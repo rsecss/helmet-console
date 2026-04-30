@@ -4,6 +4,22 @@
 
 ---
 
+## Project-Wide Conventions (Apply Here First)
+
+Before reading the sections below, follow these project-level conventions
+(applicable to backend and frontend alike):
+
+- `docs/contributing.md` — branch policy, Conventional Commits, formatter toolchain, git hooks
+- `docs/architecture.md` — system architecture, module boundaries, WS message protocol
+- `.prettierrc.json` — formatter rules (single quote, semi, 100 cols, LF)
+- `.editorconfig` — UTF-8 / LF / 2-space / final newline
+- `.gitattributes` — enforces LF in working tree on all platforms
+
+The sections below capture **backend-specific** rules (Node.js + `ws` relay).
+They will be filled as concrete code patterns emerge in P2 (`server/` MVP).
+
+---
+
 ## Overview
 
 <!--
