@@ -28,9 +28,9 @@ docs/<scope>                ◄── 纯文档
 chore/<scope>               ◄── 构建/工具/杂项
 ```
 
-* 单人项目期间：可直接在 `dev` 工作；阶段性 PR 合入 `main`
-* 合作期间：`feat/*` → PR → `dev` → 集成验证 → PR → `main`
-* 禁止：`force push` 到 `main` / `dev`；`--no-verify` 跳过 hooks
+- 单人项目期间：可直接在 `dev` 工作；阶段性 PR 合入 `main`
+- 合作期间：`feat/*` → PR → `dev` → 集成验证 → PR → `main`
+- 禁止：`force push` 到 `main` / `dev`；`--no-verify` 跳过 hooks
 
 ---
 
@@ -38,15 +38,15 @@ chore/<scope>               ◄── 构建/工具/杂项
 
 格式：`<type>(<scope>): <subject>`
 
-| type | 何时用 |
-|---|---|
-| `feat` | 新功能 |
-| `fix` | 问题修复 |
-| `docs` | 文档（README、架构、注释） |
-| `refactor` | 不改外部行为的重构 |
-| `chore` | 构建/工具/依赖更新 |
-| `test` | 测试相关 |
-| `style` | 仅格式化（不应频繁出现，平时 prettier 已自动） |
+| type       | 何时用                                         |
+| ---------- | ---------------------------------------------- |
+| `feat`     | 新功能                                         |
+| `fix`      | 问题修复                                       |
+| `docs`     | 文档（README、架构、注释）                     |
+| `refactor` | 不改外部行为的重构                             |
+| `chore`    | 构建/工具/依赖更新                             |
+| `test`     | 测试相关                                       |
+| `style`    | 仅格式化（不应频繁出现，平时 prettier 已自动） |
 
 **好例子**：
 
@@ -69,9 +69,9 @@ feat: ADD STUFF         # subject 句首大写不强制，但要简洁
 
 ## 代码风格：Prettier
 
-* 配置见 `.prettierrc.json`：单引号 · semi · 100 列 · LF
-* 日常：编辑器装 Prettier 插件，保存自动格式化
-* 提交前：`npm run format`（修改） 或 `npm run format:check`（仅检查）
+- 配置见 `.prettierrc.json`：单引号 · semi · 100 列 · LF
+- 日常：编辑器装 Prettier 插件，保存自动格式化
+- 提交前：`npm run format`（修改） 或 `npm run format:check`（仅检查）
 
 `.editorconfig` 兜底：UTF-8 / LF / 2-space / final newline。任何编辑器都该遵守。
 
@@ -91,15 +91,15 @@ npm run prepare
 
 ## 文件编码 / 行尾
 
-* 一律 **UTF-8（无 BOM）+ LF**
-* `.gitattributes` 已强制 `* text=auto eol=lf`
-* Windows 用户：Git 自动处理；编辑器若产生 CRLF，保存即被 Prettier/EditorConfig 拉回
+- 一律 **UTF-8（无 BOM）+ LF**
+- `.gitattributes` 已强制 `* text=auto eol=lf`
+- Windows 用户：Git 自动处理；编辑器若产生 CRLF，保存即被 Prettier/EditorConfig 拉回
 
 ---
 
 ## 不做的事（边界）
 
-* 不引入 ESLint，直到 P2 后端代码落地（避免空 lint）
-* 不引入构建工具（Vite/Webpack 等）
-* 不引入测试框架，直到核心 relay 函数稳定（v0.2）
-* 不在 `main` 直接 commit
+- 不引入 ESLint，直到 P2 后端代码落地（避免空 lint）
+- 不引入构建工具（Vite/Webpack 等）
+- 不引入测试框架，直到核心 relay 函数稳定（v0.2）
+- 不在 `main` 直接 commit
