@@ -1,5 +1,8 @@
 .ace-tool/
 
+# Project docs
+docs/
+
 # Node
 node_modules/
 .env

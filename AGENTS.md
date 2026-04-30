@@ -20,3 +20,13 @@ If you're using Codex, project-scoped helpers may also live in:
 Keep this managed block so 'trellis update' can refresh the instructions.
 
 <!-- TRELLIS:END -->
+
+# Project Snapshot
+
+- Runtime: single Node.js package, ESM, Node 18+.
+- Start command: `npm start` → `node server/src/index.js`.
+- Quality commands: `npm test` (lint + smoke), `npm run format:check`.
+- HTTP routes: `GET /`, `GET /healthz`, static files from `web/`.
+- WebSocket: `/ws`, JSON text frames with `from`, `type`, `payload`, optional `ts`.
+- UI model: serial-assistant style. `web/js/terminal.js` is display-only; commands must be sent through `web/js/command-panel.js`.
+- Keep frontend native ESM with no build tool. Vendor browser libraries stay under `web/vendor/`.

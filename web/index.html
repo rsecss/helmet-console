@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Helmet Console</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/vendor/xterm/xterm.css" />
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <div>
+          <h1>Helmet Console</h1>
+          <p id="statusText" class="status status-disconnected">未连接</p>
+        </div>
+        <form id="configForm" class="connection-form" autocomplete="off">
+          <label>
+            <span>Host</span>
+            <input id="wsHost" name="host" type="text" inputmode="url" required />
+          </label>
+          <label>
+            <span>Port</span>
+            <input id="wsPort" name="port" type="number" min="1" max="65535" required />
+          </label>
+          <label>
+            <span>Path</span>
+            <input id="wsPath" name="path" type="text" required />
+          </label>
+          <label class="tls-toggle">
+            <input id="wsTls" name="tls" type="checkbox" />
+            <span>wss</span>
+          </label>
+          <div class="button-row">
+            <button id="connectButton" type="submit">连接</button>
+            <button id="disconnectButton" type="button" disabled>断开</button>
+          </div>
+        </form>
+      </header>
+
+      <section class="workspace">
+        <div class="terminal-panel">
+          <div class="terminal-window">
+            <div id="terminal"></div>
+          </div>
+          <form id="commandForm" class="send-form" autocomplete="off">
+            <label>
+              <span>命令</span>
+              <textarea id="commandInput" name="command" rows="2"></textarea>
+            </label>
+            <button id="sendCommandButton" type="submit" disabled>发送</button>
+          </form>
+        </div>
+        <aside class="control-panel" aria-label="Controls">
+          <section>
+            <h2>LED</h2>
+            <div class="control-row">
+              <button id="ledOnButton" type="button">ON</button>
+              <button id="ledOffButton" type="button">OFF</button>
+            </div>
+          </section>
+          <section>
+            <h2>Motor</h2>
+            <label>
+              <span>Speed</span>
+              <input id="motorSpeed" type="range" min="0" max="5" value="0" />
+            </label>
+          </section>
+          <section>
+            <h2>Sensor</h2>
+            <output id="sensorOutput">--</output>
+          </section>
+        </aside>
+      </section>
+    </main>
+
+    <script type="module" src="/js/main.js"></script>
+  </body>
+</html>
