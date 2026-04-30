@@ -1,0 +1,19 @@
+.ace-tool/
+
+# Node
+node_modules/
+.env
+.env.local
+*.log
+logs/
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Build artifacts (reserved for future)
+dist/
+build/
+coverage/
