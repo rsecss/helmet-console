@@ -20,8 +20,9 @@ helmet-console/
 │   ├── css/
 │   │   └── style.css
 │   ├── js/
-│   │   ├── config-panel.js
 │   │   ├── command-panel.js
+│   │   ├── config-panel.js
+│   │   ├── control-panel.js
 │   │   ├── main.js
 │   │   ├── terminal.js
 │   │   └── ws-client.js
@@ -31,10 +32,11 @@ helmet-console/
 └── docs/
     ├── architecture.md
     ├── contributing.md
-    ├── design/
-    │   ├── ui-redesign-concept.html
-    │   └── ui-redesign-concept.png
     ├── deployment.md
+    ├── design/
+    │   ├── prototype-rose.html
+    │   ├── prototype.html
+    │   └── stitch-prompt-vue-calibrated.md
     └── interface.md
 ```
 
@@ -66,4 +68,6 @@ npm run smoke
 - `docs/architecture.md` — system shape and module boundaries
 - `docs/interface.md` — HTTP and WebSocket contracts
 - `docs/deployment.md` — local and service deployment notes
-- `docs/design/ui-redesign-concept.png` — single-screen UI redesign concept
+- `docs/design/prototype-rose.html` — current interactive prototype (rose theme); the
+  `web/` UI is a 1:1 replica of this file
+- `docs/design/prototype.html` — earlier green prototype (kept for reference only)

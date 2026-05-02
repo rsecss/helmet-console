@@ -9,69 +9,200 @@
     <link rel="stylesheet" href="/css/style.css" />
   </head>
   <body>
-    <main class="app-shell">
+    <main class="app-shell" data-state="disconnected" id="appShell">
+      <!-- TOPBAR -->
       <header class="topbar">
-        <div>
-          <h1>Helmet Console</h1>
-          <p id="statusText" class="status status-disconnected">未连接</p>
-        </div>
-        <form id="configForm" class="connection-form" autocomplete="off">
-          <label>
-            <span>Host</span>
-            <input id="wsHost" name="host" type="text" inputmode="url" required />
-          </label>
-          <label>
-            <span>Port</span>
-            <input id="wsPort" name="port" type="number" min="1" max="65535" required />
-          </label>
-          <label>
-            <span>Path</span>
-            <input id="wsPath" name="path" type="text" required />
-          </label>
-          <label class="tls-toggle">
-            <input id="wsTls" name="tls" type="checkbox" />
-            <span>wss</span>
-          </label>
-          <div class="button-row">
-            <button id="connectButton" type="submit">连接</button>
-            <button id="disconnectButton" type="button" disabled>断开</button>
+        <div class="brand">Helmet Console</div>
+        <div class="topbar-actions">
+          <div class="view-toggle" role="tablist" aria-label="主视图切换">
+            <button type="button" role="tab" aria-pressed="true" data-view="terminal">终端</button>
+            <button type="button" role="tab" aria-pressed="false" data-view="ai">AI助手</button>
           </div>
-        </form>
+          <button class="icon-btn" type="button" aria-label="文档" data-action="docs">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.75"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+              <line x1="8" y1="13" x2="16" y2="13" />
+              <line x1="8" y1="17" x2="13" y2="17" />
+              <polyline points="10 9 9 9 8 9" />
+            </svg>
+          </button>
+          <button class="icon-btn" type="button" aria-label="终端侧栏" data-action="sidebar">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.75"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polyline points="4 17 10 11 4 5" />
+              <line x1="12" y1="19" x2="20" y2="19" />
+            </svg>
+          </button>
+        </div>
       </header>
 
-      <section class="workspace">
-        <div class="terminal-panel">
-          <div class="terminal-window">
-            <div id="terminal"></div>
+      <!-- CONNECTION BAR -->
+      <form class="connection-bar" id="configForm" autocomplete="off" aria-label="连接状态">
+        <span class="status-pill" data-variant="disconnected" id="statusPill">未连接</span>
+        <input
+          class="conn-url"
+          id="wsUrl"
+          name="url"
+          type="text"
+          placeholder="ws://host:port/path"
+        />
+        <button type="submit" class="conn-action" id="connAction" data-variant="solid">连接</button>
+      </form>
+
+      <!-- TERMINAL CARD -->
+      <section class="terminal-card" aria-label="系统输出">
+        <header class="terminal-card-header">
+          <span class="terminal-label">SYSTEM OUTPUT</span>
+          <div class="terminal-actions">
+            <button class="icon-btn" type="button" aria-label="复制" data-action="copy">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.75"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+              </svg>
+            </button>
+            <button class="icon-btn" type="button" aria-label="全屏" data-action="expand">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.75"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polyline points="15 3 21 3 21 9" />
+                <polyline points="9 21 3 21 3 15" />
+                <line x1="21" y1="3" x2="14" y2="10" />
+                <line x1="3" y1="21" x2="10" y2="14" />
+              </svg>
+            </button>
           </div>
-          <form id="commandForm" class="send-form" autocomplete="off">
-            <label>
-              <span>命令</span>
-              <textarea id="commandInput" name="command" rows="2"></textarea>
-            </label>
-            <button id="sendCommandButton" type="submit" disabled>发送</button>
-          </form>
+        </header>
+        <div class="terminal-window">
+          <div id="terminal"></div>
         </div>
-        <aside class="control-panel" aria-label="Controls">
-          <section>
-            <h2>LED</h2>
-            <div class="control-row">
-              <button id="ledOnButton" type="button">ON</button>
-              <button id="ledOffButton" type="button">OFF</button>
+        <p class="inline-error" id="inlineError"></p>
+      </section>
+
+      <!-- COMMAND BAR -->
+      <form class="command-bar" id="commandForm" autocomplete="off">
+        <span class="command-prompt" aria-hidden="true">&gt;</span>
+        <textarea
+          id="commandInput"
+          class="command-input"
+          name="command"
+          placeholder="输入 AT 指令或 JSON 负载..."
+          rows="1"
+        ></textarea>
+        <button id="sendCommandButton" class="send-btn" type="submit" disabled>发送</button>
+      </form>
+
+      <!-- CONTROL CARDS -->
+      <section class="control-cards" aria-label="设备控制">
+        <article class="control-card">
+          <header class="control-card-head">
+            <h2>LED 阵列</h2>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.75"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M9 18h6" />
+              <path d="M10 22h4" />
+              <path d="M2 12a10 10 0 0 1 20 0c0 4-3 6-3 8H5c0-2-3-4-3-8z" />
+            </svg>
+          </header>
+          <div class="led-body">
+            <div class="led-status" id="ledStatus" data-state="off">
+              <span class="led-status-label">状态</span>
+              <span class="led-status-value" id="ledStatusValue">已关闭</span>
             </div>
-          </section>
-          <section>
-            <h2>Motor</h2>
-            <label>
-              <span>Speed</span>
-              <input id="motorSpeed" type="range" min="0" max="5" value="0" />
-            </label>
-          </section>
-          <section>
-            <h2>Sensor</h2>
-            <output id="sensorOutput">--</output>
-          </section>
-        </aside>
+            <div class="led-toggle" role="group" aria-label="LED 开关">
+              <button
+                type="button"
+                class="led-btn"
+                id="ledOnButton"
+                data-action="on"
+                aria-pressed="false"
+              >
+                开启
+              </button>
+              <button
+                type="button"
+                class="led-btn"
+                id="ledOffButton"
+                data-action="off"
+                aria-pressed="true"
+              >
+                关闭
+              </button>
+            </div>
+          </div>
+        </article>
+        <article class="control-card">
+          <header class="control-card-head">
+            <h2>驱动电机</h2>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.75"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M12 2v4" />
+              <path d="m6.31 6.31 2.83 2.83" />
+              <path d="M2 12h4" />
+              <path d="M12 12l5-3" />
+              <circle cx="12" cy="12" r="9" />
+            </svg>
+          </header>
+          <div class="motor-row">
+            <span class="motor-row-label">状态</span>
+            <output class="motor-value" id="motorValue">0</output>
+          </div>
+          <div class="motor-slider-wrap">
+            <input
+              id="motorSpeed"
+              class="slider"
+              type="range"
+              min="0"
+              max="5"
+              value="0"
+              style="--fill: 0%"
+              aria-label="电机速度"
+            />
+            <div class="slider-ticks">
+              <span>0</span>
+              <span>5</span>
+            </div>
+          </div>
+        </article>
       </section>
     </main>
 

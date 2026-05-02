@@ -1,15 +1,8 @@
 import { createCommandPanel } from './command-panel.js';
 import { createConfigPanel } from './config-panel.js';
+import { createControlPanel } from './control-panel.js';
 import { createConsoleTerminal } from './terminal.js';
 import { createWsClient } from './ws-client.js';
-
-const statusLabels = {
-  disconnected: '未连接',
-  connecting: '连接中',
-  connected: '已连接',
-  reconnecting: '重连中',
-  error: '错误',
-};
 
 function requireElement(id) {
   const element = document.getElementById(id);
@@ -19,18 +12,16 @@ function requireElement(id) {
   return element;
 }
 
-const statusText = requireElement('statusText');
+const shell = requireElement('appShell');
 const terminal = createConsoleTerminal({
   container: requireElement('terminal'),
 });
 
 const client = createWsClient({
   onStatus({ name, detail }) {
-    const label = statusLabels[name] || name;
-    statusText.textContent = detail ? `${label} ${detail}` : label;
-    statusText.className = `status status-${name}`;
-    panel.setConnected(name === 'connected');
-    commandPanel.setConnected(name === 'connected');
+    configPanel.setStatus({ name, detail });
+    const isConnected = name === 'connected';
+    commandPanel.setConnected(isConnected);
   },
   onFrame(frame) {
     if (frame.type !== 'pong') {
@@ -42,14 +33,13 @@ const client = createWsClient({
   },
 });
 
-const panel = createConfigPanel({
+const configPanel = createConfigPanel({
+  shell,
   form: requireElement('configForm'),
-  hostInput: requireElement('wsHost'),
-  portInput: requireElement('wsPort'),
-  pathInput: requireElement('wsPath'),
-  tlsInput: requireElement('wsTls'),
-  connectButton: requireElement('connectButton'),
-  disconnectButton: requireElement('disconnectButton'),
+  urlInput: requireElement('wsUrl'),
+  statusPill: requireElement('statusPill'),
+  actionButton: requireElement('connAction'),
+  inlineError: requireElement('inlineError'),
   onConnect(url) {
     terminal.writeLine(`[ws] connect ${url}`);
     client.connect(url);
@@ -69,6 +59,24 @@ const commandPanel = createCommandPanel({
   },
 });
 
+const controlPanel = createControlPanel({
+  ledOnButton: requireElement('ledOnButton'),
+  ledOffButton: requireElement('ledOffButton'),
+  ledStatus: requireElement('ledStatus'),
+  ledStatusValue: requireElement('ledStatusValue'),
+  motorSlider: requireElement('motorSpeed'),
+  motorValue: requireElement('motorValue'),
+  onLedOn() {
+    sendControl({ action: 'led_on' });
+  },
+  onLedOff() {
+    sendControl({ action: 'led_off' });
+  },
+  onMotorSpeed(value) {
+    sendControl({ action: 'motor_speed', value });
+  },
+});
+
 function sendControl(payload) {
   client.send({
     from: 'web',
@@ -77,14 +85,36 @@ function sendControl(payload) {
   });
 }
 
-requireElement('ledOnButton').addEventListener('click', () => {
-  sendControl({ action: 'led_on' });
+// ============================================================
+// Reserved-interface placeholders.
+// DOM exists so QA can verify the slot; handler is a no-op
+// that prints once per click. Wire real behavior in a later task.
+// ============================================================
+function reservePlaceholder(selector, label) {
+  document.querySelectorAll(selector).forEach((node) => {
+    node.addEventListener('click', () => {
+      console.info(`[placeholder] ${label} not implemented yet`);
+    });
+  });
+}
+
+// Topbar segmented view toggle (终端 / AI助手) — visual switch only.
+document.querySelectorAll('.view-toggle button').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    const parent = btn.parentElement;
+    parent.querySelectorAll('button').forEach((b) => {
+      b.setAttribute('aria-pressed', b === btn ? 'true' : 'false');
+    });
+    if (btn.dataset.view === 'ai') {
+      console.info('[placeholder] AI助手 view not implemented yet');
+    }
+  });
 });
 
-requireElement('ledOffButton').addEventListener('click', () => {
-  sendControl({ action: 'led_off' });
-});
+reservePlaceholder('.icon-btn[data-action="docs"]', '文档');
+reservePlaceholder('.icon-btn[data-action="sidebar"]', '终端侧栏');
+reservePlaceholder('.icon-btn[data-action="copy"]', '复制');
+reservePlaceholder('.icon-btn[data-action="expand"]', '全屏');
 
-requireElement('motorSpeed').addEventListener('input', (event) => {
-  sendControl({ action: 'motor_speed', value: Number(event.target.value) });
-});
+// Re-exports for future integration (LED state mirroring from device frames).
+export { controlPanel };

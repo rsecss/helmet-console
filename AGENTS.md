@@ -28,5 +28,7 @@ Keep this managed block so 'trellis update' can refresh the instructions.
 - Quality commands: `npm test` (lint + smoke), `npm run format:check`.
 - HTTP routes: `GET /`, `GET /healthz`, static files from `web/`.
 - WebSocket: `/ws`, JSON text frames with `from`, `type`, `payload`, optional `ts`.
-- UI model: serial-assistant style. `web/js/terminal.js` is display-only; commands must be sent through `web/js/command-panel.js`.
+- UI model: serial-assistant style. `web/js/terminal.js` is display-only; commands are sent through `web/js/command-panel.js` (free-form text) or `web/js/control-panel.js` (LED segmented toggle + motor slider).
+- UI surface: 3 visual states (`disconnected` / `connected` / `error`) driven by `.app-shell[data-state]`; `ws-client.js` keeps the internal 5-state lifecycle and `config-panel.js` collapses it.
+- Reference UI: `docs/design/prototype-rose.html` is the spec for `web/`. The earlier `prototype.html` (green) is retired.
 - Keep frontend native ESM with no build tool. Vendor browser libraries stay under `web/vendor/`.
