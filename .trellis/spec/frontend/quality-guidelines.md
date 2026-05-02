@@ -25,13 +25,15 @@ These are non-negotiable design choices for `web/`:
   or `<style>` blocks; reference via `<script type="module" src="/js/...">` and
   `<link rel="stylesheet" href="/css/...">`
 - **Vendor libraries under `web/vendor/`** — no CDN imports (offline-friendly)
-- **Module boundaries** — `main.js` (assembly), `ws-client.js` (transport + state
-  machine), `terminal.js` (display-only xterm), `config-panel.js` (connection form
-  + localStorage), `command-panel.js` (command input + send state); modules do not
-  call each other directly, only via callbacks injected in `main.js`
+- **Module boundaries** — `main.js` (assembly + reserved-placeholder handlers),
+  `ws-client.js` (transport + 5-state machine), `terminal.js` (display-only
+  xterm), `config-panel.js` (single URL form + `parseWsUrl` + localStorage +
+  `.app-shell[data-state]` mutation), `command-panel.js` (command textarea +
+  send-enabled state), `control-panel.js` (LED segmented toggle + motor slider
+  with live `--fill`); modules do not call each other directly, only via
+  callbacks injected in `main.js`
 
-The sections below capture additional frontend rules.
-They will be filled as concrete code patterns emerge in P3 (`web/` MVP).
+The sections below capture the concrete frontend rules.
 
 ---
 
@@ -39,17 +41,23 @@ They will be filled as concrete code patterns emerge in P3 (`web/` MVP).
 
 Frontend code is native browser ESM with no build step. The UI follows a serial
 assistant interaction model: the terminal is a receive/log display, and commands
-are sent only from the command input panel.
+are sent only from the command-panel textarea or the control-panel widgets —
+both go through `main.js` callbacks into `ws-client.js`. The visual surface is a
+1:1 replica of `docs/design/prototype-rose.html`.
 
 Current frontend entry points:
 
 - `web/index.html` — structure only; references CSS and ESM files
-- `web/js/main.js` — composition and callback wiring
-- `web/js/ws-client.js` — WebSocket state machine, heartbeat, send
-- `web/js/terminal.js` — xterm display-only wrapper
-- `web/js/config-panel.js` — connection fields and localStorage
+- `web/js/main.js` — composition, callback wiring, reserved-placeholder handlers
+- `web/js/ws-client.js` — WebSocket 5-state machine, heartbeat, send
+- `web/js/terminal.js` — xterm display-only wrapper (white floor + rose cursor)
+- `web/js/config-panel.js` — single URL input + `parseWsUrl` + localStorage +
+  `.app-shell[data-state]` driver
 - `web/js/command-panel.js` — command textarea and send button
-- `web/css/style.css` — single CSS entry for the MVP
+- `web/js/control-panel.js` — LED segmented toggle + motor slider with live
+  `--fill`; emits `cmd` payloads through main.js callbacks
+- `web/css/style.css` — single CSS entry; design tokens lifted from
+  `docs/design/prototype-rose.html`
 
 ---
 
@@ -62,17 +70,27 @@ Current frontend entry points:
 - Do not let feature modules instantiate each other directly. Wire modules in
   `main.js` through callbacks.
 - Do not send commands from control widgets by bypassing `ws-client.js`.
+- Do not mutate `.app-shell[data-state]` from any module other than
+  `config-panel.js`. The page-level state attribute is the single source of
+  truth for the 3-state UI surface and is owned by `applyView()`.
+- Do not write to `console.ws.*` `localStorage` keys outside
+  `config-panel.js#writeConfig`. The single write path is `parseWsUrl()` →
+  `writeConfig()`; reading from elsewhere is fine.
+- Do not register reserved-interface handlers that throw or that move beyond a
+  `console.info('[placeholder] <label> not implemented yet')` plus the local
+  visual toggle (e.g., `aria-pressed`).
 
 ---
 
 ## Required Patterns
 
-### Scenario: Native ESM Serial Assistant UI
+### Scenario: Native ESM Serial Assistant UI (rose-themed)
 
 #### 1. Scope / Trigger
 
-Any change to `web/index.html`, `web/js/*.js`, `web/css/style.css`, or the WS
-frame contract must keep this section current.
+Any change to `web/index.html`, `web/js/*.js`, `web/css/style.css`, the WS
+frame contract, or the visual surface (which mirrors
+`docs/design/prototype-rose.html`) must keep this section current.
 
 #### 2. Signatures
 
@@ -80,89 +98,187 @@ frame contract must keep this section current.
 // web/js/ws-client.js
 export function createWsClient({ onStatus, onFrame, onLog });
 // returns { connect(url), disconnect(), send(frame), isConnected() }
+// onStatus({ name, detail }) where name ∈
+//   'disconnected' | 'connecting' | 'connected' | 'reconnecting' | 'error'
 
 // web/js/terminal.js
 export function createConsoleTerminal({ container });
 // returns { writeFrame(frame), writeLine(message), dispose() }
+// xterm theme: background '#ffffff', cursor '#dc2626' (rose), GitHub-Light ANSI
 
 // web/js/config-panel.js
 export function createConfigPanel({
-  form,
-  hostInput,
-  portInput,
-  pathInput,
-  tlsInput,
-  connectButton,
-  disconnectButton,
-  onConnect,
-  onDisconnect,
+  shell, // .app-shell — receives [data-state] mutations
+  form, // <form> wrapping the connection bar
+  urlInput, // single text input for ws://host:port/path
+  statusPill, // <span> for "未连接 / 已连接 / 错误" with [data-variant]
+  actionButton, // context-sensitive: 连接 / 断开连接 / 重试
+  inlineError, // <p> for error message text
+  onConnect, // (normalizedUrl: string) => void
+  onDisconnect, // () => void
 });
+// returns { setStatus({ name, detail }) }
+
+// Pure helper, exported for tests/reuse:
+export function parseWsUrl(raw);
+// returns
+//   { ok: true, host, port, path, tls, normalized }
+// | { ok: false, reason }
 
 // web/js/command-panel.js
 export function createCommandPanel({ form, input, sendButton, onSend });
+// returns { setConnected(isConnected: boolean) }
+
+// web/js/control-panel.js
+export function createControlPanel({
+  ledOnButton,
+  ledOffButton,
+  ledStatus, // .led-status — receives [data-state='on'|'off']
+  ledStatusValue, // text node for "已开启 / 已关闭"
+  motorSlider, // <input type="range" min="0" max="5">
+  motorValue, // text node for current speed
+  onLedOn, // () => void
+  onLedOff, // () => void
+  onMotorSpeed, // (n: number) => void  — n in [0..max]
+});
+// returns { setLedState(isOn: boolean), setMotorSpeed(n: number) }
 ```
 
 #### 3. Contracts
 
-Module boundary:
+**Module boundary**:
 
-| Module              | Owns                                   | Must not own                       |
-| ------------------- | -------------------------------------- | ---------------------------------- |
-| `main.js`           | DOM lookup, callback wiring            | WS state internals, xterm internals |
-| `ws-client.js`      | Connection state, heartbeat, send      | DOM mutation, terminal rendering   |
-| `terminal.js`       | `Terminal.write/writeln`, resize       | Command input, WebSocket sending   |
-| `config-panel.js`   | Connection form and localStorage       | WS object, terminal object         |
-| `command-panel.js`  | Textarea submit and send enabled state | WS object, terminal object         |
+| Module               | Owns                                                                 | Must not own                       |
+| -------------------- | -------------------------------------------------------------------- | ---------------------------------- |
+| `main.js`            | DOM lookup, callback wiring, reserved-placeholder `console.info`     | WS state internals, xterm internals |
+| `ws-client.js`       | Connection 5-state machine, heartbeat, send                          | DOM mutation, terminal rendering   |
+| `terminal.js`        | `Terminal.write/writeln`, resize, theme                              | Command input, WebSocket sending   |
+| `config-panel.js`    | URL form, `parseWsUrl`, localStorage, `.app-shell[data-state]`       | WS object, terminal object         |
+| `command-panel.js`   | Textarea submit and send-enabled state                               | WS object, terminal object         |
+| `control-panel.js`   | LED `aria-pressed`/status text, motor slider with live `--fill`      | WS object, `.app-shell[data-state]` |
 
-Command frame:
+**3-state UI surface** — `config-panel.js` collapses the 5 internal `ws-client`
+states onto 3 visual states (driven by `.app-shell[data-state]`):
+
+| ws-client state | UI state (`data-state`) | Pill text | Pill variant   | Action      | Action variant | URL readonly | Action disabled |
+| --------------- | ----------------------- | --------- | -------------- | ----------- | -------------- | ------------ | --------------- |
+| disconnected    | `disconnected`          | 未连接    | `disconnected` | 连接        | `solid`        | no           | no              |
+| connecting      | `disconnected`          | 未连接    | `disconnected` | 连接        | `solid`        | yes          | yes             |
+| connected       | `connected`             | 已连接    | `connected`    | 断开连接    | `ghost`        | yes          | no              |
+| reconnecting    | `error`                 | 错误      | `error`        | 重试        | `solid`        | no           | no              |
+| error           | `error`                 | 错误      | `error`        | 重试        | `solid`        | no           | no              |
+
+CSS reads `[data-state]` to dim `.control-cards` and `.command-bar` to 50%
+opacity outside `connected`.
+
+**Command frame** (free-form text via command-panel):
 
 ```js
-{
-  from: 'web',
-  type: 'cmd',
-  payload: commandText
-}
+{ from: 'web', type: 'cmd', payload: '<command text>' }
 ```
 
-Connection settings persist under:
+**Control frames** (LED + motor via control-panel → main.js `sendControl`):
 
-- `console.ws.host`
-- `console.ws.port`
-- `console.ws.path`
-- `console.ws.tls`
+```js
+// LED on / off
+{ from: 'web', type: 'cmd', payload: { action: 'led_on' } }
+{ from: 'web', type: 'cmd', payload: { action: 'led_off' } }
+// Motor speed
+{ from: 'web', type: 'cmd', payload: { action: 'motor_speed', value: <0..5> } }
+```
+
+`control-panel.js` updates LED status text/dot **locally** based on click
+intent (not device confirmation). When `ws-client` learns to dispatch device
+`status` frames to per-card subscribers, `main.js` will call
+`controlPanel.setLedState(isOn)` from inbound frames instead. The exported
+`setLedState` / `setMotorSpeed` are wired now to make that hookup drop-in.
+
+**LocalStorage keys** (all written only by `config-panel.js#writeConfig`):
+
+| Key                | Type   | Source                                       |
+| ------------------ | ------ | -------------------------------------------- |
+| `console.ws.host`  | string | `parseWsUrl().host`                          |
+| `console.ws.port`  | string | `parseWsUrl().port` (defaults: `80` / `443`) |
+| `console.ws.path`  | string | `parseWsUrl().path` (default: `'/'`)         |
+| `console.ws.tls`   | string | `'true'` if `wss:`, else `'false'`           |
+| `console.ws.url`   | string | full normalized `ws[s]://host[:port]/path`   |
+
+Read order for prefilling the URL input on load: `console.ws.url` first; fall
+back to recomposing from `host/port/path/tls` (backward compatible with
+pre-rose multi-field forms); otherwise `defaultUrl()` derived from
+`window.location`.
 
 #### 4. Validation & Error Matrix
 
-| Input / State           | Frontend behavior                                  |
-| ----------------------- | -------------------------------------------------- |
-| Disconnected            | Command input and send button disabled             |
-| Connected               | Command input and send button enabled              |
-| Blank command submit    | Focus textarea; do not send                        |
-| Send while WS not open  | `ws-client.js` calls `onLog('[ws] not connected')` |
-| Incoming invalid JSON   | `ws-client.js` calls `onLog('[ws] bad frame')`     |
-| Incoming `type:"pong"`  | Update activity only; do not print to terminal     |
-| Incoming non-pong frame | `main.js` forwards to `terminal.writeFrame(frame)` |
+| Input / State                       | Frontend behavior                                                                |
+| ----------------------------------- | -------------------------------------------------------------------------------- |
+| Disconnected                        | Command input and send button disabled; control-cards dimmed                     |
+| Connected                           | Command input and send button enabled; control-cards full opacity                |
+| Blank command submit                | Focus textarea; do not send                                                      |
+| Send while WS not open              | `ws-client.js` calls `onLog('[ws] not connected')`                               |
+| Incoming invalid JSON               | `ws-client.js` calls `onLog('[ws] bad frame')`                                   |
+| Incoming `type:"pong"`              | Update activity only; do not print to terminal                                   |
+| Incoming non-pong frame             | `main.js` forwards to `terminal.writeFrame(frame)`                               |
+| URL input empty                     | `parseWsUrl` → `{ok:false, reason:'请输入连接地址'}`; inline error; keep focus   |
+| URL input not parseable as URL      | reason: `'无法解析 URL，请使用 ws:// 或 wss:// 开头的完整地址'`                   |
+| URL protocol not `ws:` / `wss:`     | reason: `'协议必须是 ws:// 或 wss://'`                                           |
+| URL hostname empty                  | reason: `'主机名不能为空'`                                                       |
+| `data-state` ≠ `connected`          | `.control-cards` and `.command-bar` dimmed to 50% opacity (CSS-driven)           |
+| Reserved-interface click            | `console.info('[placeholder] <label> not implemented yet')`; no throw, no fetch |
 
 #### 5. Good / Base / Bad Cases
 
-- Good: user connects, types `AT+PING` in the command textarea, clicks send;
-  `main.js` sends `{ from:'web', type:'cmd', payload:'AT+PING' }` through
-  `ws-client.js`, clears the textarea, and terminal remains display-only.
-- Base: page loads disconnected with default host/port/path values and send
-  disabled.
-- Bad: typing inside the xterm hidden input must not send frames; `terminal.js`
-  must keep `disableStdin: true` and register no `onData` sender.
+- **Good (connect)**: user types `wss://device.local:8443/ws`, clicks 连接;
+  `parseWsUrl` returns ok; `writeConfig` persists 5 keys; pill turns green
+  with text 已连接; button becomes 断开连接; `.app-shell[data-state]` is
+  `connected`; control-cards and command-bar regain full opacity. Reload
+  prefills the URL from `console.ws.url`.
+- **Good (cmd)**: with `data-state='connected'`, user types `AT+PING` and
+  clicks 发送; `main.js` sends `{ from:'web', type:'cmd', payload:'AT+PING' }`,
+  textarea clears, terminal stays display-only.
+- **Good (control)**: user clicks LED 开启; `control-panel.js` sets
+  `aria-pressed='true'`, status text "已开启", `.led-status[data-state='on']`,
+  and emits `{ from:'web', type:'cmd', payload:{ action:'led_on' } }` via
+  the injected `onLedOn` callback.
+- **Base**: page loads disconnected; action button shows 连接; command-bar
+  and control-cards at 50% opacity; xterm mounted with `#ffffff` background
+  and `#dc2626` cursor; placeholder buttons present but no console errors.
+- **Bad (storage bypass)**: writing to `localStorage.console.ws.*` from
+  outside `writeConfig` causes drift between the URL field and persisted
+  state on next reload.
+- **Bad (state-attr bypass)**: mutating `.app-shell[data-state]` from
+  `control-panel.js` or `command-panel.js` makes the
+  dim-outside-`connected` rule break silently and desyncs button text.
+- **Bad (terminal echo)**: registering an `onData` callback on the xterm
+  instance to forward keystrokes; `terminal.js` must keep
+  `disableStdin: true` and remain display-only.
+- **Bad (placeholder leak)**: a reserved-interface handler that triggers
+  a real fetch / state mutation instead of `console.info`. It silently
+  fires partially-implemented behavior on QA passes.
 
 #### 6. Tests Required
 
 - Run `npm run lint` for module/import errors.
 - Run `npm run format:check` for HTML/CSS/JS formatting.
-- Browser manual check: reload page, verify command textarea is focused, terminal
-  input is read-only, connect enables send, and console has no errors.
+- Run `npm test` (lint + smoke) — confirms HTTP `/healthz` and WS broadcast
+  still work.
+- Browser / MCP manual check (the 3 visual states):
+  1. **Reload disconnected** → pill 未连接 (gray), button 连接, control-cards
+     and command-bar at 50% opacity, no console errors.
+  2. **Click 连接 (server up)** → pill 已连接 (green), button 断开连接,
+     opacity restored, send button enables, terminal stays read-only.
+  3. **Stop server / submit bad URL** → pill 错误 (red), button 重试,
+     inline error text shows, control-cards and command-bar dim again.
+- **Reserved-placeholder check**: click 文档 / 终端侧栏 / 复制 / 全屏 /
+  AI 助手; expect exactly one `console.info('[placeholder] ...')` per click
+  and zero exceptions.
+- **localStorage check**: after a successful connect, read all 5
+  `console.ws.*` keys in DevTools — values should be self-consistent
+  (host/port/path/tls/url derived from the same parsed URL).
 
 #### 7. Wrong vs Correct
 
-Wrong:
+**Wrong (terminal owns sending)**:
 
 ```js
 createConsoleTerminal({
@@ -173,7 +289,7 @@ createConsoleTerminal({
 });
 ```
 
-Correct:
+**Correct**:
 
 ```js
 const commandPanel = createCommandPanel({
@@ -185,6 +301,166 @@ const commandPanel = createCommandPanel({
   },
 });
 ```
+
+**Wrong (control-panel owns state attribute)**:
+
+```js
+// In control-panel.js — leaks page-level state ownership
+ledOnButton.addEventListener('click', () => {
+  document.getElementById('appShell').dataset.state = 'connected';
+  onLedOn();
+});
+```
+
+**Correct**:
+
+```js
+// control-panel.js never touches .app-shell.
+// config-panel.js owns the data-state attribute via applyView(state).
+ledOnButton.addEventListener('click', () => {
+  setLedState(true);
+  onLedOn();
+});
+```
+
+**Wrong (raw localStorage write)**:
+
+```js
+// In main.js or any module that isn't config-panel
+localStorage.setItem('console.ws.host', '127.0.0.1');
+localStorage.setItem('console.ws.port', '8080');
+// → drifts from console.ws.url; next reload prefill is inconsistent
+```
+
+**Correct**:
+
+```js
+// Only config-panel.js#writeConfig writes these keys, and only after a
+// successful parseWsUrl(). Everyone else just reads.
+const parsed = parseWsUrl(urlInput.value);
+if (parsed.ok) {
+  writeConfig(parsed); // sets host/port/path/tls/url atomically
+  onConnect(parsed.normalized);
+}
+```
+
+---
+
+### Scenario: Reserved-Interface Placeholder Handlers
+
+#### 1. Scope / Trigger
+
+When a feature is approved by PRD but **not yet implemented** (currently:
+AI 助手 view, 文档, 终端侧栏, 复制, 全屏), reserve the DOM slot now and
+defer the behavior. New reserved features should follow this exact pattern.
+
+#### 2. Signatures
+
+```js
+// In main.js
+function reservePlaceholder(selector, label) {
+  document.querySelectorAll(selector).forEach((node) => {
+    node.addEventListener('click', () => {
+      console.info(`[placeholder] ${label} not implemented yet`);
+    });
+  });
+}
+```
+
+#### 3. Contracts
+
+| Element                            | Selector                                | Label    |
+| ---------------------------------- | --------------------------------------- | -------- |
+| Topbar `AI 助手` toggle            | `.view-toggle button[data-view='ai']`   | AI 助手  |
+| Topbar 文档 icon                   | `.icon-btn[data-action='docs']`         | 文档     |
+| Topbar 终端侧栏 icon               | `.icon-btn[data-action='sidebar']`      | 终端侧栏 |
+| Terminal card 复制 icon            | `.icon-btn[data-action='copy']`         | 复制     |
+| Terminal card 全屏 icon            | `.icon-btn[data-action='expand']`       | 全屏     |
+
+Visual-only behavior (e.g., the segmented `aria-pressed` toggle on the
+AI 助手 button) is allowed — but **no fetch, no state mutation, no
+exception**. `console.info` is the only side effect.
+
+#### 4. Validation & Error Matrix
+
+| Action                           | Behavior                                                  |
+| -------------------------------- | --------------------------------------------------------- |
+| Click any reserved placeholder   | One `console.info('[placeholder] ...')`; no throw         |
+| Click during disconnected/error  | Same as connected — placeholder is state-independent      |
+
+#### 5. Good / Base / Bad
+
+- **Good**: clicking 文档 logs once and does nothing else.
+- **Bad**: a placeholder handler that triggers a partial fetch or mutates
+  shared state; on QA the partial behavior gets mistaken for a bug.
+
+#### 6. Tests Required
+
+- Manual: click each reserved button once, confirm one `console.info`
+  line per click and zero exceptions.
+
+#### 7. Wrong vs Correct
+
+**Wrong**:
+
+```js
+docsBtn.addEventListener('click', async () => {
+  // Half-implementing while "reserved"
+  const html = await fetch('/docs').then((r) => r.text());
+  panel.innerHTML = html;
+});
+```
+
+**Correct**:
+
+```js
+reservePlaceholder('.icon-btn[data-action="docs"]', '文档');
+```
+
+---
+
+## Design Decisions
+
+### Why a single URL input over multi-field host/port/path/tls?
+
+**Context**: The pre-rose form had 4 separate inputs. The rose prototype
+collapses them to one monospaced URL field.
+
+**Decision**: Use a single `ws://host:port/path` input parsed via the pure
+helper `parseWsUrl()`. Persist the parsed components plus the normalized URL
+under existing `console.ws.*` keys for backward compatibility.
+
+**Why**: One input matches the prototype, removes 3 fields of visual noise,
+and makes copy-paste from a deployment doc trivial. Persistence stays
+backward compatible so older sessions still prefill correctly.
+
+### Why 3 visual states instead of 5?
+
+**Context**: `ws-client.js` has a 5-state lifecycle (`disconnected`,
+`connecting`, `connected`, `reconnecting`, `error`). The rose prototype
+shows only 3 pill variants.
+
+**Decision**: Keep the 5 internal states, but `config-panel.js#applyView`
+collapses them onto 3 `.app-shell[data-state]` values
+(`disconnected` / `connected` / `error`). The mapping table in §3 is the
+contract.
+
+**Why**: Internal state must stay rich so reconnect logic keeps working.
+The user-facing surface should match the prototype exactly. Collapsing in
+one place (`applyView`) means future changes to the visual surface don't
+ripple into `ws-client.js`.
+
+### Why placeholder DOM for unimplemented features?
+
+**Context**: AI 助手, 文档, 终端侧栏, 复制, 全屏 are part of the rose design
+but out of scope for this iteration.
+
+**Decision**: Add the DOM with a `console.info` no-op handler now. Don't
+half-implement.
+
+**Why**: Reserving a DOM slot is cheaper than retrofitting markup later
+when the surrounding layout has hardened. `console.info` lets QA verify
+the slot exists and clearly distinguishes "reserved" from "broken".
 
 ---
 
@@ -203,4 +479,17 @@ const commandPanel = createCommandPanel({
 - Is xterm still display-only (`disableStdin: true`, no command-sending
   `onData`)?
 - Does `command-panel.js` own command submission and connected enabled state?
-- Are labels and controls visible in a single viewport without layout overflow?
+- Are labels and controls visible in a single viewport (`100vh`,
+  `overflow: hidden`, no horizontal scroll)?
+- Does `config-panel.js` remain the **only** writer of
+  `.app-shell[data-state]`?
+- Does `config-panel.js#writeConfig` remain the **only** writer of
+  `console.ws.*` `localStorage` keys?
+- Does `parseWsUrl` cover all four error reasons (empty / unparseable /
+  bad protocol / empty hostname) with the exact messages in the matrix?
+- Does `control-panel.js` route every cmd through the injected callback
+  (no direct `client.send`, no `.app-shell` mutation)?
+- Do all reserved-interface buttons (AI 助手 / 文档 / 终端侧栏 / 复制 / 全屏)
+  log `console.info('[placeholder] ...')` and not throw?
+- Does the 3-state mapping table in §3 match `STATE_VIEW` and
+  `STATE_TO_DATA_STATE` in `config-panel.js` byte-for-byte?
