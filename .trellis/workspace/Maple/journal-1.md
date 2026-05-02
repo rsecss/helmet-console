@@ -322,3 +322,87 @@ Trellis tooling rename (separate commit `c17f9e1`):
 ### Next Steps
 
 - None - task complete
+
+
+## Session 5: Tunnel bringup spec + deploy.md neat-freak sync
+
+**Date**: 2026-05-03
+**Task**: Tunnel bringup spec + deploy.md neat-freak sync
+**Branch**: `dev`
+
+### Summary
+
+(Add summary)
+
+### Main Changes
+
+| 工作项 | 描述 |
+|---|---|
+| 新 code-spec | `.trellis/spec/backend/operational-scripts.md`：3 个 7 段场景——三处端口同步、subprocess 输出可见性、凭据/二进制不入库；外加 5 项 Code Review Checklist |
+| spec 索引 | `backend/index.md` 加 `deploy/` Pre-Dev 入口 + 3 条 Quality Check + Index 表新行 |
+| 思考守则 | `cross-layer-thinking-guide.md` 边界表加 `Backend ↔ Deploy/Infra scripts → Constants drift` |
+| 部署文档 | `deploy/deploy.md`（新增）：⚠️ 顶部 BYO 警告 + Current Test Environment 表 + BYO checklist + topology + setup + verification + production path + R5 followups |
+| .gitignore | 加 `deploy/frpc.exe` 和 `deploy/frpc`（兑现 Session 4 的 deferred followup） |
+| start.py 注释 | `PUBLIC_*_URL` 上方加 3 行 TODO，指向 `deploy.md「Current Test Environment」` |
+| README.md | 目录树加 `deploy/`、Quick Start 加 `python deploy/start.py`、Docs 章节链接 deploy.md |
+| AGENTS.md | Project Snapshot 加 2 条：deploy 编排 + 三处端口同步 |
+| docs/architecture.md §8 | 加一行指向 `deploy/deploy.md`（local-only，gitignored） |
+| docs/deployment.md | 顶部加 see-also 指向 `../deploy/deploy.md`（local-only，gitignored） |
+
+**信息分工设计**（3 层各司其职）：
+
+```
+spec/                  →  规则（怎么改不出错）— 永久
+deploy/deploy.md       →  状态（当前用什么 + BYO 提醒）— 随域名变更
+deploy/start.py 注释   →  代码内现场提醒（不读文档也能看见）— 随代码迁移
+```
+
+域名/VPS/token 这类一次性决策**不入 spec**，由 deploy.md 表头 + 强警告 + BYO checklist 承载。
+
+**Updated Files**:
+
+Tracked (in commits):
+- `.trellis/spec/backend/operational-scripts.md` (new, ~190 lines)
+- `.trellis/spec/backend/index.md`
+- `.trellis/spec/guides/cross-layer-thinking-guide.md`
+- `deploy/deploy.md` (new, ~225 lines after prettier)
+- `deploy/start.py`
+- `.gitignore`
+- `README.md`
+- `AGENTS.md`
+
+Local-only (gitignored, neat-freak consistency):
+- `docs/architecture.md`
+- `docs/deployment.md`
+
+**Verification**:
+
+- `npx prettier --check` on all touched .md files → all pass (deploy.md auto-fixed table widths once)
+- `git check-ignore deploy/frpc.exe deploy/frpc deploy/frpc.toml` → exit 0 (all ignored)
+- `npm test` (lint + smoke) → green
+- `git status` 收尾 → clean
+- 2 commits 拆分：`docs(spec)` 收 spec 改动；`docs(deploy)` 收 deploy.md + start.py + .gitignore + README + AGENTS
+
+**Followups deferred (unchanged from 05-03)**:
+
+- R5：frps token / Dashboard 密码轮换、git 历史清理、frps systemd 守护、Relay 重启退避
+
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `2231df4` | (see git log) |
+| `8459c1f` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete

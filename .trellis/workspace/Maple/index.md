@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 4
+- **Total Sessions**: 5
 - **Last Active**: 2026-05-03
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~324 | Active |
+| `journal-1.md` | ~408 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 5 | 2026-05-03 | Tunnel bringup spec + deploy.md neat-freak sync | `2231df4`, `8459c1f` | `dev` |
 | 4 | 2026-05-03 | Console tunnel bringup via frp + defaultUrl fix | `f232de8`, `c94524f`, `fb3d25c` | `dev` |
 | 3 | 2026-05-03 | Bootstrap project guidelines (Karpathy trim + Codex adversarial review) | `7c1f4ce`, `c17f9e1` | `dev` |
 | 2 | 2026-05-02 | Replicate red-themed UI | `4dfb74c`, `8d084f7` | `dev` |
