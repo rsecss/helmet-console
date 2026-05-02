@@ -33,6 +33,9 @@ RELAY_STARTUP_TIMEOUT = 20  # 秒
 FRPC_CONFIG = "frpc.toml"
 
 # 公网访问 URL（与 deploy/frpc.toml + nginx 反代规则保持一致）
+# TODO 临时联调用值（vaple.cc 个人域名 / 45.205.25.184 个人 VPS）；
+#      生产域名/IP 决策后，在本仓搜全部出现位置替换。
+#      当前状态登记见 deploy/deploy.md「Current Test Environment」。
 PUBLIC_HTTP_URL = "https://websocket.vaple.cc"
 PUBLIC_WS_URL = "wss://websocket.vaple.cc/ws"
 DEVICE_WS_URL = "ws://45.205.25.184:13000/ws"

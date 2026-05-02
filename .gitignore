@@ -10,8 +10,10 @@ node_modules/
 *.log
 logs/
 
-# Deploy（含 token，不入库；用 frpc.example.toml 作为模板）
+# Deploy（含 token / 二进制不入库；用 frpc.example.toml 作为模板）
 deploy/frpc.toml
+deploy/frpc.exe
+deploy/frpc
 
 # IDE / OS
 .idea/

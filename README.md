@@ -8,6 +8,10 @@ devices.
 
 ```text
 helmet-console/
+├── deploy/
+│   ├── deploy.md
+│   ├── frpc.example.toml
+│   └── start.py
 ├── server/
 │   ├── scripts/
 │   │   └── smoke.js
@@ -49,7 +53,14 @@ commands are sent from the command input panel.
 
 ```bash
 npm install
-npm start
+npm start                    # local relay only
+```
+
+For the local-first frp tunnel deployment (Node relay + frpc, exposing the
+console over a public domain):
+
+```bash
+python deploy/start.py       # see deploy/deploy.md for prerequisites
 ```
 
 Open `http://127.0.0.1:8080`.
@@ -65,9 +76,10 @@ npm run smoke
 
 ## Docs
 
+- `deploy/deploy.md` — local-first frp tunnel setup (BYO domain/VPS/token)
 - `docs/architecture.md` — system shape and module boundaries
 - `docs/interface.md` — HTTP and WebSocket contracts
-- `docs/deployment.md` — local and service deployment notes
+- `docs/deployment.md` — local and service deployment notes (Node relay env vars + reverse proxy)
 - `docs/design/prototype-rose.html` — current interactive prototype (rose theme); the
   `web/` UI is a 1:1 replica of this file
 - `docs/design/prototype.html` — earlier green prototype (kept for reference only)

@@ -32,3 +32,5 @@ Keep this managed block so 'trellis update' can refresh the instructions.
 - UI surface: 3 visual states (`disconnected` / `connected` / `error`) driven by `.app-shell[data-state]`; `ws-client.js` keeps the internal 5-state lifecycle and `config-panel.js` collapses it.
 - Reference UI: `docs/design/prototype-rose.html` is the spec for `web/`. The earlier `prototype.html` (green) is retired.
 - Keep frontend native ESM with no build tool. Vendor browser libraries stay under `web/vendor/`.
+- Deploy orchestration: `deploy/start.py` boots `npm start` + `frpc` for the local-first dev tunnel. Real config is `deploy/frpc.toml` (gitignored); `deploy/frpc.example.toml` is the template. See `deploy/deploy.md` for the current test environment values (BYO required) and `.trellis/spec/backend/operational-scripts.md` for coding rules.
+- Relay port `8080` is the source of truth in `server/src/config.js#PORT`; mirrors live in `deploy/start.py#RELAY_PORT` and `deploy/frpc.toml#localPort` — change all three together.
