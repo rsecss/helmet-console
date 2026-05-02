@@ -260,3 +260,65 @@ Trellis tooling rename (separate commit `c17f9e1`):
 ### Next Steps
 
 - None - task complete
+
+
+## Session 4: Console tunnel bringup via frp + defaultUrl fix
+
+**Date**: 2026-05-03
+**Task**: Console tunnel bringup via frp + defaultUrl fix
+**Branch**: `dev`
+
+### Summary
+
+(Add summary)
+
+### Main Changes
+
+| 工作项 | 描述 |
+|---|---|
+| 部署架构 | 方案 B 混合：浏览器 `wss://websocket.vaple.cc/ws` → CF 边缘 → VPS nginx:443 → frps:13000 → frpc → 本机 :8080；下位机 `ws://45.205.25.184:13000/ws` 直连绕开 CF |
+| Web 修复 | `web/js/config-panel.js` 的 `defaultUrl()` 在反代部署下不再回退 `:8080`；显式端口沿用、反代源走 scheme-standard 443/80、仅本地裸 origin 用 :8080 |
+| 部署脚本 | `deploy/start.py` 对齐 helmet-console（npm start 替代 pnpm dev；:8080 替代 :3000；移除 stdout/stderr DEVNULL；真实 URL 提示） |
+| 防泄漏 | `deploy/frpc.toml` 加入 .gitignore；新建 `deploy/frpc.example.toml` 模板（无真凭据） |
+| Spec 同步 | `spec/frontend/quality-guidelines.md` §4 增 3 条 `defaultUrl()` 端口推导契约；§5 增 1 条 "defaultUrl over-default" Bad case |
+| 验证 | Chrome DevTools 自动化测试 9/9 AC：healthz、CF AMS 边缘可达、URL 默认值无 :8080、WS 升级成功、端到端 sim-device → frps:13000 → :8080 broadcast → 浏览器 xterm 显示 |
+
+**Updated Files**:
+
+- `web/js/config-panel.js`
+- `.trellis/spec/frontend/quality-guidelines.md`
+- `deploy/start.py` (new)
+- `deploy/frpc.example.toml` (new)
+- `.gitignore`
+
+**Decision (ADR-lite)**:
+
+- **Context**：开发期联调；VPS 在海外；m100pg + DTU 固件 wss 支持未确认
+- **Decision**：方案 B 混合——浏览器 wss（CF + nginx）、下位机 ws 直连 :13000，共享同一 frps 隧道
+- **Consequences**：浏览器侧体面（https + 域名）；下位机侧绕开模组兼容；两路对外暴露面增大；下位机流量明文（开发期可接受）
+
+**Followups deferred**:
+
+- R5 安全加固：轮换 frps token + Dashboard 密码 + 评估 git 历史清理 + frps systemd 守护
+- `deploy/frpc.exe` 二进制建议下次小修加 .gitignore
+
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `f232de8` | (see git log) |
+| `c94524f` | (see git log) |
+| `fb3d25c` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
