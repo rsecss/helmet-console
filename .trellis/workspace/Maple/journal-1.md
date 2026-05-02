@@ -302,3 +302,96 @@ hooks the trellis hooks inject).
 ### Status
 
 [ACTIVE] Awaiting user review + commit + `task.py finish` + `record-session`
+
+
+## Session 3: Bootstrap project guidelines (Karpathy trim + Codex adversarial review)
+
+**Date**: 2026-05-03
+**Task**: Bootstrap project guidelines (Karpathy trim + Codex adversarial review)
+**Branch**: `dev`
+
+### Summary
+
+(Add summary)
+
+### Main Changes
+
+### Summary
+
+Filled the 9 stub spec files under `.trellis/spec/{backend,frontend}/` from real `server/src/*.js` and `web/js/*.js` code, then ran two cleanup passes against the result: a Karpathy-rules trim (remove speculation / duplication / unrequested abstraction) and an adversarial Codex MCP review that produced 14 cited defects against the actual code. Accepted 14 / rejected 2 (the rejected pair were intentional Pre-Dev Checklist + Quality Check sections in the two `index.md` files, kept as navigation hooks for `/trellis:before-dev` and `/trellis:check`). Net trim ~11% across the 9 new files plus 2 indexes (1080 → 966 lines).
+
+Three files were declared with explicit out-of-scope status: `backend/database-guidelines.md` (Not Applicable — relay is forward-only) and `frontend/component-guidelines.md` + `hook-guidelines.md` (Deferred — no framework). Each carries the trigger condition that would reactivate it.
+
+Separately, `python3` was replaced with `python` across the entire vendored Trellis tooling (30 files, mechanical 1:1 substitution) — committed in isolation so `trellis update` can be reverted independently if needed.
+
+### Main Changes
+
+| Area | Files | Notes |
+|------|-------|-------|
+| spec/backend | `directory-structure.md`, `error-handling.md`, `logging-guidelines.md` (Filled); `database-guidelines.md` (N/A); `index.md` (status table) | Real code refs: `server/src/{index,config,static,ws-relay}.js`, `server/scripts/smoke.js` |
+| spec/frontend | `directory-structure.md`, `state-management.md`, `type-safety.md` (Filled); `component-guidelines.md` + `hook-guidelines.md` (Deferred); `index.md` (status table) | Real code refs: `web/js/{main,ws-client,terminal,config-panel,command-panel,control-panel}.js` |
+| Trim pass | All 9 + 2 indexes | Removed: duplicate of quality-guidelines content, speculative "if PRD ever…" paragraphs, style-preference rules, "log query strings (none today)…", `console.debug` lecture, "API Error Responses" duplicate of quality §3 |
+| Adversarial fixes | 7 backend + 7 frontend edits | Highlights: removed false claim that smoke covers bad-frame isolation; removed `clientError`-is-logged contradiction; corrected `localStorage.console.ws.*` notation to `console.ws.*` localStorage keys; fixed broken link text/URL mismatch in `database-guidelines.md`; documented both reserved-handler shapes (plain icon vs segmented toggle); removed "leading-zero parses as octal" (Node 18+ doesn't trigger) |
+| Trellis tooling | `.trellis/scripts/**/*.py`, `.trellis/workflow.md`, `.trellis/workspace/index.md` | `python3` → `python` (30 files, +172/-172) |
+| Task | `00-bootstrap-guidelines` subtasks → completed; archived to `archive/2026-05/` | |
+
+### Updated Files
+
+Spec (filled / trimmed / fixed):
+- `.trellis/spec/backend/database-guidelines.md`
+- `.trellis/spec/backend/directory-structure.md`
+- `.trellis/spec/backend/error-handling.md`
+- `.trellis/spec/backend/index.md`
+- `.trellis/spec/backend/logging-guidelines.md`
+- `.trellis/spec/frontend/component-guidelines.md`
+- `.trellis/spec/frontend/directory-structure.md`
+- `.trellis/spec/frontend/hook-guidelines.md`
+- `.trellis/spec/frontend/index.md`
+- `.trellis/spec/frontend/state-management.md`
+- `.trellis/spec/frontend/type-safety.md`
+
+Task / metadata:
+- `.trellis/tasks/00-bootstrap-guidelines/prd.md` (`python3` → `python` in checklist)
+- `.trellis/tasks/00-bootstrap-guidelines/task.json` (subtasks → completed)
+- `.trellis/workspace/Maple/journal-1.md` (Sessions 3 + 4 added inline before this record)
+
+Trellis tooling rename (separate commit `c17f9e1`):
+- `.trellis/scripts/**/*.py` (28 files)
+- `.trellis/workflow.md`
+- `.trellis/workspace/index.md`
+
+### Verification
+
+- `npx prettier --check` on all 11 touched spec `.md` files → all pass
+- `grep "python3" .trellis/spec .trellis/tasks/00-bootstrap-guidelines` → 0 matches
+- `grep "localStorage.console.ws" .trellis/spec` → 0 matches (post-fix)
+- `grep "indirectly enforces" .trellis/spec` → 0 matches (post-fix)
+- Net diff: spec subset 1080 → 966 lines (~11% trimmed)
+
+### Status
+
+[OK] **Completed** — task archived; spec/ ready for AI agent consumption via `/trellis:before-dev` and `/trellis:check`.
+
+### Next Steps
+
+- None — all bootstrap guidelines work shipped.
+
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `7c1f4ce` | (see git log) |
+| `c17f9e1` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
