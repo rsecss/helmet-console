@@ -17,8 +17,21 @@ const STORAGE_KEYS = {
 function defaultUrl() {
   const tls = window.location.protocol === 'https:';
   const host = window.location.hostname || '127.0.0.1';
-  const port = window.location.port || '8080';
-  return `${tls ? 'wss' : 'ws'}://${host}:${port}/ws`;
+  const explicitPort = window.location.port;
+
+  // Explicit port wins (e.g. http://127.0.0.1:8080 during local dev).
+  if (explicitPort) {
+    return `${tls ? 'wss' : 'ws'}://${host}:${explicitPort}/ws`;
+  }
+
+  // No explicit port (reverse-proxied deploys like https://example.com or
+  // http://example.com): use the scheme's standard port, otherwise the
+  // generated URL would mis-target :8080 behind nginx/CF.
+  // Bare local origin still defaults to :8080 for the dev workflow.
+  if (!tls && (host === '127.0.0.1' || host === 'localhost')) {
+    return `ws://${host}:8080/ws`;
+  }
+  return `${tls ? 'wss' : 'ws'}://${host}/ws`;
 }
 
 function readInitialUrl() {

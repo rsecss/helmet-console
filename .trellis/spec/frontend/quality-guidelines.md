@@ -225,6 +225,9 @@ pre-rose multi-field forms); otherwise `defaultUrl()` derived from
 | URL hostname empty                  | reason: `'主机名不能为空'`                                                       |
 | `data-state` ≠ `connected`          | `.control-cards` and `.command-bar` dimmed to 50% opacity (CSS-driven)           |
 | Reserved-interface click            | `console.info('[placeholder] <label> not implemented yet')`; no throw, no fetch |
+| `defaultUrl()` with explicit `window.location.port` | Pass through verbatim (e.g. `http://127.0.0.1:8080/` → `ws://127.0.0.1:8080/ws`) |
+| `defaultUrl()` no port + reverse-proxied origin (`https://example.com`) | Use scheme-standard port (443/wss, 80/ws); never fall back to `:8080`            |
+| `defaultUrl()` no port + bare local origin (`127.0.0.1` / `localhost`) | Default to `:8080` for the dev workflow                                          |
 
 #### 5. Good / Base / Bad Cases
 
@@ -255,6 +258,12 @@ pre-rose multi-field forms); otherwise `defaultUrl()` derived from
 - **Bad (placeholder leak)**: a reserved-interface handler that triggers
   a real fetch / state mutation instead of `console.info`. It silently
   fires partially-implemented behavior on QA passes.
+- **Bad (defaultUrl over-default)**: hard-coding `port || '8080'` in
+  `defaultUrl()` mis-targets reverse-proxied deployments — an `https://`
+  origin on standard `:443` (CF + nginx + frp) would emit
+  `wss://example.com:8080/ws`, pointing the upstream at a non-existent
+  port. Use scheme-standard ports when `window.location.port` is empty,
+  and only fall back to `:8080` for bare local origins.
 
 #### 6. Tests Required
 
