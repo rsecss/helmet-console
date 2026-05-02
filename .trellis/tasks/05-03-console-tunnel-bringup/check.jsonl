@@ -1,0 +1,4 @@
+{"file": ".claude/commands/trellis/finish-work.md", "reason": "Finish work checklist"}
+{"file": ".claude/commands/trellis/check.md", "reason": "Code quality check spec"}
+{"file": ".trellis/spec/frontend/state-management.md", "reason": "Verify defaultUrl change does not break URL read order"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "Verify URL fallback contract still holds"}

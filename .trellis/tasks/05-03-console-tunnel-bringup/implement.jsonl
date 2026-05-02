@@ -1,0 +1,5 @@
+{"file": ".trellis/workflow.md", "reason": "Project workflow and conventions"}
+{"file": ".trellis/spec/backend/index.md", "reason": "Backend development guide"}
+{"file": ".trellis/spec/frontend/index.md", "reason": "Frontend development guide"}
+{"file": ".trellis/spec/frontend/state-management.md", "reason": "URL read order: console.ws.url -> legacy -> defaultUrl()"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "defaultUrl() is the fallback layer; spec does not constrain its internal port logic"}
