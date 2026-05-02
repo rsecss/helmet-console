@@ -1,51 +1,105 @@
 # State Management
 
-> How state is managed in this project.
+> How frontend state is organized.
 
 ---
 
 ## Overview
 
-<!--
-Document your project's state management conventions here.
+There is no state-management library (no Redux / Zustand / Pinia / Vuex /
+nanostores). State lives in **three well-defined places**, each with a
+single owner:
 
-Questions to answer:
-- What state management solution do you use?
-- How is local vs global state decided?
-- How do you handle server state?
-- What are the patterns for derived state?
--->
+1. **Module-local closure state** — inside the factory function that owns
+   it. Examples: the WS socket and reconnect counters in `ws-client.js`,
+   the `internalState` string in `config-panel.js`.
+2. **DOM-attribute state** — `.app-shell[data-state]`, `aria-pressed`,
+   `data-variant`, `data-state` on `.led-status`. The DOM is the source of
+   truth for what the user sees.
+3. **`localStorage`** — the `console.ws.*` namespace, persisting only the
+   connection target between sessions.
 
-(To be filled by the team)
+For why this is enough (and why a state library would be over-kill), see
+the locked design constraints in
+[`./quality-guidelines.md`](./quality-guidelines.md) §"Frontend-Specific
+Hard Constraints".
 
 ---
 
 ## State Categories
 
-<!-- Local state, global state, server state, URL state -->
+### 1. Connection state (5 internal → 3 visual)
 
-(To be filled by the team)
+`ws-client.js` exposes a 5-state lifecycle. `config-panel.js` collapses it
+onto a 3-state UI surface. The mapping table is in
+[`./quality-guidelines.md`](./quality-guidelines.md) §"Required Patterns".
 
----
+| Owner            | Storage                                          | Who reads                   |
+| ---------------- | ------------------------------------------------ | --------------------------- |
+| `ws-client.js`   | Closure (`socket`, `reconnectAttempt`, …)        | Itself only                 |
+| `config-panel.js`| Closure (`internalState`) + `.app-shell[data-state]` | CSS (dim outside connected) |
 
-## When to Use Global State
+### 2. Connection target (persisted)
 
-<!-- Criteria for promoting state to global -->
+`config-panel.js#writeConfig` is the **only writer** of these keys. Anyone
+may read them.
 
-(To be filled by the team)
+| Key                | Type   | Source                                       |
+| ------------------ | ------ | -------------------------------------------- |
+| `console.ws.host`  | string | `parseWsUrl().host`                          |
+| `console.ws.port`  | string | `parseWsUrl().port` (defaults: `80` / `443`) |
+| `console.ws.path`  | string | `parseWsUrl().path` (default: `'/'`)         |
+| `console.ws.tls`   | string | `'true'` if `wss:`, else `'false'`           |
+| `console.ws.url`   | string | full normalized `ws[s]://host[:port]/path`   |
+
+Read order on page load (`config-panel.js#readInitialUrl`):
+
+1. `console.ws.url` (canonical)
+2. Recompose from `host` / `port` / `path` / `tls` (backward-compatible
+   with pre-rose multi-field forms)
+3. `defaultUrl()` derived from `window.location`
+
+### 3. Widget state (control-panel, command-panel)
+
+| Concern                   | Owner             | Storage                               |
+| ------------------------- | ----------------- | ------------------------------------- |
+| LED on/off visual         | `control-panel.js`| `aria-pressed` + `.led-status[data-state]` + status text |
+| Motor speed display       | `control-panel.js`| `motorSlider.value` + text node + CSS `--fill` |
+| Send button enabled       | `command-panel.js`| `sendButton.disabled` + `input.disabled` |
+| Inline URL error          | `config-panel.js` | `inlineError.textContent` + `aria-invalid` |
+
+LED state is driven by local click intent (not device confirmation); the
+inbound-frame hookup design is in
+[`./quality-guidelines.md`](./quality-guidelines.md) §"Required Patterns"
+control-panel contract.
 
 ---
 
 ## Server State
 
-<!-- How server data is cached and synchronized -->
-
-(To be filled by the team)
+There is no server-state cache layer (no React Query / SWR equivalent).
+The only HTTP call is `GET /healthz`, which the UI does not consume.
+Real-time data flows through the WebSocket and is rendered immediately by
+`terminal.writeFrame(frame)` — there is nothing to memoize.
 
 ---
 
 ## Common Mistakes
 
-<!-- State management mistakes your team has made -->
-
-(To be filled by the team)
+- **Writing `console.ws.*` `localStorage` keys from outside `writeConfig`.**
+  Drifts the URL field from the persisted state on next reload. The single
+  write path is enforced by [`./quality-guidelines.md`](./quality-guidelines.md)
+  Code Review Checklist.
+- **Mutating `.app-shell[data-state]` from `control-panel.js` /
+  `command-panel.js`.** Breaks the dim-outside-`connected` CSS rule and
+  desyncs the action button text. Only `config-panel.js#applyView` may
+  write it.
+- **Calling `client.send` from a control widget.** Bypasses the cmd
+  contract. Widgets emit through injected callbacks (`onLedOn`,
+  `onMotorSpeed`, …), and `main.js` is the only place that calls
+  `client.send`.
+- **Stashing the WebSocket URL in a module-level `let` instead of
+  `localStorage`.** Survives within a tab, lost on reload — the worst of
+  both worlds.
+- **Caching a derived view of `console.ws.*` without re-deriving it.** The
+  five keys are the source of truth. Recompute, don't cache.

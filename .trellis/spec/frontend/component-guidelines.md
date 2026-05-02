@@ -1,59 +1,45 @@
 # Component Guidelines
 
-> How components are built in this project.
+> **Status: Deferred** — this project has no UI framework.
 
 ---
 
-## Overview
+## Why
 
-<!--
-Document your project's component conventions here.
+The frontend is **native browser ESM with no framework** (no React / Vue /
+Svelte / Lit). See the locked design constraints in
+[`./quality-guidelines.md`](./quality-guidelines.md) §"Frontend-Specific Hard
+Constraints":
 
-Questions to answer:
-- What component patterns do you use?
-- How are props defined?
-- How do you handle composition?
-- What accessibility standards apply?
--->
+> - **Native ES Modules** — no build tool
+> - **No framework** — no React / Vue / Svelte
+> - **JS and CSS as separate files**
 
-(To be filled by the team)
+There are no components in the framework sense. The unit of reuse is a
+**factory function** (`createXxxPanel({...deps})`) defined in `web/js/`, and
+the unit of styling is a CSS class in `web/css/style.css` driven by
+`data-state` / `data-variant` / `aria-pressed` attributes.
 
----
+For factory-function patterns, props (callback) conventions, and DOM
+ownership rules, read
+[`./quality-guidelines.md`](./quality-guidelines.md) §"Required Patterns" —
+that section already documents:
 
-## Component Structure
+- Module signatures (`createWsClient`, `createConfigPanel`,
+  `createCommandPanel`, `createControlPanel`, `createConsoleTerminal`)
+- Module ownership table (who may write `.app-shell[data-state]`, who may
+  call `client.send`, etc.)
+- Reserved-placeholder pattern for un-implemented DOM slots
 
-<!-- Standard structure of a component file -->
-
-(To be filled by the team)
-
----
-
-## Props Conventions
-
-<!-- How props should be defined and typed -->
-
-(To be filled by the team)
-
----
-
-## Styling Patterns
-
-<!-- How styles are applied (CSS modules, styled-components, Tailwind, etc.) -->
-
-(To be filled by the team)
+For directory layout and where new modules go, see
+[`./directory-structure.md`](./directory-structure.md).
 
 ---
 
-## Accessibility
+## When this file becomes relevant
 
-<!-- A11y requirements and patterns -->
+Only if the PRD explicitly approves adopting a UI framework. At that point,
+this file should be re-filled from the chosen framework's conventions.
 
-(To be filled by the team)
-
----
-
-## Common Mistakes
-
-<!-- Component-related mistakes your team has made -->
-
-(To be filled by the team)
+Until then, treat any `import` of a framework runtime in `web/js/` as a
+code-review blocker.

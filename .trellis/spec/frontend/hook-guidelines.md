@@ -1,51 +1,35 @@
 # Hook Guidelines
 
-> How hooks are used in this project.
+> **Status: Deferred** — this project has no framework, so no hooks.
 
 ---
 
-## Overview
+## Why
 
-<!--
-Document your project's hook conventions here.
+There is no React / Vue / Svelte runtime in `web/`, so the concept of a
+hook (`useXxx`) does not apply. The frontend uses **factory functions** that
+take dependencies (DOM elements + callbacks) and return a small public API.
 
-Questions to answer:
-- What custom hooks do you have?
-- How do you handle data fetching?
-- What are the naming conventions?
-- How do you share stateful logic?
--->
+Stateful logic that would be a hook in React is currently expressed as:
 
-(To be filled by the team)
+| Concern                          | Implementation                                   |
+| -------------------------------- | ------------------------------------------------ |
+| Connection lifecycle + reconnect | Closure state inside `web/js/ws-client.js`       |
+| URL form + persistence           | Closure state inside `web/js/config-panel.js`    |
+| LED / motor widget state         | Closure state inside `web/js/control-panel.js`   |
+| Inbound frame routing            | `main.js` callbacks (`onFrame`, `onStatus`, …)   |
 
----
-
-## Custom Hook Patterns
-
-<!-- How to create and structure custom hooks -->
-
-(To be filled by the team)
+For the ownership rules and the callback-injection wiring style, see
+[`./quality-guidelines.md`](./quality-guidelines.md) §"Required Patterns" and
+[`./state-management.md`](./state-management.md).
 
 ---
 
-## Data Fetching
+## When this file becomes relevant
 
-<!-- How data fetching is handled (React Query, SWR, etc.) -->
+Only if the PRD explicitly approves adopting a hook-based framework. At
+that point, this file should be re-filled from the chosen framework's
+conventions.
 
-(To be filled by the team)
-
----
-
-## Naming Conventions
-
-<!-- Hook naming rules (use*, etc.) -->
-
-(To be filled by the team)
-
----
-
-## Common Mistakes
-
-<!-- Hook-related mistakes your team has made -->
-
-(To be filled by the team)
+Until then, treat any `import` of a framework runtime in `web/js/` as a
+code-review blocker.

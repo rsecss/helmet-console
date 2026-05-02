@@ -45,14 +45,14 @@ Before declaring frontend work done, verify against
 
 ## Guidelines Index
 
-| Guide                                              | Description                                                | Status     |
-| -------------------------------------------------- | ---------------------------------------------------------- | ---------- |
-| [Quality Guidelines](./quality-guidelines.md)      | Module signatures, contracts, validation matrix, decisions | **Filled** |
-| [Directory Structure](./directory-structure.md)    | Module organization and file layout                        | To fill    |
-| [Component Guidelines](./component-guidelines.md)  | Component patterns (N/A while no framework)                | Deferred   |
-| [Hook Guidelines](./hook-guidelines.md)            | Custom hooks (N/A while no framework)                      | Deferred   |
-| [State Management](./state-management.md)          | Local state and persistence patterns                       | To fill    |
-| [Type Safety](./type-safety.md)                    | Type patterns, JSDoc, runtime validation                   | To fill    |
+| Guide                                              | Description                                                | Status         |
+| -------------------------------------------------- | ---------------------------------------------------------- | -------------- |
+| [Quality Guidelines](./quality-guidelines.md)      | Module signatures, contracts, validation matrix, decisions | **Filled**     |
+| [Directory Structure](./directory-structure.md)    | `web/` layout, module ownership, naming conventions        | **Filled**     |
+| [State Management](./state-management.md)          | Closure / DOM attr / localStorage; 5→3 state collapse      | **Filled**     |
+| [Type Safety](./type-safety.md)                    | JSDoc + runtime guards + ESLint (no TypeScript)            | **Filled**     |
+| [Component Guidelines](./component-guidelines.md)  | Component patterns                                         | **Deferred**   |
+| [Hook Guidelines](./hook-guidelines.md)            | Custom hooks                                               | **Deferred**   |
 
 > "Deferred" means the topic does not apply to this project's current
 > stack (native ESM, no framework, no hooks). Revisit only if the stack
