@@ -22,6 +22,13 @@ Before touching `server/`, read:
 2. **`docs/architecture.md` §2 + §4** — module diagram and WS protocol
 3. **`docs/interface.md`** — detailed HTTP / WS interface
 
+Before touching `deploy/`, read:
+
+1. **`operational-scripts.md`** — relay-port sync, subprocess output,
+   secrets/binaries gitignore
+2. **`deploy/deploy.md`** — current topology, prerequisites, setup steps,
+   pending operational followups
+
 ---
 
 ## Quality Check
@@ -37,6 +44,9 @@ Before declaring backend work done, verify against
 - `npm test` (lint + smoke) and `npm run format:check` pass
 - No `console.log` (use `console.info` / `warn` / `error`)
 - No new web framework, no DB driver, no in-memory frame buffer
+- Relay port changes touched all three sites: `config.js`, `start.py`, `frpc.toml` (+ example template)
+- `deploy/start.py` subprocesses inherit stdout/stderr (no `DEVNULL`)
+- New deploy secrets/binaries are listed in `.gitignore` before first commit
 
 ---
 
@@ -48,6 +58,7 @@ Before declaring backend work done, verify against
 | [Directory Structure](./directory-structure.md)    | Module organization (`server/src/`, `server/scripts/`)     | **Filled**        |
 | [Error Handling](./error-handling.md)              | `BAD_FRAME` envelope, HTTP errors, shutdown                | **Filled**        |
 | [Logging Guidelines](./logging-guidelines.md)      | `console.info/warn/error`, scope tags, what NOT to log     | **Filled**        |
+| [Operational Scripts](./operational-scripts.md)    | `deploy/` port sync, subprocess output, secrets/binaries   | **Filled**        |
 | [Database Guidelines](./database-guidelines.md)    | —                                                          | **Not Applicable**|
 
 > "Not Applicable" means the topic does not apply to this project's current

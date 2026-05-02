@@ -38,6 +38,7 @@ For each arrow, ask:
 | Service ↔ Database | Format conversions, null handling |
 | Backend ↔ Frontend | Serialization, date formats |
 | Component ↔ Component | Props shape changes |
+| Backend ↔ Deploy/Infra scripts | Constants drift (port, paths, env keys) |
 
 ### Step 3: Define Contracts
 
