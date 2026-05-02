@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 """
 Create Bootstrap Task for First-Time Setup.
 
@@ -6,7 +6,7 @@ Creates a guided task to help users fill in project guidelines
 after initializing Trellis for the first time.
 
 Usage:
-    python3 create_bootstrap.py [project-type]
+    python create_bootstrap.py [project-type]
 
 Arguments:
     project-type: frontend | backend | fullstack (default: fullstack)
@@ -152,8 +152,8 @@ The AI will read your code and help you document it.
 When done:
 
 ```bash
-python3 ./.trellis/scripts/task.py finish
-python3 ./.trellis/scripts/task.py archive 00-bootstrap-guidelines
+python ./.trellis/scripts/task.py finish
+python ./.trellis/scripts/task.py archive 00-bootstrap-guidelines
 ```
 
 ---
@@ -262,7 +262,7 @@ def main() -> int:
     # Check developer initialized
     if not developer:
         print("Error: Developer not initialized")
-        print(f"Run: python3 ./{DIR_WORKFLOW}/{DIR_SCRIPTS}/init_developer.py <your-name>")
+        print(f"Run: python ./{DIR_WORKFLOW}/{DIR_SCRIPTS}/init_developer.py <your-name>")
         return 1
 
     # Resolve spec base path (monorepo: spec/<package>, single-repo: spec)

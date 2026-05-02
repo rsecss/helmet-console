@@ -1,9 +1,9 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 """
 Multi-Agent Pipeline: Start Worktree Agent.
 
-Usage: python3 start.py <task-dir>
-Example: python3 start.py .trellis/tasks/01-21-my-task
+Usage: python start.py <task-dir>
+Example: python start.py .trellis/tasks/01-21-my-task
 
 This script:
 1. Creates worktree (if not exists) with dependency install

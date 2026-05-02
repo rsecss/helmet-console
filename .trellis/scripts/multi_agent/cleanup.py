@@ -1,12 +1,12 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 """
 Multi-Agent Pipeline: Cleanup Worktree.
 
 Usage:
-    python3 cleanup.py <branch-name>      Remove specific worktree
-    python3 cleanup.py --list             List all worktrees
-    python3 cleanup.py --merged           Remove merged worktrees
-    python3 cleanup.py --all              Remove all worktrees (with confirmation)
+    python cleanup.py <branch-name>      Remove specific worktree
+    python cleanup.py --list             List all worktrees
+    python cleanup.py --merged           Remove merged worktrees
+    python cleanup.py --all              Remove all worktrees (with confirmation)
 
 Options:
     -y, --yes                       Skip confirmation prompts
@@ -382,10 +382,10 @@ def main() -> int:
         return cleanup_worktree(args.branch, repo_root, args.yes, args.keep_branch)
     else:
         print("""Usage:
-  python3 cleanup.py <branch-name>      Remove specific worktree
-  python3 cleanup.py --list             List all worktrees
-  python3 cleanup.py --merged           Remove merged worktrees
-  python3 cleanup.py --all              Remove all worktrees
+  python cleanup.py <branch-name>      Remove specific worktree
+  python cleanup.py --list             List all worktrees
+  python cleanup.py --merged           Remove merged worktrees
+  python cleanup.py --all              Remove all worktrees
 
 Options:
   -y, --yes             Skip confirmation

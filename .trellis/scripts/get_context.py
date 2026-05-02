@@ -1,10 +1,10 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 """
 Get Session Context for AI Agent.
 
 Usage:
-    python3 get_context.py           Output context in text format
-    python3 get_context.py --json    Output context in JSON format
+    python get_context.py           Output context in text format
+    python get_context.py --json    Output context in JSON format
 """
 
 from __future__ import annotations

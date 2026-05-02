@@ -1,15 +1,15 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 """
 Multi-Agent Pipeline: Status Monitor.
 
 Usage:
-    python3 status.py                     Show summary of all tasks (default)
-    python3 status.py -a <assignee>       Filter tasks by assignee
-    python3 status.py --list              List all worktrees and agents
-    python3 status.py --detail <task>     Detailed task status
-    python3 status.py --watch <task>      Watch agent log in real-time
-    python3 status.py --log <task>        Show recent log entries
-    python3 status.py --registry          Show agent registry
+    python status.py                     Show summary of all tasks (default)
+    python status.py -a <assignee>       Filter tasks by assignee
+    python status.py --list              List all worktrees and agents
+    python status.py --detail <task>     Detailed task status
+    python status.py --watch <task>      Watch agent log in real-time
+    python status.py --log <task>        Show recent log entries
+    python status.py --registry          Show agent registry
 
 Entry shim — delegates to status_display and status_monitor.
 """
