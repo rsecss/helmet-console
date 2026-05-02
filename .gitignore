@@ -10,6 +10,9 @@ node_modules/
 *.log
 logs/
 
+# Deploy（含 token，不入库；用 frpc.example.toml 作为模板）
+deploy/frpc.toml
+
 # IDE / OS
 .idea/
 .vscode/
