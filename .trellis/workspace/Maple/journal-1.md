@@ -544,3 +544,89 @@ Spec / Doc：
 ### Next Steps
 
 - None - task complete
+
+
+## Session 8: ws-cli 设备端客户端 + frp 链路双向 e2e 验证
+
+**Date**: 2026-05-03
+**Task**: ws-cli 设备端客户端 + frp 链路双向 e2e 验证
+**Branch**: `dev`
+
+### Summary
+
+(Add summary)
+
+### Main Changes
+
+### Summary
+
+为 `server/scripts/` 新增 `ws-cli.js` —— 一个 ~60 行的 Node WebSocket 客户端，让开发者能在本地 shell 里扮演"下位机"角色，与浏览器一端配对，对 frp 隧道做字节级手动联调。补齐 smoke.js 仅覆盖 loopback 留下的端到端验证缺口。
+
+### Main Changes
+
+| 变更面 | 内容 |
+|---|---|
+| 新工具 (`server/scripts/ws-cli.js`) | stdin 每行一帧、自动追加 `\n`、空行跳过；ws → stdout 字节透传；二进制帧 `console.warn` + 丢；`-h/--help` / SIGINT graceful close 1000；不主动 ping、不重连；默认 URL 由 `server/src/config.js` 派生，避免硬编码端口 |
+| 关键设计 | **CONNECTING-state input buffer**：readline 的 `'line'` 事件可能在 ws 握手完成前触发（脚本化 `echo "..." \| ws-cli` 几乎必然如此），需将帧缓存到 `pending[]`、`'open'` 时 flush。该 bug 在 chrome-devtools e2e 测试方向 ② 时实测复现并修复 |
+| Spec 同步 | `backend/quality-guidelines.md` 增 7 段完整 Scenario "Dev-Side WS CLI Client"（signature / contract 表 / validation matrix / Good-Base-Bad / 测试要求 / Wrong-vs-Correct）；`directory-structure.md` 加 layout 行；`logging-guidelines.md` Scope 表加 `[ws-cli]`；`backend/index.md` Quality Check 加 buffer 项 |
+| 任务产物 | `05-03-ws-cli-client/` 完整目录（PRD / task.json / 4 jsonl / e2e 截图 evidence） |
+
+### How (本会话流程)
+
+1. **`/trellis:start`** — 调研发现：smoke.js 仅 loopback；frp 已搭好 + frpc.toml 现成；缺一个能对端的本地 ws CLI
+2. **Brainstorm** — 三问澄清（A/B/C 角色 + 实现形式 + 隧道是否活）→ 用户确认 B + a + 隧道活
+3. **Simple Task 流程** — 创建任务、写 PRD、init-context（注入 4 个 spec/code 文件）、activate
+4. **Implement** — 直写脚本（30 行 → 实际 60 行含 SIGINT/help/exit code 处理）
+5. **chrome-devtools e2e**（关键阶段）：
+   - `python deploy/start.py` 起 relay+frpc，`curl https://websocket.vaple.cc/healthz` 200
+   - `new_page` 公网入口、`click` 连接按钮、徽章变绿 ✓
+   - 方向 ① 浏览器→CLI：fill+click 发 `browser_to_cli_DOWNLINK_marker_xyz789`，`cat logs/ws-cli.log` 字节级一致 ✓
+   - 方向 ② CLI→浏览器：`echo "cli_to_browser_UPLINK_marker_abc123" \| node ws-cli.js` —— 首次失败！日志显示 `dropped input` 出现在 `connected` 之前，暴露 CONNECTING-state 缓冲缺失
+   - 加 `pending[]` + `'open'` flush，重测，`evaluate_script` 抓 `.xterm-rows` 文本含 marker ✓
+6. **`/trellis:update-spec`** — 把 bug 的 Wrong/Correct 对照写进 quality-guidelines.md，让未来 AI 不再踩同样坑
+7. **`/trellis:finish-work`** — 全部 checklist 项过；无 console.log、无 TS 类型问题（项目无 TS）、cross-layer 验证完成
+8. **commit** `c3e4382`（10 文件 / +378 / -1，截图不入库 —— 与 ws-string-protocol 归档惯例一致）
+9. **`/trellis:check`** — 13 项 backend Quality Check 逐条对照、Forbidden Patterns 全过、新 Scenario 11 项契约自洽
+10. **`task.py archive`** — 自动 commit `cd20137` 移到 `archive/2026-05/`
+
+### Surprises / Notes
+
+- **CONNECTING 输入丢失** — 是个非常容易漏的 race：readline 默认无背压，stdin 一可读就触发 `'line'`，而 ws 握手有 RTT。手动 TTY 使用永远命中不了（人类打字慢），只在脚本化 pipe 下出现。已写进 spec 的 Wrong/Correct 范例
+- **e2e 不入 CI** — scripted stdin/ws 时序在 CI 太脆，spec 明示"manual e2e before any cross-layer protocol change"，由 PRD 步骤指引复现
+- **clients 计数从 1 起步** — 测试开始时 `/healthz` 已显示 `clients:1`，怀疑残留浏览器连接；不影响测试，但说明 frp 隧道一旦活了就会被任意公网客户端发现（TODO: R5 token 轮转后再观察）
+- **commit 体量** — 一次 feat 把代码 + spec + task artifacts 全部打包；spec 同步在同 commit 里，避免后续"代码已提交但 spec 滞后"的窗口期
+- **截图不入库** — 沿用 `05-03-ws-string-protocol` 归档惯例，e2e-evidence.png 留在 archived 目录里物理存在但 git 不跟踪
+
+### Updated Files
+
+代码：
+- `server/scripts/ws-cli.js` (新, ~60 行)
+
+Spec：
+- `.trellis/spec/backend/quality-guidelines.md`（+ 完整 Scenario / entry point / Code Review 项）
+- `.trellis/spec/backend/directory-structure.md`（layout 表）
+- `.trellis/spec/backend/logging-guidelines.md`（Scope 表）
+- `.trellis/spec/backend/index.md`（Quality Check 项）
+
+任务：
+- `.trellis/tasks/archive/2026-05/05-03-ws-cli-client/`（整目录归档）
+
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `c3e4382` | (see git log) |
+| `cd20137` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
