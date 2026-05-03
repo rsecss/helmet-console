@@ -1,7 +1,9 @@
+import { createAiPanel } from './ai-panel.js';
 import { createCommandPanel } from './command-panel.js';
 import { createConfigPanel } from './config-panel.js';
 import { createControlPanel } from './control-panel.js';
 import { createConsoleTerminal } from './terminal.js';
+import { createViewSwitcher } from './view-switcher.js';
 import { createWsClient } from './ws-client.js';
 
 function requireElement(id) {
@@ -85,6 +87,38 @@ function sendControl(payload) {
   });
 }
 
+const aiPanel = createAiPanel({
+  configBar: requireElement('aiConfigBar'),
+  configKey: requireElement('aiConfigKey'),
+  configModel: requireElement('aiConfigModel'),
+  configEdit: requireElement('aiConfigEdit'),
+  configForm: requireElement('aiConfigForm'),
+  configFormTitle: requireElement('aiConfigFormTitle'),
+  keyInput: requireElement('aiKeyInput'),
+  baseUrlInput: requireElement('aiBaseUrlInput'),
+  configCancel: requireElement('aiConfigCancel'),
+  bubbles: requireElement('aiBubbles'),
+  inputForm: requireElement('aiInputForm'),
+  input: requireElement('aiInput'),
+  sendButton: requireElement('aiSendButton'),
+  onTool(payload) {
+    sendControl(payload);
+    if (payload.action === 'led_on') controlPanel.setLedState(true);
+    else if (payload.action === 'led_off') controlPanel.setLedState(false);
+    else if (payload.action === 'motor_speed') controlPanel.setMotorSpeed(payload.value);
+  },
+  isWsConnected: () => client.isConnected(),
+});
+
+const viewSwitcher = createViewSwitcher({
+  shell,
+  buttons: Array.from(document.querySelectorAll('.view-toggle button')),
+  onViewChange(name) {
+    if (name === 'ai') aiPanel.focus();
+  },
+});
+viewSwitcher.setView('terminal');
+
 // ============================================================
 // Reserved-interface placeholders.
 // DOM exists so QA can verify the slot; handler is a no-op
@@ -97,19 +131,6 @@ function reservePlaceholder(selector, label) {
     });
   });
 }
-
-// Topbar segmented view toggle (终端 / AI助手) — visual switch only.
-document.querySelectorAll('.view-toggle button').forEach((btn) => {
-  btn.addEventListener('click', () => {
-    const parent = btn.parentElement;
-    parent.querySelectorAll('button').forEach((b) => {
-      b.setAttribute('aria-pressed', b === btn ? 'true' : 'false');
-    });
-    if (btn.dataset.view === 'ai') {
-      console.info('[placeholder] AI助手 view not implemented yet');
-    }
-  });
-});
 
 reservePlaceholder('.icon-btn[data-action="docs"]', '文档');
 reservePlaceholder('.icon-btn[data-action="sidebar"]', '终端侧栏');

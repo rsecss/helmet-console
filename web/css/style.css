@@ -422,6 +422,248 @@ button:disabled {
 }
 
 /* ============================================================
+ * AI card — DeepSeek chat panel; sibling of .terminal-card.
+ * Visibility driven by [data-view] (see end of file).
+ * ============================================================ */
+.ai-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: var(--s-lg);
+  gap: var(--s-md);
+  background: var(--c-card);
+  border: 1px solid var(--c-hairline);
+  border-radius: var(--r-xl);
+  overflow: hidden;
+}
+
+.ai-config-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--s-base);
+  padding-bottom: var(--s-sm);
+  border-bottom: 1px solid var(--c-hairline);
+}
+
+/* Restore HTML5 [hidden] semantics — class rules with explicit
+   `display: flex` would otherwise win against the UA stylesheet. */
+.ai-config-bar[hidden],
+.ai-config-form[hidden],
+.ai-bubbles[hidden] {
+  display: none;
+}
+
+.ai-config-key {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--c-muted);
+}
+
+.ai-config-model {
+  padding: 4px 10px;
+  background: var(--c-track);
+  border: 1px solid var(--c-hairline);
+  border-radius: var(--r-sm);
+  font-size: 13px;
+  color: var(--c-ink);
+  cursor: pointer;
+}
+
+.ai-config-edit {
+  margin-left: auto;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--c-rose);
+  border-radius: var(--r-sm);
+  transition: color var(--motion-fast);
+}
+
+.ai-config-edit:hover {
+  color: var(--c-rose-strong);
+}
+
+.ai-config-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-sm);
+  padding: var(--s-base) 0;
+}
+
+.ai-config-form-title {
+  margin: 0 0 var(--s-md);
+  text-align: center;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--c-body);
+}
+
+.ai-config-input {
+  padding: 10px 14px;
+  background: var(--c-card);
+  border: 1px solid var(--c-hairline);
+  border-radius: var(--r-md);
+  color: var(--c-ink);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  outline: none;
+  transition: border-color var(--motion-fast);
+}
+
+.ai-config-input:focus {
+  border-color: var(--c-rose-border);
+}
+
+.ai-config-form-actions {
+  display: flex;
+  gap: var(--s-sm);
+  justify-content: center;
+  margin-top: var(--s-sm);
+}
+
+.ai-config-save {
+  padding: 8px 22px;
+  background: var(--c-rose);
+  color: #fff;
+  border-radius: var(--r-md);
+  font-size: 14px;
+  font-weight: 500;
+  transition: background var(--motion-fast);
+}
+
+.ai-config-save:hover {
+  background: var(--c-rose-strong);
+}
+
+.ai-config-cancel {
+  padding: 8px 16px;
+  color: var(--c-muted);
+  border-radius: var(--r-md);
+  font-size: 14px;
+  transition: color var(--motion-fast);
+}
+
+.ai-config-cancel:hover {
+  color: var(--c-body);
+}
+
+.ai-bubbles {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-md);
+  padding: var(--s-sm) 0;
+}
+
+.ai-bubbles::-webkit-scrollbar {
+  width: 6px;
+}
+
+.ai-bubbles::-webkit-scrollbar-thumb {
+  background: var(--c-border);
+  border-radius: var(--r-full);
+}
+
+.ai-bubble {
+  max-width: 80%;
+  padding: 10px 14px;
+  border-radius: var(--r-lg);
+  font-size: 14px;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.ai-bubble-body {
+  display: block;
+  white-space: pre-wrap;
+}
+
+.ai-bubble-user {
+  align-self: flex-end;
+  background: var(--c-rose-soft);
+  color: var(--c-rose-strong);
+  border: 1px solid var(--c-rose-border);
+}
+
+.ai-bubble-ai {
+  align-self: flex-start;
+  background: var(--c-card);
+  color: var(--c-ink);
+  border: 1px solid var(--c-hairline);
+}
+
+.ai-bubble-system {
+  align-self: center;
+  max-width: 90%;
+  padding: 8px 14px;
+  background: var(--c-rose-soft);
+  color: var(--c-rose-strong);
+  border: 1px solid var(--c-rose-border);
+  font-size: 13px;
+  text-align: center;
+}
+
+.ai-bubble-tool {
+  margin-top: var(--s-xs);
+  padding-left: var(--s-sm);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--c-muted);
+}
+
+.ai-bubble-tool-error {
+  color: var(--c-rose-strong);
+}
+
+.ai-input-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--s-md);
+  padding: var(--s-sm) var(--s-base);
+  background: var(--c-track);
+  border: 1px solid var(--c-hairline);
+  border-radius: var(--r-lg);
+}
+
+.ai-input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 0;
+  border: none;
+  background: transparent;
+  color: var(--c-ink);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  outline: none;
+  resize: none;
+}
+
+.ai-input::placeholder {
+  color: var(--c-subtle);
+}
+
+.ai-send-btn {
+  flex: 0 0 auto;
+  padding: 8px 22px;
+  background: var(--c-rose);
+  color: #fff;
+  border-radius: var(--r-md);
+  font-size: 14px;
+  font-weight: 500;
+  transition: background var(--motion-fast);
+}
+
+.ai-send-btn:hover:not(:disabled) {
+  background: var(--c-rose-strong);
+}
+
+.ai-send-btn:disabled {
+  opacity: 0.6;
+}
+
+/* ============================================================
  * Command bar
  * ============================================================ */
 .command-bar {
@@ -696,6 +938,20 @@ button:disabled {
 [data-state='error'] .command-bar {
   opacity: 0.5;
   pointer-events: none;
+}
+
+/* ============================================================
+ * View switching — driven by [data-view] on .app-shell.
+ * 'terminal' (default): AI card hidden.
+ * 'ai': terminal card and command bar hidden; AI card fills the 1fr row.
+ * ============================================================ */
+[data-view='terminal'] .ai-card {
+  display: none;
+}
+
+[data-view='ai'] .terminal-card,
+[data-view='ai'] .command-bar {
+  display: none;
 }
 
 /* ============================================================

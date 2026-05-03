@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="/css/style.css" />
   </head>
   <body>
-    <main class="app-shell" data-state="disconnected" id="appShell">
+    <main class="app-shell" data-state="disconnected" data-view="terminal" id="appShell">
       <!-- TOPBAR -->
       <header class="topbar">
         <div class="brand">Helmet Console</div>
@@ -102,6 +102,52 @@
           <div id="terminal"></div>
         </div>
         <p class="inline-error" id="inlineError"></p>
+      </section>
+
+      <!-- AI CARD -->
+      <section class="ai-card" id="aiCard" aria-label="AI 助手">
+        <header class="ai-config-bar" id="aiConfigBar" hidden>
+          <span class="ai-config-key" id="aiConfigKey">🔑 未配置</span>
+          <select class="ai-config-model" id="aiConfigModel" aria-label="模型">
+            <option value="deepseek-v4-flash">deepseek-v4-flash</option>
+            <option value="deepseek-v4-pro">deepseek-v4-pro</option>
+          </select>
+          <button type="button" class="ai-config-edit" id="aiConfigEdit">修改</button>
+        </header>
+        <form class="ai-config-form" id="aiConfigForm" autocomplete="off">
+          <p class="ai-config-form-title" id="aiConfigFormTitle">
+            🤖 配置 DeepSeek API Key 启用对话
+          </p>
+          <input
+            type="password"
+            id="aiKeyInput"
+            class="ai-config-input"
+            placeholder="sk-..."
+            aria-label="DeepSeek API Key"
+          />
+          <input
+            type="url"
+            id="aiBaseUrlInput"
+            class="ai-config-input"
+            placeholder="https://api.deepseek.com"
+            aria-label="API 地址"
+          />
+          <div class="ai-config-form-actions">
+            <button type="submit" id="aiConfigSave" class="ai-config-save">保 存</button>
+            <button type="button" id="aiConfigCancel" class="ai-config-cancel" hidden>取消</button>
+          </div>
+        </form>
+        <div class="ai-bubbles" id="aiBubbles" hidden></div>
+        <form class="ai-input-bar" id="aiInputForm" autocomplete="off">
+          <textarea
+            id="aiInput"
+            class="ai-input"
+            rows="1"
+            placeholder="输入消息..."
+            disabled
+          ></textarea>
+          <button type="submit" id="aiSendButton" class="ai-send-btn" disabled>发送</button>
+        </form>
       </section>
 
       <!-- COMMAND BAR -->
