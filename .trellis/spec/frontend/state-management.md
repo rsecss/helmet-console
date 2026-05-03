@@ -107,7 +107,7 @@ control-panel contract.
 There is no server-state cache layer (no React Query / SWR equivalent).
 The only HTTP call is `GET /healthz`, which the UI does not consume.
 Real-time data flows through the WebSocket and is rendered immediately by
-`terminal.writeFrame(frame)` — there is nothing to memoize.
+`terminal.writeText(text)` — there is nothing to memoize.
 
 ---
 

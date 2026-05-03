@@ -1,6 +1,7 @@
 const RECONNECT_DELAYS = [1000, 2000, 4000, 8000, 16000];
 const HEARTBEAT_MS = 30000;
 const STALE_MS = 45000;
+const PING_FRAME = 'ping\n';
 
 export function createWsClient({ onStatus, onFrame, onLog }) {
   let socket = null;
@@ -21,13 +22,13 @@ export function createWsClient({ onStatus, onFrame, onLog }) {
     window.clearInterval(staleTimer);
   }
 
-  function send(frame) {
+  function send(text) {
     if (!socket || socket.readyState !== WebSocket.OPEN) {
       onLog('[ws] not connected');
       return false;
     }
 
-    socket.send(JSON.stringify(frame));
+    socket.send(text);
     return true;
   }
 
@@ -43,7 +44,7 @@ export function createWsClient({ onStatus, onFrame, onLog }) {
     markActivity();
 
     heartbeatTimer = window.setInterval(() => {
-      send({ from: 'web', type: 'ping', payload: null });
+      send(PING_FRAME);
     }, HEARTBEAT_MS);
 
     staleTimer = window.setInterval(() => {
@@ -85,11 +86,12 @@ export function createWsClient({ onStatus, onFrame, onLog }) {
     socket.addEventListener('message', (event) => {
       markActivity();
 
-      try {
-        onFrame(JSON.parse(event.data));
-      } catch {
-        onLog('[ws] bad frame');
+      if (typeof event.data !== 'string') {
+        onLog('[ws] dropped binary frame');
+        return;
       }
+
+      onFrame(event.data);
     });
 
     socket.addEventListener('close', (event) => {

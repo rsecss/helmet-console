@@ -116,7 +116,7 @@ export function createWsClient({ onStatus, onFrame, onLog });
 
 // web/js/terminal.js
 export function createConsoleTerminal({ container });
-// returns { writeFrame(frame), writeLine(message), dispose() }
+// returns { writeText(text), writeLine(message), dispose() }
 // xterm theme: background '#ffffff', cursor '#dc2626' (rose), GitHub-Light ANSI
 
 // web/js/config-panel.js
@@ -186,26 +186,34 @@ states onto 3 visual states (driven by `.app-shell[data-state]`):
 CSS reads `[data-state]` to dim `.control-cards` and `.command-bar` to 50%
 opacity outside `connected`.
 
+**Wire format**: every frame is a single UTF-8 text line ending in `\n`.
+Server is a byte-passthrough — there is no JSON envelope. See
+`docs/architecture.md` §4 (canonical) and `docs/interface.md`.
+
 **Command frame** (free-form text via command-panel):
 
 ```js
-{ from: 'web', type: 'cmd', payload: '<command text>' }
+client.send('<command text>\n');
 ```
 
-**Control frames** (LED + motor via control-panel → main.js `sendControl`):
+Multi-line input from the command textarea is split on `\n` in `main.js`
+before sending; each non-empty line becomes its own frame so devices
+never need to handle frame boundaries.
+
+**Control frames** (LED + motor via control-panel → main.js `sendCommand`):
 
 ```js
 // LED on / off
-{ from: 'web', type: 'cmd', payload: { action: 'led_on' } }
-{ from: 'web', type: 'cmd', payload: { action: 'led_off' } }
+client.send('led_on\n');
+client.send('led_off\n');
 // Motor speed
-{ from: 'web', type: 'cmd', payload: { action: 'motor_speed', value: <0..5> } }
+client.send(`motor_speed_${value}\n`); // value ∈ [0..5]
 ```
 
 `control-panel.js` updates LED status text/dot **locally** based on click
-intent (not device confirmation). When `ws-client` learns to dispatch device
-`status` frames to per-card subscribers, `main.js` will call
-`controlPanel.setLedState(isOn)` from inbound frames instead. The exported
+intent (not device confirmation). When `ws-client` learns to dispatch
+device status frames to per-card subscribers, `main.js` will call
+`controlPanel.setLedState(isOn)` from inbound text instead. The exported
 `setLedState` / `setMotorSpeed` are wired now to make that hookup drop-in.
 
 **LocalStorage keys**:
@@ -245,9 +253,9 @@ pre-rose multi-field forms); otherwise `defaultUrl()` derived from
 | Connected                           | Command input and send button enabled; control-cards full opacity                |
 | Blank command submit                | Focus textarea; do not send                                                      |
 | Send while WS not open              | `ws-client.js` calls `onLog('[ws] not connected')`                               |
-| Incoming invalid JSON               | `ws-client.js` calls `onLog('[ws] bad frame')`                                   |
-| Incoming `type:"pong"`              | Update activity only; do not print to terminal                                   |
-| Incoming non-pong frame             | `main.js` forwards to `terminal.writeFrame(frame)`                               |
+| Incoming binary frame               | `ws-client.js` calls `onLog('[ws] dropped binary frame')`                        |
+| Incoming `pong\n`                   | Update activity only; do not print to terminal                                   |
+| Incoming non-pong text              | `main.js` forwards to `terminal.writeText(text)`                                 |
 | URL input empty                     | `parseWsUrl` → `{ok:false, reason:'请输入连接地址'}`; inline error; keep focus   |
 | URL input not parseable as URL      | reason: `'无法解析 URL，请使用 ws:// 或 wss:// 开头的完整地址'`                   |
 | URL protocol not `ws:` / `wss:`     | reason: `'协议必须是 ws:// 或 wss://'`                                           |
@@ -266,12 +274,12 @@ pre-rose multi-field forms); otherwise `defaultUrl()` derived from
   `connected`; control-cards and command-bar regain full opacity. Reload
   prefills the URL from `console.ws.url`.
 - **Good (cmd)**: with `data-state='connected'`, user types `AT+PING` and
-  clicks 发送; `main.js` sends `{ from:'web', type:'cmd', payload:'AT+PING' }`,
-  textarea clears, terminal stays display-only.
+  clicks 发送; `main.js` sends the text frame `'AT+PING\n'`, textarea
+  clears, terminal stays display-only.
 - **Good (control)**: user clicks LED 开启; `control-panel.js` sets
   `aria-pressed='true'`, status text "已开启", `.led-status[data-state='on']`,
-  and emits `{ from:'web', type:'cmd', payload:{ action:'led_on' } }` via
-  the injected `onLedOn` callback.
+  and emits the text frame `'led_on\n'` via the injected `onLedOn`
+  callback.
 - **Base**: page loads disconnected; action button shows 连接; command-bar
   and control-cards at 50% opacity; xterm mounted with `#ffffff` background
   and `#dc2626` cursor; placeholder buttons present but no console errors.
@@ -323,7 +331,7 @@ pre-rose multi-field forms); otherwise `defaultUrl()` derived from
 createConsoleTerminal({
   container,
   onData(data) {
-    client.send({ from: 'web', type: 'cmd', payload: data });
+    client.send(`${data}\n`);
   },
 });
 ```
@@ -336,7 +344,7 @@ const commandPanel = createCommandPanel({
   input,
   sendButton,
   onSend(command) {
-    client.send({ from: 'web', type: 'cmd', payload: command });
+    client.send(`${command}\n`);
   },
 });
 ```
@@ -532,19 +540,21 @@ export function createAiPanel({
 
 #### 3. Contracts
 
-**Tool name → cmd payload translation** (must match `control-panel.js` cmd shapes):
+**Tool name → command translation** (must match `control-panel.js` cmd shapes):
 
-| AI tool name  | tool arguments         | cmd payload                                |
-| ------------- | ---------------------- | ------------------------------------------ |
-| `led_on`      | `{}`                   | `{ action: 'led_on' }`                     |
-| `led_off`     | `{}`                   | `{ action: 'led_off' }`                    |
-| `motor_speed` | `{ value: 0..5 }` (int)| `{ action: 'motor_speed', value: <0..5> }` |
+| AI tool name  | tool arguments         | command string (no trailing newline)    |
+| ------------- | ---------------------- | --------------------------------------- |
+| `led_on`      | `{}`                   | `'led_on'`                              |
+| `led_off`     | `{}`                   | `'led_off'`                             |
+| `motor_speed` | `{ value: 0..5 }` (int)| `` `motor_speed_${value}` ``            |
 
-`main.js` injects `onTool(payload)` that:
-1. Calls `sendControl(payload)` (existing path → ws-relay → MCU)
-2. Mirrors the device-side change to control-card UI:
-   - `led_on` / `led_off` → `controlPanel.setLedState(true|false)`
-   - `motor_speed` → `controlPanel.setMotorSpeed(payload.value)`
+`main.js` injects `onTool(command)` that:
+1. Calls `sendCommand(command)` (appends `\n`, hits ws-relay → MCU)
+2. Mirrors the device-side change to control-card UI by parsing the
+   verb prefix:
+   - `'led_on'` → `controlPanel.setLedState(true)`
+   - `'led_off'` → `controlPanel.setLedState(false)`
+   - starts with `'motor_speed_'` → `controlPanel.setMotorSpeed(<parsed value>)`
 
 **SSE protocol**: standard OpenAI streaming over `POST {baseUrl}/chat/completions`.
 Events separated by `\r?\n\r?\n`. `data:` lines within an event are joined
@@ -597,9 +607,8 @@ is visible in the `1fr` row.
 
 - **Good (translate)**: `data-view='ai'`, key configured, ws connected,
   user types `把灯打开`. AI streams `好的，已为你打开 LED`, finishes with
-  tool_calls=`led_on`. ai-panel calls `onTool({action:'led_on'})`,
-  control-card shows `已开启`, ws frame
-  `{from:'web', type:'cmd', payload:{action:'led_on'}}` reaches MCU.
+  tool_calls=`led_on`. ai-panel calls `onTool('led_on')`,
+  control-card shows `已开启`, the text frame `'led_on\n'` reaches MCU.
 - **Good (no key)**: fresh load, click AI tab. Empty-state form shows
   `🤖 配置 DeepSeek API Key 启用对话` with password input + url input +
   保存. After save, switch to chat view; reload preserves `console.ai.*`.
@@ -629,7 +638,7 @@ is visible in the `1fr` row.
 // web/js/ai-panel.js — leaks WS dependency
 import { wsClient } from './ws-client.js';
 // ... when tool_call arrives:
-wsClient.send({ from: 'web', type: 'cmd', payload });
+wsClient.send('led_on\n');
 ```
 
 **Correct**:
@@ -705,5 +714,5 @@ history.push({ role: 'assistant', content }); // tool_calls dropped
   longer a placeholder.)
 - Does the 3-state mapping table in §3 match `STATE_VIEW` and
   `STATE_TO_DATA_STATE` in `config-panel.js` byte-for-byte?
-- Does the AI tool→cmd payload table match `control-panel.js` cmd shapes
-  byte-for-byte?
+- Does the AI tool→command translation table match the strings emitted
+  by `control-panel.js` byte-for-byte?

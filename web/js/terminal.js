@@ -1,15 +1,6 @@
 import { FitAddon } from '../vendor/xterm/addon-fit.mjs';
 import { Terminal } from '../vendor/xterm/xterm.mjs';
 
-function writePayload(term, payload) {
-  if (typeof payload === 'string') {
-    term.write(payload);
-    return;
-  }
-
-  term.writeln(JSON.stringify(payload));
-}
-
 export function createConsoleTerminal({ container }) {
   const term = new Terminal({
     cursorBlink: false,
@@ -55,13 +46,8 @@ export function createConsoleTerminal({ container }) {
   observer.observe(container);
 
   return {
-    writeFrame(frame) {
-      if (frame.type === 'error') {
-        term.writeln(`\r\n[error] ${JSON.stringify(frame.payload)}`);
-        return;
-      }
-
-      writePayload(term, frame.payload);
+    writeText(text) {
+      term.write(text);
     },
     writeLine(message) {
       term.writeln(`\r\n${message}`);

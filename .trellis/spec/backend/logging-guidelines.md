@@ -77,10 +77,10 @@ When a log line carries dynamic data, prefer template literals over
 
 - Every received frame / broadcast — at 32 max clients with chatty
   devices this would dominate stderr. The relay is forward-only; the
-  payload is not interesting at the server.
-- `BAD_FRAME` events — they are already reported back to the offending
-  client via the `error` envelope. Logging them here doubles the noise
-  and provides no operator action.
+  text payload is not interesting at the server.
+- Binary-frame closes — they are already signalled to the offending
+  client via close code `1003`. Logging them here doubles the noise and
+  provides no operator action.
 - `/healthz` requests — health probes will spam logs.
 - Successful upgrade / disconnect — count them via `/healthz`, not logs.
 
@@ -91,11 +91,11 @@ If you find yourself wanting to log a frame to debug a flow, reach for
 
 ## What NOT to Log (security)
 
-**Never** log raw frame `payload`. Devices may stream sensor data, command
-transcripts, or future authentication tokens through the relay. The server
-is business-agnostic by design (see
+**Never** log raw text frame contents. Devices may stream sensor data,
+command transcripts, or future authentication tokens through the relay.
+The server is business-agnostic by design (see
 [`./quality-guidelines.md`](./quality-guidelines.md) §"Forbidden
-Patterns") — logging payloads breaks that guarantee.
+Patterns") — logging the wire breaks that guarantee.
 
 ---
 

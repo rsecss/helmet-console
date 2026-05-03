@@ -1,59 +1,7 @@
 import WebSocket, { WebSocketServer } from 'ws';
 
-const VALID_TYPES = new Set(['data', 'cmd', 'status', 'error', 'ping', 'pong']);
-
-function sendFrame(ws, frame) {
-  if (ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify(frame));
-  }
-}
-
-function sendError(ws, code, message) {
-  sendFrame(ws, {
-    from: 'server',
-    type: 'error',
-    payload: { code, message },
-    ts: Date.now(),
-  });
-}
-
-function parseFrame(data) {
-  try {
-    const frame = JSON.parse(data.toString('utf8'));
-    return { frame };
-  } catch {
-    return { error: 'Frame must be UTF-8 JSON text' };
-  }
-}
-
-function validateFrame(frame) {
-  if (!frame || typeof frame !== 'object' || Array.isArray(frame)) {
-    return 'Frame must be a JSON object';
-  }
-
-  if (typeof frame.from !== 'string' || frame.from.length === 0) {
-    return 'Frame field "from" must be a non-empty string';
-  }
-
-  if (typeof frame.type !== 'string' || !VALID_TYPES.has(frame.type)) {
-    return 'Frame field "type" is unsupported';
-  }
-
-  if (!Object.hasOwn(frame, 'payload')) {
-    return 'Frame field "payload" is required';
-  }
-
-  return null;
-}
-
-function normalizeFrame(frame) {
-  return {
-    from: frame.from,
-    type: frame.type,
-    payload: frame.payload,
-    ts: Number.isFinite(frame.ts) ? frame.ts : Date.now(),
-  };
-}
+const PING_FRAME = 'ping';
+const PONG_FRAME = 'pong\n';
 
 export function createWsRelay({ wsPath, maxClients, logger = console }) {
   const wss = new WebSocketServer({
@@ -63,12 +11,10 @@ export function createWsRelay({ wsPath, maxClients, logger = console }) {
     perMessageDeflate: false,
   });
 
-  function broadcast(sender, frame) {
-    const payload = JSON.stringify(frame);
-
+  function broadcast(sender, text) {
     for (const client of wss.clients) {
       if (client !== sender && client.readyState === WebSocket.OPEN) {
-        client.send(payload);
+        client.send(text);
       }
     }
   }
@@ -80,33 +26,20 @@ export function createWsRelay({ wsPath, maxClients, logger = console }) {
 
     ws.on('message', (data, isBinary) => {
       if (isBinary) {
-        sendError(ws, 'BAD_FRAME', 'Binary frames are not supported');
+        ws.close(1003, 'binary frames are not supported');
         return;
       }
 
-      const { frame, error } = parseFrame(data);
-      if (error) {
-        sendError(ws, 'BAD_FRAME', error);
+      const text = data.toString('utf8');
+
+      if (text.replace(/\r?\n$/, '') === PING_FRAME) {
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(PONG_FRAME);
+        }
         return;
       }
 
-      const validationError = validateFrame(frame);
-      if (validationError) {
-        sendError(ws, 'BAD_FRAME', validationError);
-        return;
-      }
-
-      if (frame.type === 'ping') {
-        sendFrame(ws, {
-          from: 'server',
-          type: 'pong',
-          payload: null,
-          ts: Date.now(),
-        });
-        return;
-      }
-
-      broadcast(ws, normalizeFrame(frame));
+      broadcast(ws, text);
     });
   });
 

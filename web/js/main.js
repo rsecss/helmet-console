@@ -6,12 +6,40 @@ import { createConsoleTerminal } from './terminal.js';
 import { createViewSwitcher } from './view-switcher.js';
 import { createWsClient } from './ws-client.js';
 
+const PONG = 'pong';
+const MOTOR_PREFIX = 'motor_speed_';
+
 function requireElement(id) {
   const element = document.getElementById(id);
   if (!element) {
     throw new Error(`Missing element: ${id}`);
   }
   return element;
+}
+
+function stripTrailingNewline(text) {
+  return text.replace(/\r?\n$/, '');
+}
+
+function ensureTrailingNewline(text) {
+  return text.endsWith('\n') ? text : `${text}\n`;
+}
+
+function mirrorControlState(command) {
+  if (command === 'led_on') {
+    controlPanel.setLedState(true);
+    return;
+  }
+  if (command === 'led_off') {
+    controlPanel.setLedState(false);
+    return;
+  }
+  if (command.startsWith(MOTOR_PREFIX)) {
+    const value = Number.parseInt(command.slice(MOTOR_PREFIX.length), 10);
+    if (Number.isInteger(value)) {
+      controlPanel.setMotorSpeed(value);
+    }
+  }
 }
 
 const shell = requireElement('appShell');
@@ -25,10 +53,11 @@ const client = createWsClient({
     const isConnected = name === 'connected';
     commandPanel.setConnected(isConnected);
   },
-  onFrame(frame) {
-    if (frame.type !== 'pong') {
-      terminal.writeFrame(frame);
+  onFrame(text) {
+    if (stripTrailingNewline(text) === PONG) {
+      return;
     }
+    terminal.writeText(text);
   },
   onLog(message) {
     terminal.writeLine(message);
@@ -52,12 +81,21 @@ const configPanel = createConfigPanel({
   },
 });
 
+function sendCommand(command) {
+  client.send(ensureTrailingNewline(command));
+}
+
 const commandPanel = createCommandPanel({
   form: requireElement('commandForm'),
   input: requireElement('commandInput'),
   sendButton: requireElement('sendCommandButton'),
-  onSend(command) {
-    sendControl(command);
+  onSend(rawInput) {
+    // Allow multi-line paste: split on \n, send each non-empty line as its
+    // own frame so the device never has to handle frame boundaries itself.
+    for (const line of rawInput.split(/\r?\n/)) {
+      const trimmed = line.trim();
+      if (trimmed) sendCommand(trimmed);
+    }
   },
 });
 
@@ -69,23 +107,15 @@ const controlPanel = createControlPanel({
   motorSlider: requireElement('motorSpeed'),
   motorValue: requireElement('motorValue'),
   onLedOn() {
-    sendControl({ action: 'led_on' });
+    sendCommand('led_on');
   },
   onLedOff() {
-    sendControl({ action: 'led_off' });
+    sendCommand('led_off');
   },
   onMotorSpeed(value) {
-    sendControl({ action: 'motor_speed', value });
+    sendCommand(`${MOTOR_PREFIX}${value}`);
   },
 });
-
-function sendControl(payload) {
-  client.send({
-    from: 'web',
-    type: 'cmd',
-    payload,
-  });
-}
 
 const aiPanel = createAiPanel({
   configBar: requireElement('aiConfigBar'),
@@ -101,11 +131,9 @@ const aiPanel = createAiPanel({
   inputForm: requireElement('aiInputForm'),
   input: requireElement('aiInput'),
   sendButton: requireElement('aiSendButton'),
-  onTool(payload) {
-    sendControl(payload);
-    if (payload.action === 'led_on') controlPanel.setLedState(true);
-    else if (payload.action === 'led_off') controlPanel.setLedState(false);
-    else if (payload.action === 'motor_speed') controlPanel.setMotorSpeed(payload.value);
+  onTool(command) {
+    sendCommand(command);
+    mirrorControlState(command);
   },
   isWsConnected: () => client.isConnected(),
 });

@@ -7,42 +7,35 @@
 ## Overview
 
 The backend is a **forward-only relay**. There is no business logic, no
-database, and no application-level error taxonomy. Error handling collapses
-to three categories:
+database, and no application-level error taxonomy. Error handling
+collapses to three categories:
 
-1. **WebSocket envelope errors** — bad frames from a client → reply with an
-   `error` frame to that client only, do not broadcast.
-2. **HTTP errors** — non-`GET`/`HEAD` methods or unknown paths → JSON 4xx
-   response.
+1. **Binary frames** — `ws.close(1003, ...)` on the offending socket
+   only. There is no JSON `error`-frame envelope; the WebSocket close
+   code is the entire signal.
+2. **HTTP errors** — non-`GET`/`HEAD` methods or unknown paths → JSON
+   4xx response.
 3. **Per-WS failures** — `ws.on('error', ...)` → log via `console.warn`,
    keep other clients alive. HTTP `clientError` silently writes a 400 and
    ends the socket (malformed HTTP on a public listener is expected).
 
-There are **no custom Error classes**. Protocol issues use the structured
-`error`-frame envelope; everything else is a plain `Error`.
+There are **no custom Error classes** and no on-the-wire `error`
+payload. Protocol violations close the offending socket; everything else
+is a plain `Error`.
 
 ---
 
 ## Error Types
 
-### `error`-frame envelope (the only WS error shape)
+### WebSocket protocol violations
 
-Defined and emitted by `server/src/ws-relay.js#sendError`:
+| Trigger                | Server behavior                                                       |
+| ---------------------- | --------------------------------------------------------------------- |
+| Binary WebSocket frame | `ws.close(1003, 'binary frames are not supported')` on that socket only |
 
-```js
-{
-  from: 'server',
-  type: 'error',
-  payload: { code: '<UPPER_SNAKE>', message: '<human-readable>' },
-  ts: <number>,
-}
-```
-
-Allowed `code` values (extend this list when adding a new validation rule):
-
-| Code        | Meaning                                                  |
-| ----------- | -------------------------------------------------------- |
-| `BAD_FRAME` | Binary frame, non-JSON, missing/invalid envelope fields  |
+There is no on-the-wire error envelope. Other text frames are passed
+through byte-for-byte without interpretation, so the relay has no
+"invalid format" to report — by design.
 
 ### HTTP error responses
 
@@ -61,46 +54,42 @@ Always JSON, served by `server/src/static.js#sendJson`:
 
 Written directly to the raw socket, then `socket.destroy()`:
 
-| Response               | When                                              |
-| ---------------------- | ------------------------------------------------- |
-| `404 Not Found`        | Upgrade path is not `config.wsPath`               |
-| `503 Service Unavailable` | Connected clients ≥ `config.maxClients`        |
+| Response                  | When                                              |
+| ------------------------- | ------------------------------------------------- |
+| `404 Not Found`           | Upgrade path is not `config.wsPath`               |
+| `503 Service Unavailable` | Connected clients ≥ `config.maxClients`           |
 
 ---
 
 ## Error Handling Patterns
 
-### Pattern 1: Validate envelope, never `payload`
+### Pattern 1: Pass through, never parse
 
-`server/src/ws-relay.js` is the only module that can reject WS messages.
-Validation lives in three pure helpers:
+`server/src/ws-relay.js` is a flat byte-passthrough. The only branches
+in the message handler are (a) reject binary frames and (b) intercept
+the literal `'ping'` to reply with `'pong\n'`.
 
 ```js
-function parseFrame(data) {
-  try {
-    return { frame: JSON.parse(data.toString('utf8')) };
-  } catch {
-    return { error: 'Frame must be UTF-8 JSON text' };
+ws.on('message', (data, isBinary) => {
+  if (isBinary) {
+    ws.close(1003, 'binary frames are not supported');
+    return;
   }
-}
-
-function validateFrame(frame) {
-  if (!frame || typeof frame !== 'object' || Array.isArray(frame))
-    return 'Frame must be a JSON object';
-  if (typeof frame.from !== 'string' || frame.from.length === 0)
-    return 'Frame field "from" must be a non-empty string';
-  if (typeof frame.type !== 'string' || !VALID_TYPES.has(frame.type))
-    return 'Frame field "type" is unsupported';
-  if (!Object.hasOwn(frame, 'payload'))
-    return 'Frame field "payload" is required';
-  return null;
-}
+  const text = data.toString('utf8');
+  if (text.replace(/\r?\n$/, '') === 'ping') {
+    if (ws.readyState === WebSocket.OPEN) ws.send('pong\n');
+    return;
+  }
+  broadcast(ws, text);
+});
 ```
 
-On any validation failure, call `sendError(ws, 'BAD_FRAME', message)` and
-**return**. Never branch on `payload` — that breaks the
-"server is business-agnostic" invariant (Forbidden Patterns in
-[`./quality-guidelines.md`](./quality-guidelines.md)).
+Adding any other content-based branch (e.g., a server-side allow-list of
+verbs, a length cap, a regex check) breaks the
+"server is business-agnostic" invariant in
+[`./quality-guidelines.md`](./quality-guidelines.md). Cap protections
+that are wire-level (e.g., `maxPayload`) belong in the `WebSocketServer`
+constructor, not in the message handler.
 
 ### Pattern 2: Per-client failure does not affect peers
 
@@ -112,9 +101,10 @@ ws.on('error', (error) => {
 });
 ```
 
-A bad client must not crash the relay or disturb other clients. (`smoke.js`
-currently exercises only the happy broadcast path; bad-frame peer isolation
-is not covered yet.)
+A bad client must not crash the relay or disturb other clients. The
+smoke test exercises broadcast, ping/pong, and binary-close paths;
+client-level error isolation is an `ws.on('error', ...)` invariant
+covered by the underlying `ws` library.
 
 ### Pattern 3: Graceful shutdown, fail-loud startup
 
@@ -140,14 +130,15 @@ logging (malformed HTTP on a public listener is expected).
 
 ## Common Mistakes
 
+- **Re-introducing a JSON envelope to "carry an error code".** The
+  protocol is flat strings; close codes carry the only protocol-level
+  signal. If a future feature needs structured errors, treat that as a
+  protocol redesign, not an extension.
 - **Throwing inside `ws.on('message', ...)`.** A throw escapes into `ws`
-  and may close the socket without sending an `error` frame. Use the
-  `parseFrame` / `validateFrame` → `sendError` flow instead.
-- **Adding new error codes without updating the table above and the smoke
-  test.** A code that exists only in source rots; documented codes outlive
-  the change.
-- **Reading `error.stack` into the response payload.** Never. The relay's
-  `error` frame body is `{ code, message }` only; stacks go to
-  `console.warn` / `console.error`, never on the wire.
+  and may close the socket without a clean reason. Either branch and
+  return cleanly, or call `ws.close(code, reason)` explicitly.
+- **Adding a content-based reject (e.g., regex on the verb).** That
+  breaks the "server is business-agnostic" invariant. Devices and
+  browsers negotiate the command vocabulary; the relay is not a gate.
 - **Wrapping `server.listen` in `try/catch` to "be safe".** Hides
   port-in-use / EACCES; let it crash so the operator notices.

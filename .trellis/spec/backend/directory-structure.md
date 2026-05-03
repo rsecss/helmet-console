@@ -46,7 +46,7 @@ The server has **four modules**, each with a single responsibility:
 | `index.js`         | Composition: wire static + relay, `listen`, signals  | Routing logic, frame parsing                           |
 | `config.js`        | Reading env vars, defaulting, exporting `config`     | I/O, side effects                                      |
 | `static.js`        | `sirv` static handler, `/healthz` JSON, 405 fallback | WebSocket, frame validation                            |
-| `ws-relay.js`      | `wss.handleUpgrade`, parse + validate frame, broadcast | Reading `payload` semantics (the relay is forward-only) |
+| `ws-relay.js`      | `wss.handleUpgrade`, binary-frame reject, `ping`/`pong` intercept, byte-passthrough broadcast | Interpreting text frame contents (the relay is forward-only) |
 
 A new responsibility deserves a new file in `server/src/` only if it does not
 fit one of the four above. Most "new features" should fail PRD review — see
@@ -60,9 +60,10 @@ the deferred extensions in `docs/architecture.md` §9.
   `WsRelay.js`).
 - **Exported factories**: `createXxx({...deps})` returning `{ ... }`.
   Examples: `createStaticHandler`, `createWsRelay`.
-- **Module-internal helpers**: lowercase verb-first (`parseFrame`,
-  `validateFrame`, `normalizeFrame`, `sendFrame`, `sendError`).
-- **Constants**: `UPPER_SNAKE` (e.g., `VALID_TYPES` in `ws-relay.js`).
+- **Module-internal helpers**: lowercase verb-first (e.g., `broadcast` in
+  `ws-relay.js`).
+- **Constants**: `UPPER_SNAKE` (e.g., `PING_FRAME` / `PONG_FRAME` in
+  `ws-relay.js`).
 - **No default exports** — always named exports for grep-ability.
 
 Imports are explicit:
@@ -89,6 +90,10 @@ When extending the backend, mirror the structure of:
 - **Adding an HTTP route**: `server/src/static.js` — branch on
   `req.method` + `url.pathname` before the `sirv(req, res, ...)` fallback.
   Return JSON via the `sendJson` helper, never `res.end(string)`.
-- **Adding a WS frame rule**: `server/src/ws-relay.js` — extend `VALID_TYPES`
-  or `validateFrame`; never branch on `payload` content. Cover the change
-  with a new assertion in `server/scripts/smoke.js`.
+- **Adding a WS frame rule**: `server/src/ws-relay.js` — the relay is a
+  byte-passthrough; the only allowed branches are binary-frame reject
+  and the `ping` → `pong\n` intercept. Adding a new content-based branch
+  almost always means a wrong design (push the verb negotiation to the
+  browser and device instead). If a rule is genuinely wire-level (e.g.,
+  bumping `maxPayload`), cover it with a new assertion in
+  `server/scripts/smoke.js`.

@@ -1,13 +1,14 @@
 /**
- * AI panel — DeepSeek V4 chat with tool_calls translated to existing
- * cmd frames (LED on/off, motor speed). Sole owner of `console.ai.*`
- * localStorage keys; never imports ws-client / control-panel directly —
- * tool dispatch goes through the injected `onTool` callback.
+ * AI panel — DeepSeek V4 chat with tool_calls translated to flat string
+ * commands. Sole owner of `console.ai.*` localStorage keys; never
+ * imports ws-client / control-panel directly — tool dispatch goes
+ * through the injected `onTool(command)` callback (command is the bare
+ * verb without trailing newline; main.js adds it).
  *
- * Tool name → cmd payload (mirror of control-panel.js):
- *   led_on        →  { action: 'led_on' }
- *   led_off       →  { action: 'led_off' }
- *   motor_speed   →  { action: 'motor_speed', value: <0..5> }
+ * Tool name → command string (mirror of control-panel.js):
+ *   led_on        →  'led_on'
+ *   led_off       →  'led_off'
+ *   motor_speed   →  'motor_speed_<0..5>'
  */
 
 const AI_STORAGE_KEYS = {
@@ -90,14 +91,14 @@ function maskKey(key) {
 }
 
 function translateTool(name, args) {
-  if (name === 'led_on') return { action: 'led_on' };
-  if (name === 'led_off') return { action: 'led_off' };
+  if (name === 'led_on') return { command: 'led_on' };
+  if (name === 'led_off') return { command: 'led_off' };
   if (name === 'motor_speed') {
     const v = Number(args && args.value);
     if (!Number.isInteger(v) || v < 0 || v > 5) {
       return { error: '参数越界' };
     }
-    return { action: 'motor_speed', value: v };
+    return { command: `motor_speed_${v}` };
   }
   return { error: `未知工具 ${name}` };
 }
@@ -327,7 +328,7 @@ export function createAiPanel({
           appendToolLine(aiBubble, tc.name, args, '⚠ 设备未连接');
           continue;
         }
-        onTool(translated);
+        onTool(translated.command);
         appendToolLine(aiBubble, tc.name, args, '✓');
       }
     }

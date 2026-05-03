@@ -38,12 +38,13 @@ Before declaring backend work done, verify against
 
 - `server/src/index.js` is composition-only (no routing logic, no frame parsing)
 - `/healthz` reports `clients` via `relay.getClientCount()`
-- `ws-relay.js` validates **envelope fields only** — never branches on `payload`
+- `ws-relay.js` passes text frames through byte-for-byte; the only branches are binary-frame close and `ping` → `pong\n`
+- `ws-relay.js` closes binary frames with code `1003` rather than emitting an error envelope
 - New env vars are documented in `quality-guidelines.md` **and** `docs/deployment.md`
-- `server/scripts/smoke.js` covers the changed contract
+- `server/scripts/smoke.js` covers the changed contract (broadcast, ping/pong, binary close)
 - `npm test` (lint + smoke) and `npm run format:check` pass
 - No `console.log` (use `console.info` / `warn` / `error`)
-- No new web framework, no DB driver, no in-memory frame buffer
+- No new web framework, no DB driver, no in-memory frame buffer, **no JSON envelope**
 - Relay port changes touched all three sites: `config.js`, `start.py`, `frpc.toml` (+ example template)
 - `deploy/start.py` subprocesses inherit stdout/stderr (no `DEVNULL`)
 - New deploy secrets/binaries are listed in `.gitignore` before first commit
@@ -56,7 +57,7 @@ Before declaring backend work done, verify against
 | -------------------------------------------------- | ---------------------------------------------------------- | ----------------- |
 | [Quality Guidelines](./quality-guidelines.md)      | HTTP / WS contracts, signatures, validation matrix         | **Filled**        |
 | [Directory Structure](./directory-structure.md)    | Module organization (`server/src/`, `server/scripts/`)     | **Filled**        |
-| [Error Handling](./error-handling.md)              | `BAD_FRAME` envelope, HTTP errors, shutdown                | **Filled**        |
+| [Error Handling](./error-handling.md)              | Binary-frame close, HTTP errors, shutdown                  | **Filled**        |
 | [Logging Guidelines](./logging-guidelines.md)      | `console.info/warn/error`, scope tags, what NOT to log     | **Filled**        |
 | [Operational Scripts](./operational-scripts.md)    | `deploy/` port sync, subprocess output, secrets/binaries   | **Filled**        |
 | [Database Guidelines](./database-guidelines.md)    | —                                                          | **Not Applicable**|

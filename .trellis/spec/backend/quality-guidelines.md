@@ -42,8 +42,11 @@ Current backend entry points:
   Use `node:http`, `sirv`, and `ws`.
 - Do not persist WebSocket frames in memory, files, or a database. The relay is
   forward-only.
-- Do not inspect or branch on `payload` business content in `server/src/ws-relay.js`.
-  The server may validate envelope fields only.
+- Do not parse, branch on, or rewrite text frame contents in
+  `server/src/ws-relay.js` (the only exception is matching the literal
+  `'ping'` to reply with `'pong\n'`). The server is a flat byte
+  passthrough — adding a JSON envelope, validating fields, or building a
+  command registry breaks the "server is business-agnostic" invariant.
 - Do not use `console.log`; use `console.info`, `console.warn`, or
   `console.error` for process-visible messages.
 
@@ -94,12 +97,15 @@ HTTP:
 
 WebSocket:
 
-| Field     | Required | Contract                                            |
-| --------- | -------- | --------------------------------------------------- |
-| `from`    | yes      | Non-empty string; client self-identifies            |
-| `type`    | yes      | `data`, `cmd`, `status`, `error`, `ping`, or `pong` |
-| `payload` | yes      | Any JSON value, including `null`                    |
-| `ts`      | no       | Unix milliseconds; server fills when missing        |
+Each frame is a single UTF-8 **text** message — one command per frame,
+terminated by `\n`. There is no JSON envelope, no required fields, no
+schema. Binary frames are not supported.
+
+| Direction      | Examples                                            |
+| -------------- | --------------------------------------------------- |
+| browser → MCU  | `led_on\n` / `led_off\n` / `motor_speed_<0..5>\n`   |
+| MCU → browser  | any UTF-8 text (e.g. `temp=42.3\n`)                 |
+| client ↔ server | `ping\n` / `pong\n` (server-intercepted; not relayed) |
 
 Environment:
 
@@ -115,31 +121,31 @@ Environment:
 
 #### 4. Validation & Error Matrix
 
-| Input / State                | Server behavior                                           |
-| ---------------------------- | --------------------------------------------------------- |
-| Upgrade path is not `wsPath` | Write HTTP `404`, destroy socket                          |
-| Connected clients exceed max | Write HTTP `503`, destroy socket                          |
-| Binary WebSocket frame       | Send `{ from:"server", type:"error", code:"BAD_FRAME" }` |
-| Invalid JSON                 | Send `BAD_FRAME`, do not broadcast                        |
-| Missing `from/type/payload`  | Send `BAD_FRAME`, do not broadcast                        |
-| `type:"ping"`                | Reply only to sender with `type:"pong"`                   |
-| Valid non-ping frame         | Broadcast to every open client except sender              |
+| Input / State                 | Server behavior                                         |
+| ----------------------------- | ------------------------------------------------------- |
+| Upgrade path is not `wsPath`  | Write HTTP `404`, destroy socket                        |
+| Connected clients exceed max  | Write HTTP `503`, destroy socket                        |
+| Binary WebSocket frame        | `ws.close(1003, 'binary frames are not supported')`     |
+| Text frame `ping` or `ping\n` | Reply only to sender with `'pong\n'`; do not broadcast  |
+| Any other text frame          | Broadcast byte-for-byte to every open client except sender |
 
 #### 5. Good / Base / Bad Cases
 
-- Good: two WebSocket clients connect to `/ws`; client A sends
-  `{ from:"web", type:"data", payload:"hello" }`; client B receives the frame
-  with a numeric `ts`; client A does not receive its own frame.
+- Good: two WebSocket clients connect to `/ws`; client A sends the text
+  frame `led_on\n`; client B receives the text frame `led_on\n`
+  byte-for-byte; client A does not receive its own frame.
 - Base: `GET /healthz` before clients connect returns `clients:0`.
-- Bad: client sends `not-json`; server replies to only that client with
-  `payload.code:"BAD_FRAME"` and keeps the connection usable.
+- Bad: client sends a binary frame; server closes that socket with code
+  `1003` and other clients are unaffected.
 
 #### 6. Tests Required
 
-- `npm run smoke` must assert `/healthz` shape and WS broadcast behavior.
+- `npm run smoke` must assert `/healthz` shape, broadcast (text frame in,
+  same bytes out), `ping\n` → `pong\n`, and that a binary frame closes
+  the offending socket with code `1003`.
 - `npm test` must run lint plus smoke before commit.
-- If frame validation changes, extend `server/scripts/smoke.js` with at least one
-  bad-frame assertion.
+- If the relay's text-frame behavior changes (e.g., a new server-intercepted
+  literal beyond `ping`), extend `server/scripts/smoke.js` accordingly.
 
 #### 7. Wrong vs Correct
 
@@ -147,7 +153,7 @@ Wrong:
 
 ```js
 ws.on('message', (data) => {
-  const frame = JSON.parse(data);
+  const frame = JSON.parse(data); // re-introducing JSON envelope
   if (frame.payload.action === 'led_on') {
     // Server starts interpreting business commands.
   }
@@ -157,9 +163,17 @@ ws.on('message', (data) => {
 Correct:
 
 ```js
-ws.on('message', (data) => {
-  const { frame } = parseFrame(data);
-  broadcast(ws, normalizeFrame(frame));
+ws.on('message', (data, isBinary) => {
+  if (isBinary) {
+    ws.close(1003, 'binary frames are not supported');
+    return;
+  }
+  const text = data.toString('utf8');
+  if (text.replace(/\r?\n$/, '') === 'ping') {
+    ws.send('pong\n');
+    return;
+  }
+  broadcast(ws, text); // byte-for-byte passthrough
 });
 ```
 
@@ -179,6 +193,10 @@ ws.on('message', (data) => {
 
 - Is `server/src/index.js` still composition-only?
 - Does `/healthz` count clients via `relay.getClientCount()`?
-- Does `ws-relay.js` validate envelope fields without interpreting `payload`?
+- Does `ws-relay.js` pass text frames through byte-for-byte, with the
+  single exception of `ping` → `pong\n`?
+- Does `ws-relay.js` close binary frames with code `1003` instead of
+  trying to interpret them?
 - Are all new environment variables documented here and in `docs/deployment.md`?
-- Does `server/scripts/smoke.js` cover the changed contract?
+- Does `server/scripts/smoke.js` cover the changed contract (broadcast,
+  ping/pong, binary close)?
