@@ -26,7 +26,9 @@ web/
 │   ├── terminal.js       # xterm display-only wrapper (white floor, rose cursor)
 │   ├── config-panel.js   # Single URL input + parseWsUrl + localStorage + .app-shell[data-state]
 │   ├── command-panel.js  # Command textarea + send-enabled state
-│   └── control-panel.js  # LED segmented toggle + motor slider with live --fill
+│   ├── control-panel.js  # LED segmented toggle + motor slider with live --fill
+│   ├── view-switcher.js  # Single writer of .app-shell[data-view] + view-toggle aria-pressed
+│   └── ai-panel.js       # DeepSeek V4 chat + tool_calls → cmd; sole writer of console.ai.*
 ├── vendor/
 │   └── xterm/            # Vendored xterm + addon-fit; NEVER imported from CDN
 ├── favicon.svg
@@ -52,6 +54,8 @@ In short:
 | `config-panel.js`    | URL form, `parseWsUrl`, localStorage, `.app-shell[data-state]` driver |
 | `command-panel.js`   | Textarea submit and send-enabled state                               |
 | `control-panel.js`   | LED `aria-pressed`/status text, motor slider with live `--fill`      |
+| `view-switcher.js`   | `.app-shell[data-view]` + view-toggle `aria-pressed` sync            |
+| `ai-panel.js`        | DeepSeek fetch + SSE + tool_call dispatch + bubbles + `console.ai.*` |
 
 > **Modules never import each other directly.** All wiring happens in
 > `main.js` via injected callbacks (`onConnect`, `onSend`, `onLedOn`, …).
@@ -100,9 +104,11 @@ When extending the frontend, mirror the structure of:
   `client.send` or `.app-shell[data-state]`.
 - **Adding a localStorage key**: `web/js/config-panel.js` — must follow the
   `console.ws.*` namespace and be written **only** by `writeConfig` (single
-  write path). See [`./state-management.md`](./state-management.md).
-- **Adding a reserved DOM slot**: `web/js/main.js:93-117` — for plain
-  icons use `reservePlaceholder(selector, label)`. For segmented toggles
-  that need to mirror `aria-pressed` across siblings (e.g., AI 助手), keep
-  a custom handler that flips siblings then calls
-  `console.info('[placeholder] ...')`. Never half-implement.
+  write path). For a new sub-feature with its own namespace, mirror the
+  `ai-panel.js#writeAiConfig` (`console.ai.*`) pattern instead.
+  See [`./state-management.md`](./state-management.md).
+- **Adding a reserved DOM slot**: `web/js/main.js` — for plain icons use
+  `reservePlaceholder(selector, label)`. For segmented toggles that need
+  to mirror `aria-pressed` across siblings, build a small dedicated
+  module that owns the page-level state attribute (mirror
+  `view-switcher.js`). Never half-implement.

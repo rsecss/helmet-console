@@ -28,8 +28,9 @@ Keep this managed block so 'trellis update' can refresh the instructions.
 - Quality commands: `npm test` (lint + smoke), `npm run format:check`.
 - HTTP routes: `GET /`, `GET /healthz`, static files from `web/`.
 - WebSocket: `/ws`, JSON text frames with `from`, `type`, `payload`, optional `ts`.
-- UI model: serial-assistant style. `web/js/terminal.js` is display-only; commands are sent through `web/js/command-panel.js` (free-form text) or `web/js/control-panel.js` (LED segmented toggle + motor slider).
+- UI model: serial-assistant style. `web/js/terminal.js` is display-only; commands are sent through `web/js/command-panel.js` (free-form text) or `web/js/control-panel.js` (LED segmented toggle + motor slider). The `AI助手` view (`web/js/ai-panel.js`) talks directly to DeepSeek V4 from the browser and dispatches `tool_calls` through the same `cmd` path — no backend AI proxy. View swap is owned by `web/js/view-switcher.js`, the sole writer of `.app-shell[data-view]` (`'terminal' | 'ai'`).
 - UI surface: 3 visual states (`disconnected` / `connected` / `error`) driven by `.app-shell[data-state]`; `ws-client.js` keeps the internal 5-state lifecycle and `config-panel.js` collapses it.
+- localStorage namespaces (single-writer per namespace): `console.ws.*` written only by `config-panel.js#writeConfig`; `console.ai.*` (`apiKey` / `baseUrl` / `model`) written only by `ai-panel.js#writeAiConfig`.
 - Reference UI: `docs/design/prototype-rose.html` is the spec for `web/`. The earlier `prototype.html` (green) is retired.
 - Keep frontend native ESM with no build tool. Vendor browser libraries stay under `web/vendor/`.
 - Deploy orchestration: `deploy/start.py` boots `npm start` + `frpc` for the local-first dev tunnel. Real config is `deploy/frpc.toml` (gitignored); `deploy/frpc.example.toml` is the template. See `deploy/deploy.md` for the current test environment values (BYO required) and `.trellis/spec/backend/operational-scripts.md` for coding rules.

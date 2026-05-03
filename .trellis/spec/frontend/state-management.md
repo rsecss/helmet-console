@@ -12,12 +12,16 @@ single owner:
 
 1. **Module-local closure state** — inside the factory function that owns
    it. Examples: the WS socket and reconnect counters in `ws-client.js`,
-   the `internalState` string in `config-panel.js`.
-2. **DOM-attribute state** — `.app-shell[data-state]`, `aria-pressed`,
-   `data-variant`, `data-state` on `.led-status`. The DOM is the source of
-   truth for what the user sees.
-3. **`localStorage`** — the `console.ws.*` namespace, persisting only the
-   connection target between sessions.
+   the `internalState` string in `config-panel.js`, the streaming flag and
+   message history in `ai-panel.js`.
+2. **DOM-attribute state** — `.app-shell[data-state]` (owned by
+   `config-panel.js`), `.app-shell[data-view]` (owned by
+   `view-switcher.js`), `aria-pressed`, `data-variant`, `data-state` on
+   `.led-status`. The DOM is the source of truth for what the user sees.
+3. **`localStorage`** — the `console.ws.*` namespace (owned by
+   `config-panel.js#writeConfig`) for the connection target, and the
+   `console.ai.*` namespace (owned by `ai-panel.js#writeAiConfig`) for
+   the DeepSeek API configuration.
 
 For why this is enough (and why a state library would be over-kill), see
 the locked design constraints in
@@ -59,6 +63,29 @@ Read order on page load (`config-panel.js#readInitialUrl`):
    with pre-rose multi-field forms)
 3. `defaultUrl()` derived from `window.location`
 
+### 2b. AI configuration (persisted)
+
+`ai-panel.js#writeAiConfig` is the **only writer** of these keys. Anyone
+may read them. The AI panel itself reads via `readAiConfig()`, which
+defends against a malformed `model` value by falling back to the default.
+
+| Key                  | Type   | Source                                                              |
+| -------------------- | ------ | ------------------------------------------------------------------- |
+| `console.ai.apiKey`  | string | DeepSeek API key (raw `sk-...`)                                     |
+| `console.ai.baseUrl` | string | API base URL (default `https://api.deepseek.com`)                   |
+| `console.ai.model`   | string | `deepseek-v4-flash` \| `deepseek-v4-pro` (validated against allow-list) |
+
+Reload behavior: the three keys persist; the AI conversation history
+does **not** persist (per PRD D11) — it is a closure-local array and
+clears every page load.
+
+### 2c. View selection (NOT persisted)
+
+`view-switcher.js` is the **only writer** of `.app-shell[data-view]`
+(`'terminal' | 'ai'`). The chosen view does NOT persist to localStorage;
+every reload starts in `'terminal'` (set explicitly in `main.js` after
+construction).
+
 ### 3. Widget state (control-panel, command-panel)
 
 | Concern                   | Owner             | Storage                               |
@@ -90,10 +117,17 @@ Real-time data flows through the WebSocket and is rendered immediately by
   Drifts the URL field from the persisted state on next reload. The single
   write path is enforced by [`./quality-guidelines.md`](./quality-guidelines.md)
   Code Review Checklist.
+- **Writing `console.ai.*` `localStorage` keys from outside
+  `ai-panel.js#writeAiConfig`.** Same hazard as `console.ws.*`. The AI
+  config bar (mask + model dropdown + edit form) is the single UI that
+  may persist these keys.
 - **Mutating `.app-shell[data-state]` from `control-panel.js` /
   `command-panel.js`.** Breaks the dim-outside-`connected` CSS rule and
   desyncs the action button text. Only `config-panel.js#applyView` may
   write it.
+- **Mutating `.app-shell[data-view]` from any module other than
+  `view-switcher.js`.** Breaks the terminal/ai card swap CSS rule and
+  desyncs the topbar `aria-pressed` toggle.
 - **Calling `client.send` from a control widget.** Bypasses the cmd
   contract. Widgets emit through injected callbacks (`onLedOn`,
   `onMotorSpeed`, …), and `main.js` is the only place that calls

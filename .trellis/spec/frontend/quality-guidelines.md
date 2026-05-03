@@ -30,8 +30,11 @@ These are non-negotiable design choices for `web/`:
   xterm), `config-panel.js` (single URL form + `parseWsUrl` + localStorage +
   `.app-shell[data-state]` mutation), `command-panel.js` (command textarea +
   send-enabled state), `control-panel.js` (LED segmented toggle + motor slider
-  with live `--fill`); modules do not call each other directly, only via
-  callbacks injected in `main.js`
+  with live `--fill`), `view-switcher.js` (single writer of
+  `.app-shell[data-view]` + `view-toggle aria-pressed` sync), `ai-panel.js`
+  (DeepSeek chat + tool_calls translation + sole writer of `console.ai.*`);
+  modules do not call each other directly, only via callbacks injected in
+  `main.js`
 
 The sections below capture the concrete frontend rules.
 
@@ -56,6 +59,10 @@ Current frontend entry points:
 - `web/js/command-panel.js` — command textarea and send button
 - `web/js/control-panel.js` — LED segmented toggle + motor slider with live
   `--fill`; emits `cmd` payloads through main.js callbacks
+- `web/js/view-switcher.js` — single writer of `.app-shell[data-view]` and
+  the `view-toggle aria-pressed` sync (terminal / ai)
+- `web/js/ai-panel.js` — DeepSeek V4 chat panel; sole writer of
+  `console.ai.*` localStorage; tool_calls translated to existing cmd frames
 - `web/css/style.css` — single CSS entry; design tokens lifted from
   `docs/design/prototype-rose.html`
 
@@ -79,6 +86,12 @@ Current frontend entry points:
 - Do not register reserved-interface handlers that throw or that move beyond a
   `console.info('[placeholder] <label> not implemented yet')` plus the local
   visual toggle (e.g., `aria-pressed`).
+- Do not toggle visibility through the HTML `[hidden]` attribute on an element
+  whose class sets an explicit `display: flex | grid | block`. Author-defined
+  `display` rules win against the UA stylesheet's `[hidden] { display: none }`,
+  so the element stays visible. Either drop the explicit `display`, or pair the
+  class with a `.x[hidden] { display: none }` selector. Affected today:
+  `.ai-config-bar`, `.ai-config-form`, `.ai-bubbles` — see `web/css/style.css`.
 
 ---
 
@@ -156,6 +169,8 @@ export function createControlPanel({
 | `config-panel.js`    | URL form, `parseWsUrl`, localStorage, `.app-shell[data-state]`       | WS object, terminal object         |
 | `command-panel.js`   | Textarea submit and send-enabled state                               | WS object, terminal object         |
 | `control-panel.js`   | LED `aria-pressed`/status text, motor slider with live `--fill`      | WS object, `.app-shell[data-state]` |
+| `view-switcher.js`   | `.app-shell[data-view]` + `view-toggle aria-pressed` sync            | WS object, terminal object, business state |
+| `ai-panel.js`        | DeepSeek fetch + SSE + tool_call dispatch + `console.ai.*` localStorage + AI bubbles DOM | WS object (uses injected `onTool` + `isWsConnected`), `.app-shell[data-state]`, `.app-shell[data-view]` |
 
 **3-state UI surface** — `config-panel.js` collapses the 5 internal `ws-client`
 states onto 3 visual states (driven by `.app-shell[data-state]`):
@@ -193,7 +208,9 @@ intent (not device confirmation). When `ws-client` learns to dispatch device
 `controlPanel.setLedState(isOn)` from inbound frames instead. The exported
 `setLedState` / `setMotorSpeed` are wired now to make that hookup drop-in.
 
-**LocalStorage keys** (all written only by `config-panel.js#writeConfig`):
+**LocalStorage keys**:
+
+`config-panel.js#writeConfig` is the **only writer** of `console.ws.*`:
 
 | Key                | Type   | Source                                       |
 | ------------------ | ------ | -------------------------------------------- |
@@ -203,10 +220,22 @@ intent (not device confirmation). When `ws-client` learns to dispatch device
 | `console.ws.tls`   | string | `'true'` if `wss:`, else `'false'`           |
 | `console.ws.url`   | string | full normalized `ws[s]://host[:port]/path`   |
 
+`ai-panel.js#writeAiConfig` is the **only writer** of `console.ai.*`:
+
+| Key                  | Type   | Source                                                              |
+| -------------------- | ------ | ------------------------------------------------------------------- |
+| `console.ai.apiKey`  | string | DeepSeek API key (raw `sk-...`)                                     |
+| `console.ai.baseUrl` | string | API base URL (default `https://api.deepseek.com`)                   |
+| `console.ai.model`   | string | `deepseek-v4-flash` \| `deepseek-v4-pro` (validated against allow-list on read) |
+
 Read order for prefilling the URL input on load: `console.ws.url` first; fall
 back to recomposing from `host/port/path/tls` (backward compatible with
 pre-rose multi-field forms); otherwise `defaultUrl()` derived from
 `window.location`.
+
+`ai-panel.js#readAiConfig` reads three keys with default fallbacks; the
+`model` value is rejected if it is not in `SUPPORTED_MODELS` (defaults to
+`deepseek-v4-flash`).
 
 #### 4. Validation & Error Matrix
 
@@ -278,9 +307,10 @@ pre-rose multi-field forms); otherwise `defaultUrl()` derived from
      opacity restored, send button enables, terminal stays read-only.
   3. **Stop server / submit bad URL** → pill 错误 (red), button 重试,
      inline error text shows, control-cards and command-bar dim again.
-- **Reserved-placeholder check**: click 文档 / 终端侧栏 / 复制 / 全屏 /
-  AI 助手; expect exactly one `console.info('[placeholder] ...')` per click
-  and zero exceptions.
+- **Reserved-placeholder check**: click 文档 / 终端侧栏 / 复制 / 全屏;
+  expect exactly one `console.info('[placeholder] ...')` per click and
+  zero exceptions. The AI 助手 button now switches to the real AI panel
+  (no `[placeholder]` log expected).
 - **localStorage check**: after a successful connect, read all 5
   `console.ws.*` keys in DevTools — values should be self-consistent
   (host/port/path/tls/url derived from the same parsed URL).
@@ -360,8 +390,8 @@ if (parsed.ok) {
 #### 1. Scope / Trigger
 
 When a feature is approved by PRD but **not yet implemented** (currently:
-AI 助手 view, 文档, 终端侧栏, 复制, 全屏), reserve the DOM slot now and
-defer the behavior. New reserved features should follow this exact pattern.
+文档, 终端侧栏, 复制, 全屏), reserve the DOM slot now and defer the
+behavior. New reserved features should follow this exact pattern.
 
 #### 2. Signatures
 
@@ -380,15 +410,14 @@ function reservePlaceholder(selector, label) {
 
 | Element                            | Selector                                | Label    |
 | ---------------------------------- | --------------------------------------- | -------- |
-| Topbar `AI 助手` toggle            | `.view-toggle button[data-view='ai']`   | AI 助手  |
 | Topbar 文档 icon                   | `.icon-btn[data-action='docs']`         | 文档     |
 | Topbar 终端侧栏 icon               | `.icon-btn[data-action='sidebar']`      | 终端侧栏 |
 | Terminal card 复制 icon            | `.icon-btn[data-action='copy']`         | 复制     |
 | Terminal card 全屏 icon            | `.icon-btn[data-action='expand']`       | 全屏     |
 
-Visual-only behavior (e.g., the segmented `aria-pressed` toggle on the
-AI 助手 button) is allowed — but **no fetch, no state mutation, no
-exception**. `console.info` is the only side effect.
+`console.info` is the only side effect — no fetch, no state mutation, no
+exception. The AI 助手 view toggle is no longer a placeholder; it now
+flips the real `view-switcher.js` between `terminal` and `ai`.
 
 #### 4. Validation & Error Matrix
 
@@ -461,8 +490,9 @@ ripple into `ws-client.js`.
 
 ### Why placeholder DOM for unimplemented features?
 
-**Context**: AI 助手, 文档, 终端侧栏, 复制, 全屏 are part of the rose design
-but out of scope for this iteration.
+**Context**: 文档, 终端侧栏, 复制, 全屏 are part of the rose design but
+out of scope for the current iteration. (AI 助手 used to be in this list
+and is now implemented as the real `ai-panel.js` module.)
 
 **Decision**: Add the DOM with a `console.info` no-op handler now. Don't
 half-implement.
@@ -470,6 +500,162 @@ half-implement.
 **Why**: Reserving a DOM slot is cheaper than retrofitting markup later
 when the surrounding layout has hardened. `console.info` lets QA verify
 the slot exists and clearly distinguishes "reserved" from "broken".
+
+---
+
+### Scenario: AI Panel + DeepSeek Integration
+
+#### 1. Scope / Trigger
+
+Any change to `web/js/ai-panel.js`, the AI tool schema, the `console.ai.*`
+localStorage namespace, the `data-view` switching contract, or the
+mapping from AI `tool_calls` to existing cmd payloads must keep this
+section current.
+
+#### 2. Signatures
+
+```js
+// web/js/view-switcher.js
+export function createViewSwitcher({ shell, buttons });
+// returns { setView(name: 'terminal' | 'ai') }
+
+// web/js/ai-panel.js
+export function createAiPanel({
+  configBar, configKey, configModel, configEdit,
+  configForm, configFormTitle, keyInput, baseUrlInput, configCancel,
+  bubbles, inputForm, input, sendButton,
+  onTool,           // (payload: { action, value? }) => void
+  isWsConnected,    // () => boolean
+});
+// returns { focus() }
+```
+
+#### 3. Contracts
+
+**Tool name → cmd payload translation** (must match `control-panel.js` cmd shapes):
+
+| AI tool name  | tool arguments         | cmd payload                                |
+| ------------- | ---------------------- | ------------------------------------------ |
+| `led_on`      | `{}`                   | `{ action: 'led_on' }`                     |
+| `led_off`     | `{}`                   | `{ action: 'led_off' }`                    |
+| `motor_speed` | `{ value: 0..5 }` (int)| `{ action: 'motor_speed', value: <0..5> }` |
+
+`main.js` injects `onTool(payload)` that:
+1. Calls `sendControl(payload)` (existing path → ws-relay → MCU)
+2. Mirrors the device-side change to control-card UI:
+   - `led_on` / `led_off` → `controlPanel.setLedState(true|false)`
+   - `motor_speed` → `controlPanel.setMotorSpeed(payload.value)`
+
+**SSE protocol**: standard OpenAI streaming over `POST {baseUrl}/chat/completions`.
+Events separated by `\r?\n\r?\n`. `data:` lines within an event are joined
+by `\n` before `JSON.parse`. `data: [DONE]` terminates. tool_calls deltas
+accumulate by `index` per OpenAI spec — concatenate `function.arguments`
+strings then `JSON.parse` once on stream end.
+
+**Request body** (constants in `ai-panel.js`):
+```js
+{
+  model: <SUPPORTED_MODELS>,         // 'deepseek-v4-flash' | 'deepseek-v4-pro'
+  messages: [{ role:'system', content: SYSTEM_PROMPT }, ...history],
+  tools: TOOLS,                       // OpenAI tools format with led_on/led_off/motor_speed
+  stream: true,
+  thinking: { type: 'disabled' },     // hardcoded; not user-toggleable
+}
+```
+
+**History strategy** (per PRD D8 strategy i): assistant messages stored
+in `history` carry only `{ role, content }`. The `tool_calls` field is
+NOT persisted. When a turn produces only tool_calls (empty content), an
+assistant message with `content: ''` is still pushed so OpenAI's
+user→assistant→user invariant holds.
+
+**`data-view` switching**: `view-switcher.js` is the SOLE writer of
+`.app-shell[data-view]`. Two valid values: `'terminal'` (default) and
+`'ai'`. CSS toggles `.terminal-card` and `.command-bar` off in `'ai'` and
+hides `.ai-card` in `'terminal'`. The `.app-shell` grid (`auto auto 1fr
+auto auto`) auto-flows remaining visible children, keeping whichever card
+is visible in the `1fr` row.
+
+#### 4. Validation & Error Matrix
+
+| Condition                             | UI behavior                                         |
+| ------------------------------------- | --------------------------------------------------- |
+| `console.ai.apiKey` empty             | Empty-state config form; bubbles + input hidden     |
+| `console.ai.model` invalid value       | `readAiConfig` falls back to `deepseek-v4-flash`    |
+| HTTP 401                              | Red system bubble: `API Key 无效，请检查配置`        |
+| HTTP 429                              | Red system bubble: `请求过于频繁，请稍后重试`        |
+| HTTP 5xx                              | Red system bubble: `DeepSeek 服务异常 (HTTP <s>)`   |
+| Network / stream-mid failure          | Red system bubble: `网络连接失败，请检查网络`       |
+| `isWsConnected()` false on tool_call  | Tool line badge `⚠ 设备未连接`; `onTool` NOT called |
+| Unknown tool name                     | Tool line badge `⚠ 未知工具 <name>`                 |
+| Tool arguments JSON parse fail        | Tool line badge `⚠ 参数解析失败`                    |
+| `motor_speed.value` out of `0..5`     | Tool line badge `⚠ 参数越界`; `onTool` NOT called   |
+| Sending while streaming               | Submit handler short-circuits; input/send disabled  |
+| Reload                                | History cleared; `console.ai.*` (3 keys) preserved  |
+
+#### 5. Good / Base / Bad
+
+- **Good (translate)**: `data-view='ai'`, key configured, ws connected,
+  user types `把灯打开`. AI streams `好的，已为你打开 LED`, finishes with
+  tool_calls=`led_on`. ai-panel calls `onTool({action:'led_on'})`,
+  control-card shows `已开启`, ws frame
+  `{from:'web', type:'cmd', payload:{action:'led_on'}}` reaches MCU.
+- **Good (no key)**: fresh load, click AI tab. Empty-state form shows
+  `🤖 配置 DeepSeek API Key 启用对话` with password input + url input +
+  保存. After save, switch to chat view; reload preserves `console.ai.*`.
+- **Bad (ws-bypass)**: `ai-panel.js` directly imports `ws-client.js` to
+  call `client.send`. Breaks module boundary; tool execution becomes
+  non-mockable from main.js.
+- **Bad (state attr leak)**: `ai-panel.js` mutates `.app-shell[data-view]`
+  to switch back to terminal after a fatal error. Steals `view-switcher`'s
+  ownership of the page-level state.
+- **Bad (history leak)**: assistant `tool_calls` field persists into the
+  next request. OpenAI requires the next message to be `role:'tool'`,
+  which we do not send (PRD D8 i strategy), so the next request 400s.
+
+#### 6. Tests Required
+
+- Manual: with valid key + ws-up, send `把灯打开` → LED card flips to 已开启
+- Manual: with valid key + ws-down, send `把灯打开` → tool line shows `⚠ 设备未连接`
+- Manual: invalid key (e.g. `sk-invalid`) → red system bubble with 401 message
+- Manual: switch view-toggle to AI then back; layout stays single-viewport, no console errors
+- Manual: reload → key + baseUrl + model preserved; bubbles cleared
+
+#### 7. Wrong vs Correct
+
+**Wrong (ai-panel imports ws-client)**:
+
+```js
+// web/js/ai-panel.js — leaks WS dependency
+import { wsClient } from './ws-client.js';
+// ... when tool_call arrives:
+wsClient.send({ from: 'web', type: 'cmd', payload });
+```
+
+**Correct**:
+
+```js
+// web/js/ai-panel.js — receives capability via injection
+export function createAiPanel({ /* ... */ onTool, isWsConnected }) {
+  // ... when tool_call is ready:
+  if (!isWsConnected()) { /* render warning */ return; }
+  onTool(translatedPayload);
+}
+// web/js/main.js wires onTool → sendControl + controlPanel.setXxx
+```
+
+**Wrong (history retains tool_calls)**:
+
+```js
+// next request would 400 because there's no follow-up role:'tool' message
+history.push({ role: 'assistant', content, tool_calls: accumulatedTools });
+```
+
+**Correct**:
+
+```js
+history.push({ role: 'assistant', content }); // tool_calls dropped
+```
 
 ---
 
@@ -492,13 +678,32 @@ the slot exists and clearly distinguishes "reserved" from "broken".
   `overflow: hidden`, no horizontal scroll)?
 - Does `config-panel.js` remain the **only** writer of
   `.app-shell[data-state]`?
+- Does `view-switcher.js` remain the **only** writer of
+  `.app-shell[data-view]`?
 - Does `config-panel.js#writeConfig` remain the **only** writer of
   `console.ws.*` `localStorage` keys?
+- Does `ai-panel.js#writeAiConfig` remain the **only** writer of
+  `console.ai.*` `localStorage` keys?
 - Does `parseWsUrl` cover all four error reasons (empty / unparseable /
   bad protocol / empty hostname) with the exact messages in the matrix?
 - Does `control-panel.js` route every cmd through the injected callback
   (no direct `client.send`, no `.app-shell` mutation)?
-- Do all reserved-interface buttons (AI 助手 / 文档 / 终端侧栏 / 复制 / 全屏)
-  log `console.info('[placeholder] ...')` and not throw?
+- Does `ai-panel.js` route every cmd through the injected `onTool`
+  callback (no direct `client.send`, no `.app-shell` mutation)?
+- Does `ai-panel.js` validate the `model` value read from localStorage
+  against `SUPPORTED_MODELS` and fall back to the default?
+- Does the AI history strategy keep only `{ role, content }` per assistant
+  turn (drop `tool_calls`)?
+- Does the SSE parser handle `\r?\n\r?\n` event separators and merge
+  multiple `data:` lines per event?
+- For any element toggled via `element.hidden = true/false`, does its class
+  either avoid an explicit `display:` rule or pair it with a
+  `.x[hidden] { display: none }` selector? (HTML5 `[hidden]` is overridden by
+  any author `display: flex|grid|block`.)
+- Do all reserved-interface buttons (文档 / 终端侧栏 / 复制 / 全屏) log
+  `console.info('[placeholder] ...')` and not throw? (AI 助手 is no
+  longer a placeholder.)
 - Does the 3-state mapping table in §3 match `STATE_VIEW` and
   `STATE_TO_DATA_STATE` in `config-panel.js` byte-for-byte?
+- Does the AI tool→cmd payload table match `control-panel.js` cmd shapes
+  byte-for-byte?

@@ -24,11 +24,13 @@ helmet-console/
 │   ├── css/
 │   │   └── style.css
 │   ├── js/
+│   │   ├── ai-panel.js
 │   │   ├── command-panel.js
 │   │   ├── config-panel.js
 │   │   ├── control-panel.js
 │   │   ├── main.js
 │   │   ├── terminal.js
+│   │   ├── view-switcher.js
 │   │   └── ws-client.js
 │   ├── vendor/
 │   │   └── xterm/
@@ -47,7 +49,10 @@ helmet-console/
 `server/` and `web/` are separated by runtime boundary: Node.js owns HTTP/WS,
 the browser owns UI state and terminal rendering. The browser UI follows a
 serial-assistant model: the terminal displays received data and logs, while
-commands are sent from the command input panel.
+commands are sent from the command input panel. The topbar `AI助手` view swaps
+the terminal+command stack for an in-browser DeepSeek V4 chat panel that
+translates `tool_calls` into the same `cmd` frames (LED on/off, motor speed) —
+no extra backend hop.
 
 ## Quick Start
 
