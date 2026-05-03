@@ -485,3 +485,62 @@ Spec / Doc：
 ### Next Steps
 
 - None - task complete
+
+
+## Session 7: WS 字符串协议切换 + 自动化验证 + Trellis 子代理修复
+
+**Date**: 2026-05-03
+**Task**: WS 字符串协议切换 + 自动化验证 + Trellis 子代理修复
+**Branch**: `dev`
+
+### Summary
+
+(Add summary)
+
+### Main Changes
+
+将 WebSocket 帧格式从 JSON 信封 (`{from,type,payload,ts}`) 切换为单行字符串协议（snake_case + `\n` 终止），让 MCU 可用 `strcmp` 直接分发，无需 JSON 解析器。服务器降级为纯字节透传 + binary close 1003，仅保留 `ping → pong` 一条例外。
+
+| 变更面 | 内容 |
+|---|---|
+| Backend | `server/src/ws-relay.js` 移除 parseFrame/validateFrame；`server/scripts/smoke.js` 加 broadcast/ping/pong/binary close 断言 |
+| Frontend | `web/js/ws-client.js` 收发改字符串；`main.js` LED→`led_on/led_off`、电机→`motor_speed_<N>`；`terminal.js` 用 `writeText` 替代 `writeFrame`；`ai-panel.js` tool_calls 直接生成字符串命令 |
+| Spec | `.trellis/spec/{backend,frontend}/*.md` 共 8 份重写：协议字段、validation matrix、Wrong/Correct 范例 |
+| Trellis 修复 | `.trellis/worktree.yaml` verify 节配置 `npm test` + `npm run format:check`，让 ralph-loop 走 programmatic verification 路径，跳过基于 `reason` 字段生成的烂 marker — 解决子代理被 SubagentStop hook 困死直到 5x 上限的问题 |
+
+**自动化验证**（chrome-devtools MCP）：
+- ✅ LED on/off → `led_on\n` 7B / `led_off\n` 8B
+- ✅ 电机滑块=3 → `motor_speed_3\n` 14B
+- ✅ 心跳 → `ping\n` 5B / `pong\n` 5B
+- ✅ 多 client 广播：A 发 → B/C 收，A 自己不收
+- ✅ Binary frame → close code 1003 reason "binary frames are not supported"
+- ✅ 终端原样显示设备上行字符串
+- ✅ `npm test` (lint+smoke) + `npm run format:check` 全过
+
+**意外发现**：`docs/architecture.md` + `docs/interface.md` 自最初 commit `17a959c` 就先于代码写好了字符串协议，本任务实际是把代码追平 docs。PRD 列出的 docs 重写项实际是 no-op。
+
+**Commit**:
+- `65ab164` feat(ws): switch to single-line string protocol
+- `38a4e9d` fix(trellis): use programmatic verify in ralph-loop
+- `36f3db9` chore(task): scaffold ws-string-protocol task artifacts
+
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `65ab164` | (see git log) |
+| `38a4e9d` | (see git log) |
+| `36f3db9` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete

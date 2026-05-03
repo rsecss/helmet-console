@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 6
+- **Total Sessions**: 7
 - **Last Active**: 2026-05-03
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~487 | Active |
+| `journal-1.md` | ~546 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 7 | 2026-05-03 | WS 字符串协议切换 + 自动化验证 + Trellis 子代理修复 | `65ab164`, `38a4e9d`, `36f3db9` | `dev` |
 | 6 | 2026-05-03 | Web AI 对话面板 (DeepSeek V4) — Phase 4/5/6 收尾 | `ae4eb4f`, `f91d624`, `c93f60d`, `1e537be` | `dev` |
 | 5 | 2026-05-03 | Tunnel bringup spec + deploy.md neat-freak sync | `2231df4`, `8459c1f` | `dev` |
 | 4 | 2026-05-03 | Console tunnel bringup via frp + defaultUrl fix | `f232de8`, `c94524f`, `fb3d25c` | `dev` |
