@@ -49,6 +49,7 @@ loose convention:
 | `[server]`  | `server/src/index.js` — listen / shutdown lifecycle |
 | `[ws]`      | `server/src/ws-relay.js` — per-connection events  |
 | `[smoke]`   | `server/scripts/smoke.js` — test progress         |
+| `[ws-cli]`  | `server/scripts/ws-cli.js` — manual e2e client    |
 
 Examples from the codebase:
 

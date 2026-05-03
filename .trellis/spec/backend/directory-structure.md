@@ -24,7 +24,8 @@ layer. See `docs/architecture.md` §1 and the Forbidden Patterns in
 ```text
 server/
 ├── scripts/
-│   └── smoke.js          # Executable smoke test (runs from `npm run smoke`)
+│   ├── smoke.js          # Executable smoke test (runs from `npm run smoke`)
+│   └── ws-cli.js         # Manual e2e client; cli plays the device role for tunnel verification
 └── src/
     ├── index.js          # Process entry: composes static + relay, listens
     ├── config.js         # Reads env vars, exports `config` object (defaults)

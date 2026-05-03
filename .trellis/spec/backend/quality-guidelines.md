@@ -33,6 +33,7 @@ Current backend entry points:
 - `server/src/static.js` — static files plus `/healthz`
 - `server/src/ws-relay.js` — `/ws` upgrade handling, frame validation, broadcast
 - `server/scripts/smoke.js` — executable health and relay smoke checks
+- `server/scripts/ws-cli.js` — manual end-to-end WS client; developer plays the device role for tunnel verification
 
 ---
 
@@ -179,6 +180,141 @@ ws.on('message', (data, isBinary) => {
 
 ---
 
+### Scenario: Dev-Side WS CLI Client
+
+#### 1. Scope / Trigger
+
+`server/scripts/ws-cli.js` is a developer-ergonomics tool: a small Node
+WebSocket client that lets a developer play the **device role** from a
+local terminal, paired with the browser console at the other end. It is
+the hands-on counterpart to `smoke.js` (which only exercises the
+loopback path) and the only way to byte-for-byte verify the frp tunnel
+end-to-end.
+
+Trigger this section when modifying `ws-cli.js`, when adding a new
+"role" to the protocol, or when changing the relay's text-frame
+contract — the cli must continue to behave as a dumb device peer.
+
+#### 2. Signatures
+
+```
+node server/scripts/ws-cli.js [ws-url]
+node server/scripts/ws-cli.js -h | --help
+```
+
+The default URL is computed from `server/src/config.js`:
+
+```js
+const DEFAULT_URL = `ws://127.0.0.1:${config.port}${config.wsPath}`;
+```
+
+Hard-coding the port or path here would break the
+"Three-Place Relay Port Constant" rule in
+[`./operational-scripts.md`](./operational-scripts.md).
+
+#### 3. Contracts
+
+| Channel              | Behavior                                                                  |
+| -------------------- | ------------------------------------------------------------------------- |
+| stdin → ws           | One non-empty line per text frame; append `\n` if missing; empty lines skipped |
+| ws (text) → stdout   | `process.stdout.write(text)` byte-for-byte; never trim, prefix, or annotate |
+| ws (binary) → stderr | `console.warn('[ws-cli] dropped binary frame (N bytes)')`; frame discarded |
+| Status messages      | `console.info` / `warn` / `error` with `[ws-cli]` scope; never `console.log` |
+| Heartbeat            | None (cli plays the device role; only browsers send `ping\n`)             |
+| Reconnect            | None (operator restarts on drop)                                          |
+| SIGINT / stdin EOF   | Graceful close with code `1000`; exit 0 on normal close, 1 if `error` fired |
+
+#### 4. Validation & Error Matrix
+
+| State / Input                          | Result                                                  |
+| -------------------------------------- | ------------------------------------------------------- |
+| stdin line arrives during `CONNECTING` | Frame buffered into `pending[]`; flushed on `'open'`    |
+| stdin line arrives while CLOSING / CLOSED | `console.warn('[ws-cli] not connected; dropped input')` |
+| Inbound binary frame                   | `console.warn` and discard                              |
+| `ws.error` event                       | `console.error` and set exit code 1; close handler exits |
+| Normal close (`1000`)                  | `console.info('[ws-cli] closed (code=1000)')`; exit 0   |
+| `-h` / `--help`                        | Print usage; exit 0                                     |
+
+#### 5. Good / Base / Bad Cases
+
+- **Good** (`echo "device_data" | node server/scripts/ws-cli.js`): cli
+  starts, readline emits the line during `CONNECTING`, the line is
+  buffered into `pending`, `'open'` fires and flushes `pending`, stdin
+  hits EOF, cli initiates `ws.close(1000)`. The relay broadcasts the
+  frame to every other client byte-for-byte.
+- **Base** (interactive TTY): operator types `temp=42.3` + Enter, the
+  line is sent immediately; inbound frames stream to stdout as they
+  arrive; `Ctrl+C` triggers shutdown.
+- **Bad** (regression): if the `CONNECTING`-state buffer is removed,
+  scripted use silently drops the very first frame — observable as
+  `[ws-cli] not connected; dropped input` printed *before*
+  `[ws-cli] connected`.
+
+#### 6. Tests Required
+
+- `npm run lint` and `npm run smoke` continue to pass after changes —
+  the cli has no automated harness because scripted stdin/ws timing is
+  fragile in CI.
+- Manual end-to-end run before any cross-layer protocol change:
+  1. `python deploy/start.py` — relay + frpc come up; `/healthz` over
+     the public host returns `200`.
+  2. Browser opens `https://<public-host>/`, clicks Connect, badge goes
+     green.
+  3. Browser → CLI: a persistent cli (`tail -f /dev/null | node
+     server/scripts/ws-cli.js > logs/ws-cli.log`) records the marker
+     typed into the browser command bar byte-for-byte.
+  4. CLI → Browser: a one-shot cli (`echo "marker" | node
+     server/scripts/ws-cli.js`) sends a marker; the browser terminal
+     renders it byte-for-byte (verify with
+     `document.querySelectorAll('.xterm-rows > div')`).
+
+#### 7. Wrong vs Correct
+
+**Wrong** — drop input that arrives before `'open'`:
+
+```js
+rl.on('line', (line) => {
+  if (ws.readyState !== WebSocket.OPEN) {
+    console.warn('[ws-cli] not connected; dropped input');
+    return;
+  }
+  ws.send(line.endsWith('\n') ? line : `${line}\n`);
+});
+```
+
+This silently breaks `echo "..." | ws-cli.js`: stdin is readable as
+soon as the parent shell flushes, but the WebSocket handshake takes
+roundtrip time. The very first frame is dropped on every scripted run.
+
+**Correct** — buffer during `CONNECTING`, flush on `'open'`:
+
+```js
+const pending = [];
+
+ws.on('open', () => {
+  console.info('[ws-cli] connected');
+  while (pending.length > 0) {
+    ws.send(pending.shift());
+  }
+});
+
+rl.on('line', (line) => {
+  if (!line) return;
+  const frame = line.endsWith('\n') ? line : `${line}\n`;
+  if (ws.readyState === WebSocket.CONNECTING) {
+    pending.push(frame);
+    return;
+  }
+  if (ws.readyState !== WebSocket.OPEN) {
+    console.warn('[ws-cli] not connected; dropped input');
+    return;
+  }
+  ws.send(frame);
+});
+```
+
+---
+
 ## Testing Requirements
 
 - Run `npm test` for backend changes. This currently executes `npm run lint`
@@ -200,3 +336,5 @@ ws.on('message', (data, isBinary) => {
 - Are all new environment variables documented here and in `docs/deployment.md`?
 - Does `server/scripts/smoke.js` cover the changed contract (broadcast,
   ping/pong, binary close)?
+- Does `server/scripts/ws-cli.js` still buffer stdin lines that arrive
+  during `CONNECTING` and flush them on `'open'`?

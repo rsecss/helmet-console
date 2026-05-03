@@ -42,6 +42,7 @@ Before declaring backend work done, verify against
 - `ws-relay.js` closes binary frames with code `1003` rather than emitting an error envelope
 - New env vars are documented in `quality-guidelines.md` **and** `docs/deployment.md`
 - `server/scripts/smoke.js` covers the changed contract (broadcast, ping/pong, binary close)
+- `server/scripts/ws-cli.js` still buffers stdin during `CONNECTING` (scripted `echo "..." | ws-cli` keeps working)
 - `npm test` (lint + smoke) and `npm run format:check` pass
 - No `console.log` (use `console.info` / `warn` / `error`)
 - No new web framework, no DB driver, no in-memory frame buffer, **no JSON envelope**
