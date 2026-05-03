@@ -406,3 +406,82 @@ Local-only (gitignored, neat-freak consistency):
 ### Next Steps
 
 - None - task complete
+
+
+## Session 6: Web AI 对话面板 (DeepSeek V4) — Phase 4/5/6 收尾
+
+**Date**: 2026-05-03
+**Task**: Web AI 对话面板 (DeepSeek V4) — Phase 4/5/6 收尾
+**Branch**: `dev`
+
+### Summary
+
+(Add summary)
+
+### Main Changes
+
+**Task**: `05-03-web-ai-panel-deepseek` (P2) — 一次性走完 check / update-spec / record-session 三阶段并归档。
+
+## What
+
+| Layer | Outcome |
+|---|---|
+| 代码 (commit `ae4eb4f`) | 新模块 `web/js/ai-panel.js` (~400 行) + `web/js/view-switcher.js` (~28 行)；改 `main.js` 注入 `onTool` / `isWsConnected` + 移除旧 view-toggle placeholder；改 `index.html` 加 ai-card section + `data-view="terminal"`；改 `style.css` +242 行（ai-card / 气泡 / 配置条 / view-switch 规则）。AI tool_calls 在浏览器内翻译成现有 cmd payload，沿用 `sendControl` → `ws-client.send` 通道，**后端零改动**。 |
+| Spec (commit `f91d624`) | `frontend/quality-guidelines.md` 新增 §"AI Panel + DeepSeek Integration" 完整 Scenario（signature / tool→cmd 表 / SSE 协议 / 12 行错误矩阵 / Good-Base-Bad / Wrong-vs-Correct）；模块边界表 + LocalStorage keys 表 + Code Review Checklist 同步扩展；Reserved-Interface §3 移除 AI 助手行。`directory-structure.md` + `state-management.md` 加 view-switcher / ai-panel 模块行 + §2b/2c。`AGENTS.md` / `README.md` 给后来人扫一眼即知 AI 视图存在 + `console.ai.*` 命名空间归属。 |
+| 任务产物 (commit `c93f60d`) | PRD / research / 3 张 e2e 截图 / jsonl 上下文 / task.json 入库。 |
+| 归档 (commit `1e537be`) | `task.py archive` 移到 `.trellis/tasks/archive/2026-05/`。 |
+
+## How (本会话流程)
+
+1. `/trellis:start` 拿 context — 发现任务已写完代码 + 截图，状态仍标 `planning`，尚未跑 check
+2. `/trellis:check` 直接跑（Check Agent 因服务端 panic 失败两次，改为本人按 check.jsonl 注入的 6 个 spec 文件逐项校验）
+   - 验收清单逐条对照 PRD §10
+   - single-writer 验证：`grep` 全仓 `console.ai.` 字面量仅出现在 ai-panel.js；`dataset.view =` 仅出现在 view-switcher.js；`ai-panel.js` 不 import ws-client
+   - `npm run lint` / `npm run format:check` / `npm test` 全绿，无需 auto-fix
+   - 输出 4 项 informational findings（history 不变量在错误路径会被打破 / 无 Enter 提交快捷键 / setView('terminal') 与 HTML 默认值冗余 / 长 token 性能边界），均非 blocker
+3. `/trellis:finish-work` 走完整 pre-commit checklist：lint / format / smoke 三绿，spec 与 §13 完全对账，无 console.log / TODO 残留
+4. 拆 3 个 conventional commit 提交（`feat(web)` / `docs(spec)` / `chore(task)`）；commitlint hook 全部通过
+5. `task.py archive` 自动归档 + 自动 commit；`record-session` 收尾
+
+## Surprises / Notes
+
+- **Check Agent 连续两次 API 500 panic** — 走人工审查兜底，结论一致；下次若再遇可直接接管，不必反复重试
+- **CRLF 自动转 LF** — `git add` 任务目录的 4 个 jsonl/json 文件时有警告，`.gitattributes` 在 commit 时自动规范化，符合 LF-only 约定
+- **history 不变量缺口（PRD D9 接受）** — 错误 / 空回复路径 user message 会成孤儿，下次请求可能 400；MVP 接受此风险，未来 Phase C 多轮 tool 反馈时一并解决
+- 任务目录有 e2e 截图入库的先例（`05-02-ui-replica-red/screenshots/*.png`），本任务的 3 张沿用此模式
+
+## Updated Files
+
+代码：
+- `web/js/ai-panel.js` (新, 11.8KB)
+- `web/js/view-switcher.js` (新)
+- `web/js/main.js` / `web/index.html` / `web/css/style.css`
+
+Spec / Doc：
+- `.trellis/spec/frontend/quality-guidelines.md` / `directory-structure.md` / `state-management.md`
+- `AGENTS.md` / `README.md`
+
+任务：
+- `.trellis/tasks/archive/2026-05/05-03-web-ai-panel-deepseek/` (整目录归档)
+
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `ae4eb4f` | (see git log) |
+| `f91d624` | (see git log) |
+| `c93f60d` | (see git log) |
+| `1e537be` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
