@@ -702,3 +702,71 @@ Spec：
 ### Next Steps
 
 - None - task complete
+
+
+## Session 10: Add direction markers to xterm (red [↓] sent / blue [↑] received)
+
+**Date**: 2026-05-04
+**Task**: Add direction markers to xterm (red [↓] sent / blue [↑] received)
+**Branch**: `dev`
+
+### Summary
+
+(Add summary)
+
+### Main Changes
+
+## Scope
+
+Web 终端没法看到自己刚发的命令（relay 不回环 sender 自己的帧），交互体验差："敲 hello 回车后没反馈"。显示层加方向箭头：红色 `[↓]` = 自己发出（下发），蓝色 `[↑]` = 收到（上行）。`ws-cli` stdout 字节直通契约保持不动；线上字节、relay 一行未改。
+
+## Files
+
+| 文件 | 变更 |
+|---|---|
+| `web/js/main.js` | 加 `TX_PREFIX = '\x1b[31m[↓]\x1b[0m'` / `RX_PREFIX = '\x1b[34m[↑]\x1b[0m'`；`sendCommand` 在 `client.send` 返回 `true` 时 echo `${TX_PREFIX}${command}\n`；`onFrame` 写非 pong 文本前加 `${RX_PREFIX}` + 保证 `\n` 结尾 |
+| `server/scripts/ws-cli.js` | 中途试加过 stderr echo，按用户诉求"本地不做处理"撤回，**最终未变更** |
+| `.trellis/spec/frontend/quality-guidelines.md` | §3 Contracts 加 "Display-layer direction markers" 段（含 marker / ANSI / 源常量表）；§4 Validation Matrix 改 "Incoming non-pong text" 行 + 新增 "Outgoing command" 行；§Design Decisions 加 "Why display-layer direction markers in the web xterm only (not ws-cli)" 节（Context / Decision / 三点对比 / Implementation seam / 三条 Common Mistakes）；§Code Review Checklist 加 3 条断言 |
+| `.trellis/spec/frontend/index.md` | §Quality Check 加 1 条 marker 边界提醒（cross-ref quality-guidelines） |
+
+## Decisions / Constraints
+
+- **显示层 vs 协议层解耦**：marker 仅活在 `main.js` 的两个常量里；`ws-client.js` / `terminal.js` / `ws-cli.js` / relay / wire 都不知道 marker 存在。后续改 glyph / 颜色 / 增加 raw-view 开关都不需要动协议层。
+- **Web 端加、ws-cli 端不加**：`spec/backend/quality-guidelines.md` §Dev-Side WS CLI Client §3 硬约束 "ws (text) → stdout: never trim, prefix, or annotate"——ws-cli 是脚本场景（`... | ws-cli > log` 字节比对）的依赖；web xterm 是人机面，加 marker 是合理的本地 echo。
+- **`client.send` 返回值是契约**：返回 `false` 时不 echo——避免"未发但显示发了"的假象。ws-client 已经在 `onLog('[ws] not connected')` 里报错 = 单一真相源。
+- **方向语义对齐工业惯例**：`[↓]` 下发（控制出去）、`[↑]` 上行（反馈回来）；颜色用红 (31) / 蓝 (34) 高对比度，配合 xterm GitHub-Light 主题在白底上都很清晰。
+- **markers 绝不进 wire**：把 marker 拼进 `client.send(...)` 是明确禁止的反模式（破坏 byte-passthrough，spec 列入 Common Mistakes）。
+- **过程中的认知修正**：第一版 cyan `>` / green `<` 用户觉得对比度不够、且方向语义反了；第二版 cyan `↑` / green `↓` 中括号缺失；第三版 `[↑]` `[↓]` 颜色仍弱；最终红 `[↓]` / 蓝 `[↑]`。每次修正只动 `main.js` 的两个常量 = 验证了"显示层解耦"决策的可演进性。
+
+## Tests
+
+- `npm run lint`：0 error
+- `npm run format:check`：clean
+- `npm run smoke`：[smoke] ok（broadcast / ping-pong / binary close 全通 → relay 行为确实没改）
+- 浏览器手动验证（用户硬刷后）：上行 `[↓]hello` 红色、下行 `[↑]<frame>` 蓝色、ws-cli stdout 字节直通
+
+## Next
+
+- 最小可行版本已在 `14f6bd7` 落地。可选后续（无紧迫性）：
+  - "raw view" 切换：按 spec §Design Decision "Implementation seam" 提示，门控 `sendCommand` / `onFrame` 的 marker 写入即可，其他模块零改动
+  - 真实下位机 telemetry 协议落定后，按 backend §Telemetry (Deferred) 在 `client.onFrame` 加分流——marker 与扩展路径互不干扰
+  - frpc 隧道场景下，公网浏览器 + 本地 ws-cli 的端到端再做一次手动回归（这次会话因 frpc 进程未起，公网链路未实测；本地双 ws-cli + 单浏览器三方互发已通）
+
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `14f6bd7` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
