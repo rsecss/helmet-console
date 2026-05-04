@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 10
-- **Last Active**: 2026-05-04
+- **Total Sessions**: 11
+- **Last Active**: 2026-05-05
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~772 | Active |
+| `journal-1.md` | ~849 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 11 | 2026-05-05 | 4G 模组上云端到端实机验证 | `8f7a3ed`, `4bb2d9f` | `dev` |
 | 10 | 2026-05-04 | Add direction markers to xterm (red [↓] sent / blue [↑] received) | `14f6bd7` | `dev` |
 | 9 | 2026-05-04 | Add panel view with motor switch/gear rework + reserved telemetry slot | `621dad9` | `dev` |
 | 8 | 2026-05-03 | ws-cli 设备端客户端 + frp 链路双向 e2e 验证 | `c3e4382`, `cd20137` | `dev` |
