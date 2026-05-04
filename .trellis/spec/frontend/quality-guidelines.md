@@ -194,6 +194,24 @@ opacity outside `connected`.
 Server is a byte-passthrough — there is no JSON envelope. See
 `docs/architecture.md` §4 (canonical) and `docs/interface.md`.
 
+**Display-layer direction markers** (xterm only — wire is unchanged):
+the web terminal prefixes every visible frame with a directional marker
+so the operator can distinguish their own outgoing commands from
+incoming peer frames (the relay does not echo a sender's own frame
+back). Markers exist in the xterm display only and are never sent on
+the wire, never written by `ws-cli.js`.
+
+| Direction                       | Marker | ANSI      | Source constant (in `main.js`) |
+| ------------------------------- | ------ | --------- | ------------------------------ |
+| Browser → relay (outgoing/down) | `[↓]`  | red (31)  | `TX_PREFIX = '\x1b[31m[↓]\x1b[0m'` |
+| Relay → browser (incoming/up)   | `[↑]`  | blue (34) | `RX_PREFIX = '\x1b[34m[↑]\x1b[0m'` |
+
+The trailing `\x1b[0m` is part of the prefix so any device-side ANSI in
+the body still renders normally. Marker constants live exclusively in
+`main.js`; `terminal.js`, `ws-client.js`, `web/vendor/`, and
+`server/scripts/ws-cli.js` must remain marker-agnostic. See the design
+decision below for why ws-cli stays byte-faithful.
+
 **Command frame** (free-form text via command-panel):
 
 ```js
@@ -259,7 +277,8 @@ pre-rose multi-field forms); otherwise `defaultUrl()` derived from
 | Send while WS not open              | `ws-client.js` calls `onLog('[ws] not connected')`                               |
 | Incoming binary frame               | `ws-client.js` calls `onLog('[ws] dropped binary frame')`                        |
 | Incoming `pong\n`                   | Update activity only; do not print to terminal                                   |
-| Incoming non-pong text              | `main.js` forwards to `terminal.writeText(text)`                                 |
+| Incoming non-pong text              | `main.js#onFrame` writes `${RX_PREFIX}${body}` via `terminal.writeText`; `body` is the byte-passthrough text with a guaranteed trailing `\n` |
+| Outgoing command (cmd / control / ai-tool) | `main.js#sendCommand` calls `client.send(<text>\n)`; if the call returns `true`, write `${TX_PREFIX}${command}\n` via `terminal.writeText`; on `false`, no echo (ws-client already emits `[ws] not connected`) |
 | URL input empty                     | `parseWsUrl` → `{ok:false, reason:'请输入连接地址'}`; inline error; keep focus   |
 | URL input not parseable as URL      | reason: `'无法解析 URL，请使用 ws:// 或 wss:// 开头的完整地址'`                   |
 | URL protocol not `ws:` / `wss:`     | reason: `'协议必须是 ws:// 或 wss://'`                                           |
@@ -542,6 +561,58 @@ integration doesn't reflow neighboring controls.
 to a chart widget, and replace the `.data-card` placeholder. See
 `spec/backend/quality-guidelines.md` §Telemetry (Deferred).
 
+### Why display-layer direction markers in the web xterm only (not ws-cli)
+
+**Context**: The relay does not loop a sender's own frame back (see
+`spec/backend/quality-guidelines.md` §3 "client A does not receive its
+own frame"). For interactive console use, an operator types a command
+in the web command-bar and gets no terminal feedback that anything
+went out — the only proof is a peer (the device or another browser)
+echoing back, which the device is not obliged to do. The same
+"silence after submit" applies on `server/scripts/ws-cli.js`.
+
+**Decision**: Add direction markers (`[↓]` red for outgoing, `[↑]`
+blue for incoming) only in the web xterm, emitted exclusively by
+`main.js` (`TX_PREFIX` / `RX_PREFIX`). Keep `ws-cli.js` strictly
+byte-passthrough on stdout per the backend `quality-guidelines.md`
+§Dev-Side WS CLI Client §3 ("never trim, prefix, or annotate"). The
+wire and the relay are untouched.
+
+**Why split the two ends**:
+
+1. ws-cli's contract is "play a dumb device peer". Tooling such as
+   `... | node server/scripts/ws-cli.js > logs/ws-cli.log` requires
+   stdout to be byte-faithful so the log can be diff'd against the
+   frame the other end claims to have sent. Markers would silently
+   break that test path (backend §6 manual test plan).
+2. The web xterm is a human-facing display surface; the relay's
+   no-echo rule is a usability problem only for humans. Local echo
+   plus a distinct color/glyph per direction is the cheapest fix and
+   stays inside the display layer.
+3. Wire format and relay code are untouched — adding, removing, or
+   recoloring markers in the future never requires a relay or
+   protocol change.
+
+**Implementation seam**: only `main.js` knows about markers. To
+change glyph or color, edit `TX_PREFIX` / `RX_PREFIX`. To add a
+"raw view" toggle in the future, gate the writes inside
+`sendCommand` and `onFrame` on a flag — do **not** push marker logic
+into `ws-client.js`, `terminal.js`, or `ws-cli.js`.
+
+**Common Mistakes**:
+
+- Echo on `client.send` regardless of return value. The boolean is
+  the contract — `false` means the WS is not OPEN and ws-client has
+  already logged `[ws] not connected`. A second echo there fakes
+  delivery and is a worse UX than silence.
+- Wrap the marker into the `client.send(...)` argument. Marker bytes
+  on the wire break the byte-passthrough contract (`spec/backend/
+  quality-guidelines.md` §Forbidden Patterns) and would also confuse
+  any downstream device parser.
+- Add the same markers to `ws-cli.js`. Breaks `> log` redirection
+  used in backend §6 manual test plan; CI / scripts that diff log
+  bytes against wire bytes silently fail.
+
 ---
 
 ### Scenario: AI Panel + DeepSeek Integration
@@ -718,6 +789,13 @@ history.push({ role: 'assistant', content }); // tool_calls dropped
 - Are all module imports relative and under `web/js/` or `web/vendor/`?
 - Is xterm still display-only (`disableStdin: true`, no command-sending
   `onData`)?
+- Does `main.js#sendCommand` echo `${TX_PREFIX}${command}\n` (red `[↓]`)
+  via `terminal.writeText` **only** when `client.send` returns `true`?
+- Does `main.js#onFrame` prefix non-pong incoming text with `${RX_PREFIX}`
+  (blue `[↑]`) and ensure a trailing `\n` before writing to the terminal?
+- Are `TX_PREFIX` / `RX_PREFIX` defined exclusively in `main.js`, with no
+  marker bytes in `ws-client.js`, `terminal.js`, `ws-cli.js`, the relay,
+  or any `client.send(...)` argument?
 - Does `command-panel.js` own command submission and connected enabled state?
 - Are labels and controls visible in a single viewport (`100vh`,
   `overflow: hidden`, no horizontal scroll)?

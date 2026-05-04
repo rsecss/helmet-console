@@ -37,6 +37,10 @@ Before declaring frontend work done, verify against
   `console.ws.*` localStorage keys
 - `parseWsUrl` covers the 4 error reasons with the exact messages in the matrix
 - Control widgets emit `cmd` only via injected callbacks (never `client.send`)
+- Direction markers `[↓]` / `[↑]` exist only in `main.js`
+  (`TX_PREFIX` / `RX_PREFIX`); never on the wire, never in `ws-cli.js`
+  stdout (see `quality-guidelines.md` §"Why display-layer direction
+  markers in the web xterm only")
 - Reserved placeholders log `console.info('[placeholder] ...')`, never throw
 - Page locked to `100vh` with `overflow: hidden`, no horizontal scroll
 - `npm run lint` and `npm run format:check` pass; `npm test` smoke is green

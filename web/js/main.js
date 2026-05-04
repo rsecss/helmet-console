@@ -8,6 +8,13 @@ import { createWsClient } from './ws-client.js';
 
 const PONG = 'pong';
 const MOTOR_PREFIX = 'motor_speed_';
+// Display-layer direction markers (xterm only — wire stays byte-passthrough).
+// Convention: ↓ = downstream control (this browser → device/peer),
+//             ↑ = upstream feedback (device/peer → this browser).
+// ANSI 31 = red (high-attention control out), 34 = blue (info in); 0 resets so
+// device-side ANSI colors still render normally after the marker.
+const TX_PREFIX = '\x1b[31m[↓]\x1b[0m';
+const RX_PREFIX = '\x1b[34m[↑]\x1b[0m';
 
 function requireElement(id) {
   const element = document.getElementById(id);
@@ -57,7 +64,8 @@ const client = createWsClient({
     if (stripTrailingNewline(text) === PONG) {
       return;
     }
-    terminal.writeText(text);
+    const body = text.endsWith('\n') ? text : `${text}\n`;
+    terminal.writeText(`${RX_PREFIX}${body}`);
   },
   onLog(message) {
     terminal.writeLine(message);
@@ -82,7 +90,12 @@ const configPanel = createConfigPanel({
 });
 
 function sendCommand(command) {
-  client.send(ensureTrailingNewline(command));
+  const ok = client.send(ensureTrailingNewline(command));
+  // Echo only on successful send. ws-client already calls onLog('[ws] not connected')
+  // on failure, so the operator gets a single source of truth.
+  if (ok) {
+    terminal.writeText(`${TX_PREFIX}${command}\n`);
+  }
 }
 
 const commandPanel = createCommandPanel({
