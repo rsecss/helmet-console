@@ -109,7 +109,7 @@ button:disabled {
  * ============================================================ */
 .app-shell {
   display: grid;
-  grid-template-rows: auto auto 1fr auto auto;
+  grid-template-rows: auto auto 1fr auto;
   height: 100vh;
   max-width: 1480px;
   margin: 0 auto;
@@ -723,13 +723,26 @@ button:disabled {
 }
 
 /* ============================================================
- * Control cards (LED + Motor)
+ * Panel view — owns LED + Motor + reserved data card.
+ * Lives in the 1fr row; competes with .terminal-card / .ai-card
+ * via [data-view] visibility rules at the bottom of the file.
+ * ============================================================ */
+.panel-view {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-base);
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ============================================================
+ * Control cards (LED + Motor) — child of .panel-view.
  * ============================================================ */
 .control-cards {
   display: grid;
   grid-template-columns: 2fr 3fr;
   gap: var(--s-base);
-  height: 156px;
+  flex: 0 0 auto;
   transition: opacity var(--motion-base);
 }
 
@@ -832,93 +845,168 @@ button:disabled {
   border-color: var(--c-rose-border);
 }
 
-/* Motor card body */
-.motor-row {
+/* Motor card body — display section + switch + gear segmented controls.
+   Shares visual contract with .led-toggle / .led-btn. */
+.motor-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-base);
+  flex: 1;
+}
+
+.motor-display {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-xs);
+}
+
+.motor-display-row {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  margin-bottom: var(--s-md);
+  gap: var(--s-base);
 }
 
-.motor-row-label {
+.motor-display-row dt {
+  margin: 0;
   font-size: 13px;
   color: var(--c-muted);
 }
 
-.motor-value {
-  font-size: 24px;
-  font-weight: 600;
+.motor-display-row dd {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
   color: var(--c-ink);
-  letter-spacing: -0.4px;
 }
 
-.motor-slider-wrap {
+.motor-display-row-muted dd {
+  color: var(--c-subtle);
+  font-weight: 400;
+}
+
+.motor-rpm-note {
+  color: var(--c-subtle);
+  font-weight: 400;
+}
+
+#motorStateValue::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: var(--r-full);
+  background: var(--c-emerald);
+  margin-right: var(--s-xs);
+  vertical-align: middle;
+}
+
+.motor-display[data-state='off'] #motorStateValue::before {
+  background: var(--c-subtle);
+}
+
+.motor-controls {
   display: flex;
   flex-direction: column;
   gap: var(--s-sm);
+  margin-top: auto;
 }
 
-.slider {
-  appearance: none;
-  -webkit-appearance: none;
-  width: 100%;
-  height: 4px;
-  border-radius: var(--r-full);
-  outline: none;
-  background: linear-gradient(
-    to right,
-    var(--c-rose) 0,
-    var(--c-rose) var(--fill, 0%),
-    var(--c-hairline) var(--fill, 0%),
-    var(--c-hairline) 100%
-  );
-}
-
-.slider::-webkit-slider-runnable-track {
-  height: 4px;
-  background: transparent;
-  border-radius: var(--r-full);
-}
-
-.slider::-webkit-slider-thumb {
-  appearance: none;
-  -webkit-appearance: none;
-  width: 18px;
-  height: 18px;
-  margin-top: -7px;
-  background: #fff;
-  border: 2px solid var(--c-rose);
-  border-radius: var(--r-full);
-  cursor: pointer;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
-}
-
-.slider::-moz-range-track {
-  height: 4px;
-  background: var(--c-hairline);
-  border-radius: var(--r-full);
-}
-
-.slider::-moz-range-progress {
-  height: 4px;
-  background: var(--c-rose);
-  border-radius: var(--r-full);
-}
-
-.slider::-moz-range-thumb {
-  width: 18px;
-  height: 18px;
-  background: #fff;
-  border: 2px solid var(--c-rose);
-  border-radius: var(--r-full);
-  cursor: pointer;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
-}
-
-.slider-ticks {
+.motor-control-row {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  font-size: 12px;
+  gap: var(--s-base);
+}
+
+.motor-control-label {
+  font-size: 13px;
+  color: var(--c-muted);
+}
+
+.motor-switch,
+.motor-gears {
+  display: inline-flex;
+  gap: var(--s-sm);
+}
+
+.motor-switch-btn,
+.motor-gear-btn {
+  padding: 6px 18px;
+  background: transparent;
+  color: var(--c-muted);
+  border: 1px solid var(--c-hairline);
+  border-radius: var(--r-md);
+  font-size: 14px;
+  font-weight: 500;
+  transition:
+    color var(--motion-fast),
+    background var(--motion-fast),
+    border-color var(--motion-fast);
+}
+
+.motor-gear-btn {
+  padding: 6px 16px;
+  min-width: 40px;
+}
+
+.motor-switch-btn:hover:not([aria-pressed='true']),
+.motor-gear-btn:hover:not([aria-pressed='true']) {
+  color: var(--c-body);
+  border-color: var(--c-border);
+}
+
+.motor-switch-btn[aria-pressed='true'],
+.motor-gear-btn[aria-pressed='true'] {
+  background: var(--c-rose-soft);
+  color: var(--c-rose-strong);
+  border-color: var(--c-rose-border);
+}
+
+/* ============================================================
+ * Data card — reserved telemetry slot.
+ * Click → console.info via reservePlaceholder() in main.js.
+ * Stays at normal opacity in disconnected/error states (it's a
+ * placeholder, not an active control).
+ * ============================================================ */
+.data-card {
+  flex: 1 1 auto;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-md);
+  padding: var(--s-xl);
+  background: var(--c-card);
+  border: 1px dashed var(--c-border);
+  border-radius: var(--r-xl);
+  text-align: center;
+  cursor: pointer;
+  transition: border-color var(--motion-base);
+}
+
+.data-card:hover {
+  border-color: var(--c-rose-border);
+}
+
+.data-card-icon svg {
+  width: 40px;
+  height: 40px;
+  color: var(--c-subtle);
+}
+
+.data-card h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--c-body);
+}
+
+.data-card p {
+  margin: 0;
+  font-size: 13px;
   color: var(--c-muted);
 }
 
@@ -942,15 +1030,26 @@ button:disabled {
 
 /* ============================================================
  * View switching — driven by [data-view] on .app-shell.
- * 'terminal' (default): AI card hidden.
- * 'ai': terminal card and command bar hidden; AI card fills the 1fr row.
+ * Three values:
+ *   'terminal' (default): terminal-card + command-bar visible.
+ *   'ai': ai-card visible.
+ *   'panel': panel-view visible (LED + motor + reserved data card).
+ * Whichever section is visible fills the 1fr row.
  * ============================================================ */
-[data-view='terminal'] .ai-card {
+[data-view='terminal'] .ai-card,
+[data-view='terminal'] .panel-view {
   display: none;
 }
 
 [data-view='ai'] .terminal-card,
-[data-view='ai'] .command-bar {
+[data-view='ai'] .command-bar,
+[data-view='ai'] .panel-view {
+  display: none;
+}
+
+[data-view='panel'] .terminal-card,
+[data-view='panel'] .ai-card,
+[data-view='panel'] .command-bar {
   display: none;
 }
 
@@ -964,5 +1063,8 @@ button:disabled {
   .control-cards {
     grid-template-columns: 1fr;
     height: auto;
+  }
+  .data-card {
+    min-height: 160px;
   }
 }

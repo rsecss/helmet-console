@@ -8,7 +8,7 @@
  * Tool name → command string (mirror of control-panel.js):
  *   led_on        →  'led_on'
  *   led_off       →  'led_off'
- *   motor_speed   →  'motor_speed_<0..5>'
+ *   motor_speed   →  'motor_speed_<0..3>'
  */
 
 const AI_STORAGE_KEYS = {
@@ -28,7 +28,7 @@ const SYSTEM_PROMPT = `你是「Helmet Console」中的头盔控制助手。
 
 设备说明：
 - LED：头盔顶部照明阵列，仅有「开 / 关」两态。
-- 电机：驱动电机，档位 0-5，0 表示停止，5 表示最高速。
+- 电机：驱动电机，档位 0-3，0 表示停止，3 表示最高速。
 
 工作方式：
 - 用简体中文回答用户。
@@ -57,11 +57,11 @@ const TOOLS = [
     type: 'function',
     function: {
       name: 'motor_speed',
-      description: '设置头盔驱动电机速度档位（0=停止，5=最高速）',
+      description: '设置头盔驱动电机速度档位（0=停止，3=最高速）',
       parameters: {
         type: 'object',
         properties: {
-          value: { type: 'integer', minimum: 0, maximum: 5 },
+          value: { type: 'integer', minimum: 0, maximum: 3 },
         },
         required: ['value'],
       },
@@ -95,7 +95,7 @@ function translateTool(name, args) {
   if (name === 'led_off') return { command: 'led_off' };
   if (name === 'motor_speed') {
     const v = Number(args && args.value);
-    if (!Number.isInteger(v) || v < 0 || v > 5) {
+    if (!Number.isInteger(v) || v < 0 || v > 3) {
       return { error: '参数越界' };
     }
     return { command: `motor_speed_${v}` };

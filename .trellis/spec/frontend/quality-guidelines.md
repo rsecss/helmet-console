@@ -148,11 +148,15 @@ export function createControlPanel({
   ledOffButton,
   ledStatus, // .led-status — receives [data-state='on'|'off']
   ledStatusValue, // text node for "已开启 / 已关闭"
-  motorSlider, // <input type="range" min="0" max="5">
-  motorValue, // text node for current speed
+  motorOnButton, // segmented switch [开]
+  motorOffButton, // segmented switch [关]
+  motorGearButtons, // Array<HTMLButtonElement> with data-gear="1|2|3"
+  motorDisplay, // .motor-display — receives [data-state='on'|'off']
+  motorStateValue, // text node for "运行中 / 已停止"
+  motorGearValue, // text node for the current gear ("1" | "2" | "3")
   onLedOn, // () => void
   onLedOff, // () => void
-  onMotorSpeed, // (n: number) => void  — n in [0..max]
+  onMotorSpeed, // (n: number) => void  — n in [0..3]
 });
 // returns { setLedState(isOn: boolean), setMotorSpeed(n: number) }
 ```
@@ -207,7 +211,7 @@ never need to handle frame boundaries.
 client.send('led_on\n');
 client.send('led_off\n');
 // Motor speed
-client.send(`motor_speed_${value}\n`); // value ∈ [0..5]
+client.send(`motor_speed_${value}\n`); // value ∈ [0..3]; 0 emitted by switch OFF, 1..3 by switch ON
 ```
 
 `control-panel.js` updates LED status text/dot **locally** based on click
@@ -509,6 +513,35 @@ half-implement.
 when the surrounding layout has hardened. `console.info` lets QA verify
 the slot exists and clearly distinguishes "reserved" from "broken".
 
+### Why panel view + motor switch/gear two-axis (PRD 05-04-panel-view)
+
+**Context**: The motor card was a 0..5 single-value slider rendered
+alongside the LED card on every view. Two issues: (1) the controls
+fought for vertical space against the terminal/AI 1fr row; (2) the
+single value conflated "stopped" with "low speed". Future telemetry
+display also needed a place to live.
+
+**Decision**: Introduce a third `data-view='panel'` that owns LED +
+motor + a reserved `.data-card` slot. Split motor state into two axes
+— `switch:bool` (the power gate) and `gear:1..3` (the target speed).
+Wire stays the existing flat string `motor_speed_<0..3>`; switch OFF
+emits `motor_speed_0`, switch ON emits `motor_speed_<gear>`. While
+switch is OFF, clicking a gear button only updates in-memory state
+(passive memory) — no frame is sent.
+
+**Why**: Aligns the protocol surface with user mental model
+("ignition + transmission"); narrowing 0..5 → 0..3 reflects actual
+device capability without any backend churn (relay stays
+byte-pass-through). Passive memory prevents accidental motor start
+when pre-selecting a gear before powering on. The `.data-card`
+placeholder reserves layout space so the future telemetry/chart
+integration doesn't reflow neighboring controls.
+
+**Extensibility**: To add real telemetry, parse incoming frames in
+`client.onFrame`, route recognized verbs (e.g. `telemetry rpm 1234`)
+to a chart widget, and replace the `.data-card` placeholder. See
+`spec/backend/quality-guidelines.md` §Telemetry (Deferred).
+
 ---
 
 ### Scenario: AI Panel + DeepSeek Integration
@@ -525,7 +558,7 @@ section current.
 ```js
 // web/js/view-switcher.js
 export function createViewSwitcher({ shell, buttons });
-// returns { setView(name: 'terminal' | 'ai') }
+// returns { setView(name: 'terminal' | 'ai' | 'panel') }
 
 // web/js/ai-panel.js
 export function createAiPanel({
@@ -546,7 +579,7 @@ export function createAiPanel({
 | ------------- | ---------------------- | --------------------------------------- |
 | `led_on`      | `{}`                   | `'led_on'`                              |
 | `led_off`     | `{}`                   | `'led_off'`                             |
-| `motor_speed` | `{ value: 0..5 }` (int)| `` `motor_speed_${value}` ``            |
+| `motor_speed` | `{ value: 0..3 }` (int)| `` `motor_speed_${value}` ``            |
 
 `main.js` injects `onTool(command)` that:
 1. Calls `sendCommand(command)` (appends `\n`, hits ws-relay → MCU)
@@ -580,11 +613,14 @@ assistant message with `content: ''` is still pushed so OpenAI's
 user→assistant→user invariant holds.
 
 **`data-view` switching**: `view-switcher.js` is the SOLE writer of
-`.app-shell[data-view]`. Two valid values: `'terminal'` (default) and
-`'ai'`. CSS toggles `.terminal-card` and `.command-bar` off in `'ai'` and
-hides `.ai-card` in `'terminal'`. The `.app-shell` grid (`auto auto 1fr
-auto auto`) auto-flows remaining visible children, keeping whichever card
-is visible in the `1fr` row.
+`.app-shell[data-view]`. Three valid values: `'terminal'` (default), `'ai'`,
+and `'panel'`. CSS hides `.ai-card` and `.panel-view` in `'terminal'`; hides
+`.terminal-card`, `.command-bar`, and `.panel-view` in `'ai'`; hides
+`.terminal-card`, `.command-bar`, and `.ai-card` in `'panel'`. The
+`.app-shell` grid (`auto auto 1fr auto`) auto-flows remaining visible
+children, keeping whichever section is visible in the `1fr` row. The
+`.panel-view` owns LED + motor cards plus the reserved `.data-card`
+telemetry slot — these are NOT visible in `'terminal'` / `'ai'`.
 
 #### 4. Validation & Error Matrix
 
@@ -599,7 +635,7 @@ is visible in the `1fr` row.
 | `isWsConnected()` false on tool_call  | Tool line badge `⚠ 设备未连接`; `onTool` NOT called |
 | Unknown tool name                     | Tool line badge `⚠ 未知工具 <name>`                 |
 | Tool arguments JSON parse fail        | Tool line badge `⚠ 参数解析失败`                    |
-| `motor_speed.value` out of `0..5`     | Tool line badge `⚠ 参数越界`; `onTool` NOT called   |
+| `motor_speed.value` out of `0..3`     | Tool line badge `⚠ 参数越界`; `onTool` NOT called   |
 | Sending while streaming               | Submit handler short-circuits; input/send disabled  |
 | Reload                                | History cleared; `console.ai.*` (3 keys) preserved  |
 

@@ -17,6 +17,7 @@
           <div class="view-toggle" role="tablist" aria-label="主视图切换">
             <button type="button" role="tab" aria-pressed="true" data-view="terminal">终端</button>
             <button type="button" role="tab" aria-pressed="false" data-view="ai">AI助手</button>
+            <button type="button" role="tab" aria-pressed="false" data-view="panel">面板</button>
           </div>
           <button class="icon-btn" type="button" aria-label="文档" data-action="docs">
             <svg
@@ -163,92 +164,146 @@
         <button id="sendCommandButton" class="send-btn" type="submit" disabled>发送</button>
       </form>
 
-      <!-- CONTROL CARDS -->
-      <section class="control-cards" aria-label="设备控制">
-        <article class="control-card">
-          <header class="control-card-head">
-            <h2>LED 阵列</h2>
+      <!-- PANEL VIEW (LED + Motor + reserved data card) -->
+      <section class="panel-view" id="panelView" aria-label="面板">
+        <section class="control-cards" aria-label="设备控制">
+          <article class="control-card">
+            <header class="control-card-head">
+              <h2>LED 阵列</h2>
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.75"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M9 18h6" />
+                <path d="M10 22h4" />
+                <path d="M2 12a10 10 0 0 1 20 0c0 4-3 6-3 8H5c0-2-3-4-3-8z" />
+              </svg>
+            </header>
+            <div class="led-body">
+              <div class="led-status" id="ledStatus" data-state="off">
+                <span class="led-status-label">状态</span>
+                <span class="led-status-value" id="ledStatusValue">已关闭</span>
+              </div>
+              <div class="led-toggle" role="group" aria-label="LED 开关">
+                <button
+                  type="button"
+                  class="led-btn"
+                  id="ledOnButton"
+                  data-action="on"
+                  aria-pressed="false"
+                >
+                  开启
+                </button>
+                <button
+                  type="button"
+                  class="led-btn"
+                  id="ledOffButton"
+                  data-action="off"
+                  aria-pressed="true"
+                >
+                  关闭
+                </button>
+              </div>
+            </div>
+          </article>
+          <article class="control-card motor-card">
+            <header class="control-card-head">
+              <h2>驱动电机</h2>
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.75"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M12 2v4" />
+                <path d="m6.31 6.31 2.83 2.83" />
+                <path d="M2 12h4" />
+                <path d="M12 12l5-3" />
+                <circle cx="12" cy="12" r="9" />
+              </svg>
+            </header>
+            <div class="motor-body">
+              <dl class="motor-display" id="motorDisplay" data-state="off">
+                <div class="motor-display-row">
+                  <dt>状态</dt>
+                  <dd id="motorStateValue">已停止</dd>
+                </div>
+                <div class="motor-display-row">
+                  <dt>目标档位</dt>
+                  <dd id="motorGearValue">1</dd>
+                </div>
+                <div class="motor-display-row motor-display-row-muted">
+                  <dt>实际转速</dt>
+                  <dd>-- rpm <span class="motor-rpm-note">(待接入)</span></dd>
+                </div>
+              </dl>
+              <div class="motor-controls">
+                <div class="motor-control-row">
+                  <span class="motor-control-label">开关</span>
+                  <div class="motor-switch" role="group" aria-label="电机开关">
+                    <button
+                      type="button"
+                      class="motor-switch-btn"
+                      id="motorOnButton"
+                      data-action="on"
+                      aria-pressed="false"
+                    >
+                      开
+                    </button>
+                    <button
+                      type="button"
+                      class="motor-switch-btn"
+                      id="motorOffButton"
+                      data-action="off"
+                      aria-pressed="true"
+                    >
+                      关
+                    </button>
+                  </div>
+                </div>
+                <div class="motor-control-row">
+                  <span class="motor-control-label">挡位</span>
+                  <div class="motor-gears" id="motorGears" role="group" aria-label="电机挡位">
+                    <button type="button" class="motor-gear-btn" data-gear="1" aria-pressed="true">
+                      1
+                    </button>
+                    <button type="button" class="motor-gear-btn" data-gear="2" aria-pressed="false">
+                      2
+                    </button>
+                    <button type="button" class="motor-gear-btn" data-gear="3" aria-pressed="false">
+                      3
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </article>
+        </section>
+        <section class="data-card" id="dataCard" aria-label="实时数据">
+          <div class="data-card-icon" aria-hidden="true">
             <svg
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
-              stroke-width="1.75"
+              stroke-width="1.5"
               stroke-linecap="round"
               stroke-linejoin="round"
-              aria-hidden="true"
             >
-              <path d="M9 18h6" />
-              <path d="M10 22h4" />
-              <path d="M2 12a10 10 0 0 1 20 0c0 4-3 6-3 8H5c0-2-3-4-3-8z" />
+              <path d="M3 3v18h18" />
+              <path d="M7 15l4-6 4 4 5-7" />
             </svg>
-          </header>
-          <div class="led-body">
-            <div class="led-status" id="ledStatus" data-state="off">
-              <span class="led-status-label">状态</span>
-              <span class="led-status-value" id="ledStatusValue">已关闭</span>
-            </div>
-            <div class="led-toggle" role="group" aria-label="LED 开关">
-              <button
-                type="button"
-                class="led-btn"
-                id="ledOnButton"
-                data-action="on"
-                aria-pressed="false"
-              >
-                开启
-              </button>
-              <button
-                type="button"
-                class="led-btn"
-                id="ledOffButton"
-                data-action="off"
-                aria-pressed="true"
-              >
-                关闭
-              </button>
-            </div>
           </div>
-        </article>
-        <article class="control-card">
-          <header class="control-card-head">
-            <h2>驱动电机</h2>
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.75"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M12 2v4" />
-              <path d="m6.31 6.31 2.83 2.83" />
-              <path d="M2 12h4" />
-              <path d="M12 12l5-3" />
-              <circle cx="12" cy="12" r="9" />
-            </svg>
-          </header>
-          <div class="motor-row">
-            <span class="motor-row-label">状态</span>
-            <output class="motor-value" id="motorValue">0</output>
-          </div>
-          <div class="motor-slider-wrap">
-            <input
-              id="motorSpeed"
-              class="slider"
-              type="range"
-              min="0"
-              max="5"
-              value="0"
-              style="--fill: 0%"
-              aria-label="电机速度"
-            />
-            <div class="slider-ticks">
-              <span>0</span>
-              <span>5</span>
-            </div>
-          </div>
-        </article>
+          <h2>实时数据</h2>
+          <p>下位机上传实时数据后将在此显示</p>
+        </section>
       </section>
     </main>
 

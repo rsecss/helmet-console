@@ -104,7 +104,7 @@ schema. Binary frames are not supported.
 
 | Direction      | Examples                                            |
 | -------------- | --------------------------------------------------- |
-| browser → MCU  | `led_on\n` / `led_off\n` / `motor_speed_<0..5>\n`   |
+| browser → MCU  | `led_on\n` / `led_off\n` / `motor_speed_<0..3>\n`   |
 | MCU → browser  | any UTF-8 text (e.g. `temp=42.3\n`)                 |
 | client ↔ server | `ping\n` / `pong\n` (server-intercepted; not relayed) |
 
@@ -338,3 +338,22 @@ rl.on('line', (line) => {
   ping/pong, binary close)?
 - Does `server/scripts/ws-cli.js` still buffer stdin lines that arrive
   during `CONNECTING` and flush them on `'open'`?
+
+---
+
+## Telemetry (Deferred)
+
+Future device → browser real-time telemetry (e.g. live RPM, sensor
+readings) reuses the existing byte-pass-through wire — **no new server
+verbs, no envelope, no length prefix, no JSON**. The relay code in
+`server/src/ws-relay.js` does not change when telemetry is added.
+
+The frame format is TBD; it will be a flat ASCII string (e.g.
+`telemetry rpm 1234\n`) decided when device firmware lands. The frontend
+seam lives next to `reservePlaceholder('.data-card', ...)` in
+`web/js/main.js`; populate it with a parser that branches on the verb
+prefix inside `client.onFrame` and routes recognized telemetry frames to
+a chart widget. Vendor any chart library under `web/vendor/`.
+
+Until then, the `.data-card` is a click-only `console.info` placeholder
+and the wire stays as documented above.

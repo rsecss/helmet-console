@@ -1,11 +1,11 @@
 /**
  * View switcher — single owner of `.app-shell[data-view]` and the
- * `.view-toggle` button group's `aria-pressed` sync. Two views:
- * `'terminal' | 'ai'`. Mirrors the single-writer pattern that
+ * `.view-toggle` button group's `aria-pressed` sync. Three views:
+ * `'terminal' | 'ai' | 'panel'`. Mirrors the single-writer pattern that
  * `config-panel.js` uses for `data-state`.
  */
 
-const VALID_VIEWS = new Set(['terminal', 'ai']);
+const VALID_VIEWS = new Set(['terminal', 'ai', 'panel']);
 
 export function createViewSwitcher({ shell, buttons, onViewChange }) {
   function setView(name) {

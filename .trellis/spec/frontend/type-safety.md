@@ -115,7 +115,7 @@ known-shape type. Example from `ai-panel.js#translateTool`:
 ```js
 if (name === 'motor_speed') {
   const v = Number(args && args.value);
-  if (!Number.isInteger(v) || v < 0 || v > 5) {
+  if (!Number.isInteger(v) || v < 0 || v > 3) {
     return { error: '参数越界' };
   }
   return { command: `motor_speed_${v}` };

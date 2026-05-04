@@ -82,16 +82,18 @@ clears every page load.
 ### 2c. View selection (NOT persisted)
 
 `view-switcher.js` is the **only writer** of `.app-shell[data-view]`
-(`'terminal' | 'ai'`). The chosen view does NOT persist to localStorage;
-every reload starts in `'terminal'` (set explicitly in `main.js` after
-construction).
+(`'terminal' | 'ai' | 'panel'`). The chosen view does NOT persist to
+localStorage; every reload starts in `'terminal'` (set explicitly in
+`main.js` after construction). The `'panel'` view owns LED + motor cards
+plus the reserved `.data-card` telemetry slot.
 
 ### 3. Widget state (control-panel, command-panel)
 
 | Concern                   | Owner             | Storage                               |
 | ------------------------- | ----------------- | ------------------------------------- |
 | LED on/off visual         | `control-panel.js`| `aria-pressed` + `.led-status[data-state]` + status text |
-| Motor speed display       | `control-panel.js`| `motorSlider.value` + text node + CSS `--fill` |
+| Motor switch (on/off)     | `control-panel.js`| Closure (`motorOn:bool`) + `aria-pressed` on switch buttons + `.motor-display[data-state]` + status text |
+| Motor target gear (1..3)  | `control-panel.js`| Closure (`motorGear:1\|2\|3`) + `aria-pressed` on the matching gear button + gear text node |
 | Send button enabled       | `command-panel.js`| `sendButton.disabled` + `input.disabled` |
 | Inline URL error          | `config-panel.js` | `inlineError.textContent` + `aria-invalid` |
 
@@ -99,6 +101,16 @@ LED state is driven by local click intent (not device confirmation); the
 inbound-frame hookup design is in
 [`./quality-guidelines.md`](./quality-guidelines.md) §"Required Patterns"
 control-panel contract.
+
+Motor state is two-axis: a switch (on/off, the power gate) and a gear
+(1..3, the target speed). The wire still carries the existing flat string
+`motor_speed_<0..3>`; switch OFF emits `motor_speed_0`, switch ON emits
+`motor_speed_<gear>`. **Passive memory rule**: while the switch is OFF,
+clicking a gear button only updates the in-memory `motorGear` and
+re-paints the highlight — no WS frame is emitted. Inbound mirror via
+`controlPanel.setMotorSpeed(value)` accepts integer 0 (switch OFF, gear
+preserved) or 1..3 (switch ON, gear ← value); any other value is logged
+via `console.warn` and dropped.
 
 ---
 
@@ -137,3 +149,13 @@ Real-time data flows through the WebSocket and is rendered immediately by
   both worlds.
 - **Caching a derived view of `console.ws.*` without re-deriving it.** The
   five keys are the source of truth. Recompute, don't cache.
+- **Sending `motor_speed_<n>` on every gear button click regardless of
+  switch state.** Defeats the passive-memory rule: with the switch OFF
+  the user is pre-selecting a gear, not starting the motor. The correct
+  behavior — gear click while switch=OFF updates `motorGear` and the
+  `aria-pressed` highlight only, and the next switch-ON click is what
+  emits `motor_speed_<gear>`.
+- **Resetting `motorGear` to a default when receiving `motor_speed_0`.**
+  Frame `motor_speed_0` means "stop" only; the user's selected gear
+  must persist so re-enabling the switch resumes at the same gear. The
+  `setMotorSpeed(0)` boundary preserves `motorGear` by design.
