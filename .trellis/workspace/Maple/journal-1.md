@@ -630,3 +630,75 @@ Spec：
 ### Next Steps
 
 - None - task complete
+
+
+## Session 9: Add panel view with motor switch/gear rework + reserved telemetry slot
+
+**Date**: 2026-05-04
+**Task**: Add panel view with motor switch/gear rework + reserved telemetry slot
+**Branch**: `dev`
+
+### Summary
+
+(Add summary)
+
+### Main Changes
+
+## Scope
+
+第三个顶部 tab "面板"（与 终端 / AI 助手 同级），把 LED + 电机卡从"全视图常驻"迁移到只在 panel 视图渲染；电机改造（开关 + 1..3 挡位 + 状态读数区）；预留 `.data-card` 占位用于后续下位机遥测/图表接入。后端 relay 仍字节直通，无新动词。
+
+## Files
+
+| 文件 | 变更 |
+|---|---|
+| `web/index.html` | 新增 panel tab；`<section class="panel-view">` 包裹 control-cards + data-card；电机卡 body 改为 display 区 + 开关 + 3 挡位段；移除滑块 |
+| `web/css/style.css` | `.app-shell` grid 5→4 行；新增 `.panel-view` / `.motor-body` / `.motor-display(-row)` / `.motor-switch(-btn)` / `.motor-gears` / `.motor-gear-btn` / `.data-card`；扩展 `[data-view]` 切换规则到三态；移除 `.slider*` / `.motor-row*` / `.motor-slider-wrap` |
+| `web/js/view-switcher.js` | `VALID_VIEWS` 增 `'panel'`，doc comment 更新 |
+| `web/js/control-panel.js` | 重构电机：双轴闭包态 `motorOn:bool` + `motorGear:1..3`；新增 `setMotorState({on,gear})`；保留 `setMotorSpeed(value)` 作为 mirror 边界；OFF + 点挡位 → 被动记忆不发命令；越界值 `console.warn` 丢弃 |
+| `web/js/main.js` | 新电机元素 wiring；`reservePlaceholder('.data-card', '实时数据')` + 文档化注释块（指向遥测 frame TBD 的 spec） |
+| `web/js/ai-panel.js` | `motor_speed` 工具 `maximum: 5→3`、描述 `0=停止，3=最高速`；`translateTool` 边界 `>5→>3`；SYSTEM_PROMPT 同步；模块顶 doc comment `0..5→0..3` |
+| `.trellis/spec/frontend/quality-guidelines.md` | createControlPanel 签名替换；motor 命令行/校验矩阵 0..3；`data-view` 切换三态文档；新增 §"Why panel view + motor switch/gear two-axis" 设计决策 |
+| `.trellis/spec/frontend/state-management.md` | View 枚举三态；widget 状态表用双轴行替换电机单值行；新增 motor mirror 规则段；Common Mistakes 加两条（passive memory / 0-preserve gear） |
+| `.trellis/spec/frontend/type-safety.md` | `translateTool` 示例上界 `>5→>3` |
+| `.trellis/spec/backend/quality-guidelines.md` | 协议表 motor 行 `0..3`；末尾新增 §Telemetry (Deferred)：未来 telemetry 仍字节直通、无 envelope、frame 格式 TBD |
+
+## Decisions / Constraints
+
+- **协议复用**：把 0 当作"开关 OFF 的命令值"，挡位 UI 域为 1..3，整个改动不引入新动词；后端 relay 一行未动。
+- **被动记忆**：开关 OFF 时点挡位仅更新 `motorGear` + 高亮，不发帧。匹配"点火 + 变速箱"心智模型，避免误触启动。
+- **Mirror 0-preserve**：收到 `motor_speed_0` 关电但保留挡位高亮，便于再次开机回到上次档；`motor_speed_4|5` 越界 `console.warn` 丢弃。
+- **遥测预留 L2**：仅 DOM 占位 + `reservePlaceholder` + 注释钩子；不引图表库、不定 frame 格式（KISS / YAGNI）。
+- **单 commit 而非 Q6.2 计划的 2 commit**：HTML/CSS 与 JS 行为变更原子耦合（`main.js` 不再 `requireElement('motorSpeed')`），拆分会让 Phase 1 commit 直接崩溃。
+
+## Tests
+
+- `npm run lint`：0 error
+- `npm run format:check`：clean
+- `npm run smoke`（HTTP /healthz + 广播 + ping/pong + 二进制 1003）：ok
+- `node .trellis/tasks/archive/2026-05/05-04-panel-view/ui-harness.mjs`：39/39 passed（覆盖初始态 / 被动记忆 / 开关 ON/OFF / 挡位切换 / mirrorControlState 分支 0/1..3/越界 / LED 回归）
+- chrome-devtools MCP 自动化未跑：本会话 `ToolSearch` 持续 `InputValidationError: max_results expected number got string`，无法加载 schemas。已用 Node DOM 仿真 harness 覆盖 PRD 全部电机验收点。
+
+## Next
+
+- 真实下位机协议落定后，按 `spec/backend/quality-guidelines.md` §Telemetry (Deferred) 在 `main.js#client.onFrame` 加分流分支、替换 `.data-card` 为图表组件、把 chart 库 vendor 进 `web/vendor/`。
+- 等 chrome-devtools MCP 服务恢复，可补一次浏览器端端到端回归（视图切换 / disconnected dim / 数据卡 placeholder click 日志）。
+
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `621dad9` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
