@@ -1,0 +1,8 @@
+{"file": ".trellis/workflow.md", "reason": "Project workflow and conventions"}
+{"file": ".trellis/spec/frontend/index.md", "reason": "Frontend development guide"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "Module boundaries (control-panel state ownership, terminal display-only, no client.send from ai-panel) and parseWsUrl/state-machine contracts"}
+{"file": ".trellis/spec/frontend/state-management.md", "reason": "Closure/DOM-attr layering for LED 4-state extension and snapshot() pattern"}
+{"file": ".trellis/spec/frontend/type-safety.md", "reason": "JSDoc/runtime-guards for new tool param 'color' and snapshot return shape"}
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Confirm new state: frame stays text-only single-line and does not violate byte-passthrough relay contract"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "New wire frame state:led=X,motor=Y crosses browser->relay->device boundary; checklist before adding"}
+{"file": ".trellis/spec/guides/code-reuse-thinking-guide.md", "reason": "controlPanel.snapshot() reused by ai-panel state injection + state-card render + sendCommand snapshot frame"}
