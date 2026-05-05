@@ -1,116 +1,73 @@
-# Logging Guidelines
+# Backend Logging Guidelines
 
-> How the backend logs.
-
----
-
-## Overview
-
-The backend logs to **stdout / stderr only** via the standard `console`
-methods. There is no logging library (no winston / pino / bunyan), and
-there is no log file rotation in code — the `logs/` directory at the repo
-root is for user-driven `node server/src/index.js > logs/...` redirection,
-not framework output.
+> Console-only. No logger library. No structured JSON.
 
 ---
 
-## Log Levels
-
-The relay accepts an optional `logger` (defaulting to `console`) so that
-tests / smoke scripts can substitute a silent logger. In source we use
-exactly three methods:
+## Levels
 
 | Method            | When                                                       |
 | ----------------- | ---------------------------------------------------------- |
-| `console.info`    | Lifecycle events: server listening, signal received, smoke ok |
-| `console.warn`    | Recoverable per-client problems: WS client error            |
-| `console.error`   | Unrecoverable / unexpected — **rare**; reserved for future  |
+| `console.info`    | Lifecycle: server listening, signal received, smoke ok     |
+| `console.warn`    | Recoverable per-client problems (e.g. WS client error)     |
+| `console.error`   | Unrecoverable / unexpected — **rare**, reserved for future |
 
-`console.log` is **forbidden** (Forbidden Patterns in
-[`./quality-guidelines.md`](./quality-guidelines.md)). It does not signal
-intent and is harder to grep than the level-prefixed forms.
+`console.log` is **forbidden**: it does not signal intent and is harder
+to grep than the level-prefixed forms. ESLint will not flag it; the
+review checklist will.
 
 ---
 
-## Structured Logging
-
-We do **not** use JSON structured logging. The volume is low (a few lines
-per process lifetime) and operators can read it directly. Lines follow a
-loose convention:
+## Format
 
 ```text
 [<scope>] <message> [<extra>]
 ```
 
-`<scope>` is a short bracketed tag identifying the source module:
-
-| Scope       | Module / context                                  |
+| Scope       | Source                                            |
 | ----------- | ------------------------------------------------- |
-| `[server]`  | `server/src/index.js` — listen / shutdown lifecycle |
-| `[ws]`      | `server/src/ws-relay.js` — per-connection events  |
-| `[smoke]`   | `server/scripts/smoke.js` — test progress         |
-| `[ws-cli]`  | `server/scripts/ws-cli.js` — manual e2e client    |
+| `[server]`  | `server/src/index.js` (listen/shutdown lifecycle) |
+| `[ws]`      | `server/src/ws-relay.js` (per-connection events)  |
+| `[smoke]`   | `server/scripts/smoke.js` (test progress)         |
+| `[ws-cli]`  | `server/scripts/ws-cli.js` (manual e2e client)    |
 
-Examples from the codebase:
-
-```js
-console.info(`[server] listening on http://${config.host}:${config.port}`);
-console.info(`[server] websocket path ${config.wsPath}`);
-console.info(`[server] ${signal} received, shutting down`);
-logger.warn('[ws] client error', error.message);
-console.info('[smoke] ok');
-```
-
-When a log line carries dynamic data, prefer template literals over
-`%s`-style format strings.
+Use template literals for dynamic values, not `%s` format strings.
 
 ---
 
 ## What to Log
 
-**Do log**:
-
+**Do**:
 - Server start (`host`, `port`, `wsPath`)
-- Process signal received (SIGINT / SIGTERM) before shutdown
-- Per-client WebSocket errors (`ws.on('error', ...)`)
+- Process signal received before shutdown
+- Per-client WebSocket errors
 
-**Do NOT log**:
-
+**Don't**:
 - Every received frame / broadcast — at 32 max clients with chatty
-  devices this would dominate stderr. The relay is forward-only; the
-  text payload is not interesting at the server.
-- Binary-frame closes — they are already signalled to the offending
-  client via close code `1003`. Logging them here doubles the noise and
-  provides no operator action.
+  devices this dominates stderr.
+- Binary-frame closes — already signalled via close code `1003`.
 - `/healthz` requests — health probes will spam logs.
-- Successful upgrade / disconnect — count them via `/healthz`, not logs.
+- Successful upgrade / disconnect — use `/healthz` for the count.
 
-If you find yourself wanting to log a frame to debug a flow, reach for
-`server/scripts/smoke.js` and add a test instead.
+If you find yourself wanting to log a frame to debug a flow, add a
+smoke assertion instead.
 
 ---
 
-## What NOT to Log (security)
+## Security
 
 **Never** log raw text frame contents. Devices may stream sensor data,
 command transcripts, or future authentication tokens through the relay.
-The server is business-agnostic by design (see
-[`./quality-guidelines.md`](./quality-guidelines.md) §"Forbidden
-Patterns") — logging the wire breaks that guarantee.
+Logging the wire breaks the business-agnostic guarantee.
 
 ---
 
 ## Common Mistakes
 
-- **Reaching for a logger library.** YAGNI. `console.info / warn / error`
-  with `[scope] message` is sufficient and frees us from a runtime dep on
-  the hot path. Revisit only if a real operator complaint arrives.
-- **`console.log` slipping in during debugging.** ESLint will not flag it,
-  but [`./quality-guidelines.md`](./quality-guidelines.md) does. Use
-  `console.info` even for one-off prints, then remove before commit.
-- **Logging inside `broadcast(...)`.** This runs once per client per frame
-  — a guaranteed log explosion. If you need to instrument throughput, add
-  a counter exposed via `/healthz`, not a log line.
-- **Using `console.error` for client problems.** A misbehaving client is a
-  warning, not an error — it does not threaten process health. Reserve
-  `error` for issues an operator must act on.
+- Reaching for a logger library (winston / pino / bunyan). YAGNI.
+- `console.log` slipping in during debugging. Use `console.info` and
+  remove before commit.
+- Logging inside `broadcast(...)` — runs once per client per frame.
+  Counter via `/healthz` if you need throughput visibility.
+- `console.error` for client problems — a misbehaving client is a
+  warning, not an error.

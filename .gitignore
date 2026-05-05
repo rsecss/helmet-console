@@ -1,7 +1,7 @@
 .ace-tool/
 
-# Project docs
-docs/
+# Design prototypes (large HTML mockups; reference-only)
+docs/design/
 
 # Node
 node_modules/

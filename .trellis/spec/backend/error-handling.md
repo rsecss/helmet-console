@@ -1,99 +1,33 @@
-# Error Handling
+# Backend Error Handling
 
-> How errors are surfaced and handled in the backend.
-
----
-
-## Overview
-
-The backend is a **forward-only relay**. There is no business logic, no
-database, and no application-level error taxonomy. Error handling
-collapses to three categories:
-
-1. **Binary frames** — `ws.close(1003, ...)` on the offending socket
-   only. There is no JSON `error`-frame envelope; the WebSocket close
-   code is the entire signal.
-2. **HTTP errors** — non-`GET`/`HEAD` methods or unknown paths → JSON
-   4xx response.
-3. **Per-WS failures** — `ws.on('error', ...)` → log via `console.warn`,
-   keep other clients alive. HTTP `clientError` silently writes a 400 and
-   ends the socket (malformed HTTP on a public listener is expected).
-
-There are **no custom Error classes** and no on-the-wire `error`
-payload. Protocol violations close the offending socket; everything else
-is a plain `Error`.
+> The relay has no business logic. Error handling is three patterns.
 
 ---
 
-## Error Types
+## Categories
 
-### WebSocket protocol violations
+| Category                | Surface                                                     |
+| ----------------------- | ----------------------------------------------------------- |
+| Binary WebSocket frames | `ws.close(1003, 'binary frames are not supported')` on the offending socket only |
+| HTTP 4xx                | JSON `{ status:'error', message }` via `static.js#sendJson` (`405` for non-`GET`/`HEAD`, `404` for unknown static path) |
+| Upgrade failures        | Raw `404 Not Found` (path mismatch) or `503 Service Unavailable` (max clients), then `socket.destroy()` |
+| Per-client `ws` errors  | `logger.warn('[ws] client error', error.message)`; other clients unaffected |
+| HTTP `clientError`      | `socket.end('HTTP/1.1 400 Bad Request\r\n\r\n')`; not logged |
 
-| Trigger                | Server behavior                                                       |
-| ---------------------- | --------------------------------------------------------------------- |
-| Binary WebSocket frame | `ws.close(1003, 'binary frames are not supported')` on that socket only |
-
-There is no on-the-wire error envelope. Other text frames are passed
-through byte-for-byte without interpretation, so the relay has no
-"invalid format" to report — by design.
-
-### HTTP error responses
-
-Always JSON, served by `server/src/static.js#sendJson`:
-
-```js
-{ status: 'error', message: '<human-readable>' }
-```
-
-| Status | When                                            |
-| ------ | ----------------------------------------------- |
-| `405`  | Method other than `GET` / `HEAD`                |
-| `404`  | `sirv` cannot find the requested static file    |
-
-### Upgrade-time HTTP errors
-
-Written directly to the raw socket, then `socket.destroy()`:
-
-| Response                  | When                                              |
-| ------------------------- | ------------------------------------------------- |
-| `404 Not Found`           | Upgrade path is not `config.wsPath`               |
-| `503 Service Unavailable` | Connected clients ≥ `config.maxClients`           |
+There are **no custom Error classes** and no on-the-wire `error` payload
+— close codes carry the only protocol-level signal.
 
 ---
 
-## Error Handling Patterns
+## Patterns
 
-### Pattern 1: Pass through, never parse
+### Pass through, never parse
 
-`server/src/ws-relay.js` is a flat byte-passthrough. The only branches
-in the message handler are (a) reject binary frames and (b) intercept
-the literal `'ping'` to reply with `'pong\n'`.
+The only branches in `ws-relay.js#message` are reject-binary and
+`ping` → `pong\n`. Adding any other content-based branch breaks the
+"server is business-agnostic" invariant.
 
-```js
-ws.on('message', (data, isBinary) => {
-  if (isBinary) {
-    ws.close(1003, 'binary frames are not supported');
-    return;
-  }
-  const text = data.toString('utf8');
-  if (text.replace(/\r?\n$/, '') === 'ping') {
-    if (ws.readyState === WebSocket.OPEN) ws.send('pong\n');
-    return;
-  }
-  broadcast(ws, text);
-});
-```
-
-Adding any other content-based branch (e.g., a server-side allow-list of
-verbs, a length cap, a regex check) breaks the
-"server is business-agnostic" invariant in
-[`./quality-guidelines.md`](./quality-guidelines.md). Cap protections
-that are wire-level (e.g., `maxPayload`) belong in the `WebSocketServer`
-constructor, not in the message handler.
-
-### Pattern 2: Per-client failure does not affect peers
-
-WebSocket-level errors are logged via `logger.warn` and contained:
+### Per-client failure isolation
 
 ```js
 ws.on('error', (error) => {
@@ -101,15 +35,9 @@ ws.on('error', (error) => {
 });
 ```
 
-A bad client must not crash the relay or disturb other clients. The
-smoke test exercises broadcast, ping/pong, and binary-close paths;
-client-level error isolation is an `ws.on('error', ...)` invariant
-covered by the underlying `ws` library.
+A bad client must not crash the relay or disturb peers.
 
-### Pattern 3: Graceful shutdown, fail-loud startup
-
-`server/src/index.js` traps SIGINT / SIGTERM and closes the relay before
-exiting:
+### Graceful shutdown, fail-loud startup
 
 ```js
 function shutdown(signal) {
@@ -121,24 +49,16 @@ process.on('SIGINT', shutdown);
 process.on('SIGTERM', shutdown);
 ```
 
-Startup (`server.listen`, config parsing) is **not** wrapped in `try/catch` —
-let exceptions surface so the process exits with a non-zero code.
-`server.on('clientError', ...)` writes a 400 and ends the socket without
-logging (malformed HTTP on a public listener is expected).
+`server.listen` is **not** wrapped in `try/catch` — port-in-use / EACCES
+must surface as a non-zero exit code so the operator notices.
 
 ---
 
 ## Common Mistakes
 
-- **Re-introducing a JSON envelope to "carry an error code".** The
-  protocol is flat strings; close codes carry the only protocol-level
-  signal. If a future feature needs structured errors, treat that as a
-  protocol redesign, not an extension.
-- **Throwing inside `ws.on('message', ...)`.** A throw escapes into `ws`
-  and may close the socket without a clean reason. Either branch and
-  return cleanly, or call `ws.close(code, reason)` explicitly.
-- **Adding a content-based reject (e.g., regex on the verb).** That
-  breaks the "server is business-agnostic" invariant. Devices and
-  browsers negotiate the command vocabulary; the relay is not a gate.
-- **Wrapping `server.listen` in `try/catch` to "be safe".** Hides
-  port-in-use / EACCES; let it crash so the operator notices.
+- Re-introducing a JSON `error` envelope. Close codes are sufficient.
+- Throwing inside `ws.on('message', ...)` — escapes into `ws` and may
+  close the socket without a clean reason. Use `ws.close(code, reason)`.
+- Adding a content-based reject (regex on the verb). Breaks
+  business-agnostic relay; verb negotiation lives in browser + device.
+- Wrapping `server.listen` in `try/catch` — hides startup failures.
