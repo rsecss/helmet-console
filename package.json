@@ -2,6 +2,8 @@
   "name": "helmet-console",
   "version": "0.0.1",
   "private": true,
+  "license": "MIT",
+  "author": "Maple",
   "type": "module",
   "description": "Lightweight smart terminal console (host-side) for embedded devices via WebSocket relay.",
   "scripts": {
