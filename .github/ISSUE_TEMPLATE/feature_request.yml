@@ -1,0 +1,42 @@
+name: Feature request
+description: Propose an enhancement consistent with the lightweight relay goal
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        helmet-console intentionally stays a forward-only WebSocket relay.
+        Before proposing, please skim `docs/architecture.md` §1 and
+        `docs/contributing.md` "Boundaries" — features that turn the
+        server into a parser / store / framework will likely be declined.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What's currently hard or impossible?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+      description: |
+        Where does this live (server / web / deploy / docs)?
+        Does it add a new dependency or a new wire format?
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope check
+      options:
+        - label: This does not turn the server into a JSON parser / data store / framework
+        - label: This does not require a build tool on the frontend

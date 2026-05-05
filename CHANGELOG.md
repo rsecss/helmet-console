@@ -82,5 +82,10 @@ adheres to [Semantic Versioning](https://semver.org/) once it ships.
 - Initial WebSocket console: `server/` (composition + `sirv` + `ws`),
   `web/` (xterm-based UI), `server/scripts/smoke.js` (HTTP / WS / ping
   / binary-close coverage).
+- GitHub Actions CI/CD: quality gate on Node 18/20/22
+  (`format:check` / `lint` / `smoke`), commitlint on PRs, and a
+  tag-triggered release workflow that extracts the matching
+  `CHANGELOG.md` section as Release notes. Bundled with issue / PR
+  templates, `CODEOWNERS`, and a `npm run release -- X.Y.Z` helper.
 
-[Unreleased]: https://github.com/your-org/helmet-console/commits/main
+[Unreleased]: https://github.com/rsecss/helmet-console/commits/main

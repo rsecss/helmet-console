@@ -1,0 +1,51 @@
+name: Bug report
+description: Report a defect in helmet-console
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug.  A minimal reproducible
+        example helps a lot — ideally something that runs against
+        `node server/scripts/ws-cli.js` or the in-browser console.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Steps to reproduce + expected vs actual
+      placeholder: |
+        1. `npm start`
+        2. open http://127.0.0.1:8080
+        3. click 连接, type `led_on`
+        4. expected: …
+           actual: …
+    validations:
+      required: true
+
+  - type: input
+    id: node
+    attributes:
+      label: Node version
+      placeholder: '22.10.0'
+    validations:
+      required: true
+
+  - type: input
+    id: browser
+    attributes:
+      label: Browser (if frontend issue)
+      placeholder: 'Chrome 130 / Firefox 132 / Safari 18'
+
+  - type: input
+    id: os
+    attributes:
+      label: OS
+      placeholder: 'Windows 11 / macOS 14 / Ubuntu 24.04'
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / smoke output
+      description: Paste relevant `npm run smoke` output, server logs, or browser console errors.
+      render: shell
