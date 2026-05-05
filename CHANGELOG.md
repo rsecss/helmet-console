@@ -6,6 +6,10 @@ adheres to [Semantic Versioning](https://semver.org/) once it ships.
 
 ## [Unreleased]
 
+_Nothing yet._
+
+## [0.1.0] - 2026-05-05
+
 ### Added
 
 - **AI device-state context**: `ai-panel.js` injects a `[当前设备状态]`
@@ -88,4 +92,5 @@ adheres to [Semantic Versioning](https://semver.org/) once it ships.
   `CHANGELOG.md` section as Release notes. Bundled with issue / PR
   templates, `CODEOWNERS`, and a `npm run release -- X.Y.Z` helper.
 
-[Unreleased]: https://github.com/rsecss/helmet-console/commits/main
+[Unreleased]: https://github.com/rsecss/helmet-console/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/rsecss/helmet-console/releases/tag/v0.1.0
