@@ -483,6 +483,30 @@ button:disabled {
   color: var(--c-rose-strong);
 }
 
+.ai-config-query {
+  margin-left: auto;
+  padding: 6px 12px;
+  background: var(--c-track);
+  border: 1px solid var(--c-hairline);
+  border-radius: var(--r-sm);
+  font-size: 13px;
+  color: var(--c-body);
+  transition:
+    color var(--motion-fast),
+    border-color var(--motion-fast),
+    background var(--motion-fast);
+}
+
+.ai-config-query + .ai-config-edit {
+  margin-left: 0;
+}
+
+.ai-config-query:hover {
+  color: var(--c-ink);
+  border-color: var(--c-border);
+  background: var(--c-card);
+}
+
 .ai-config-form {
   display: flex;
   flex-direction: column;
@@ -580,6 +604,10 @@ button:disabled {
   white-space: pre-wrap;
 }
 
+.ai-bubble-body:empty {
+  display: none;
+}
+
 .ai-bubble-user {
   align-self: flex-end;
   background: var(--c-rose-soft);
@@ -615,6 +643,58 @@ button:disabled {
 
 .ai-bubble-tool-error {
   color: var(--c-rose-strong);
+}
+
+.ai-bubble-state-card {
+  margin-top: var(--s-sm);
+  padding: 8px 12px;
+  background: var(--c-track);
+  border: 1px solid var(--c-hairline);
+  border-left: 3px solid var(--c-emerald);
+  border-radius: var(--r-sm);
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--c-body);
+}
+
+.ai-bubble-state-card:first-child {
+  margin-top: 0;
+}
+
+.ai-bubble-body:empty + .ai-bubble-state-card {
+  margin-top: 0;
+}
+
+.ai-bubble-state-card[data-led='off'] {
+  border-left-color: var(--c-subtle);
+}
+.ai-bubble-state-card[data-led='white'] {
+  border-left-color: var(--c-emerald);
+}
+.ai-bubble-state-card[data-led='red'] {
+  border-left-color: var(--c-rose);
+}
+.ai-bubble-state-card[data-led='green'] {
+  border-left-color: var(--c-emerald-strong);
+}
+
+.ai-bubble-state-card-title {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--c-muted);
+  margin-bottom: 2px;
+}
+
+.ai-bubble-state-card-row {
+  font-family: var(--font-mono);
+}
+
+.ai-bubble-state-card-note {
+  margin-top: 4px;
+  color: var(--c-orange);
+  font-size: 11px;
 }
 
 .ai-input-bar {
@@ -813,6 +893,18 @@ button:disabled {
 
 .led-status[data-state='off'] .led-status-value::before {
   background: var(--c-subtle);
+}
+
+.led-status[data-state='white'] .led-status-value::before {
+  background: var(--c-ink);
+}
+
+.led-status[data-state='red'] .led-status-value::before {
+  background: var(--c-rose);
+}
+
+.led-status[data-state='green'] .led-status-value::before {
+  background: var(--c-emerald);
 }
 
 .led-toggle {

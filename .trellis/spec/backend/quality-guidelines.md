@@ -104,7 +104,8 @@ schema. Binary frames are not supported.
 
 | Direction      | Examples                                            |
 | -------------- | --------------------------------------------------- |
-| browser → MCU  | `led_on\n` / `led_off\n` / `motor_speed_<0..3>\n`   |
+| browser → MCU  | `led_on\n` / `led_off\n` / `led_color_<white|red|green>\n` / `motor_speed_<0..3>\n` |
+| browser → peers | `state:led=<off|white|red|green>,motor=<0..3>\n` (ordinary relayed text; not server-interpreted) |
 | MCU → browser  | any UTF-8 text (e.g. `temp=42.3\n`)                 |
 | client ↔ server | `ping\n` / `pong\n` (server-intercepted; not relayed) |
 

@@ -8,6 +8,8 @@ import { createWsClient } from './ws-client.js';
 
 const PONG = 'pong';
 const MOTOR_PREFIX = 'motor_speed_';
+const LED_COLOR_PREFIX = 'led_color_';
+const LED_COLORS = new Set(['white', 'red', 'green']);
 // Display-layer direction markers (xterm only — wire stays byte-passthrough).
 // Convention: ↓ = downstream control (this browser → device/peer),
 //             ↑ = upstream feedback (device/peer → this browser).
@@ -34,11 +36,18 @@ function ensureTrailingNewline(text) {
 
 function mirrorControlState(command) {
   if (command === 'led_on') {
-    controlPanel.setLedState(true);
+    controlPanel.setLedState('white');
     return;
   }
   if (command === 'led_off') {
-    controlPanel.setLedState(false);
+    controlPanel.setLedState('off');
+    return;
+  }
+  if (command.startsWith(LED_COLOR_PREFIX)) {
+    const color = command.slice(LED_COLOR_PREFIX.length);
+    if (LED_COLORS.has(color)) {
+      controlPanel.setLedState(color);
+    }
     return;
   }
   if (command.startsWith(MOTOR_PREFIX)) {
@@ -64,6 +73,7 @@ const client = createWsClient({
     if (stripTrailingNewline(text) === PONG) {
       return;
     }
+    // TODO(state-mirror): parse `state:` frames here for cross-client UI mirroring.
     const body = text.endsWith('\n') ? text : `${text}\n`;
     terminal.writeText(`${RX_PREFIX}${body}`);
   },
@@ -89,12 +99,36 @@ const configPanel = createConfigPanel({
   },
 });
 
+function isControlCommand(command) {
+  if (command === 'led_on' || command === 'led_off') return true;
+  if (command.startsWith(LED_COLOR_PREFIX)) {
+    return LED_COLORS.has(command.slice(LED_COLOR_PREFIX.length));
+  }
+  if (command.startsWith(MOTOR_PREFIX)) {
+    const value = Number.parseInt(command.slice(MOTOR_PREFIX.length), 10);
+    return Number.isInteger(value) && value >= 0 && value <= 3;
+  }
+  return false;
+}
+
 function sendCommand(command) {
   const ok = client.send(ensureTrailingNewline(command));
   // Echo only on successful send. ws-client already calls onLog('[ws] not connected')
   // on failure, so the operator gets a single source of truth.
   if (ok) {
     terminal.writeText(`${TX_PREFIX}${command}\n`);
+    if (isControlCommand(command)) {
+      emitStateSnapshot();
+    }
+  }
+}
+
+function emitStateSnapshot() {
+  const { led, motorOn, motorGear } = controlPanel.snapshot();
+  const motor = motorOn ? motorGear : 0;
+  const frame = `state:led=${led},motor=${motor}\n`;
+  if (client.send(frame)) {
+    terminal.writeText(`${TX_PREFIX}${frame}`);
   }
 }
 
@@ -150,11 +184,13 @@ const aiPanel = createAiPanel({
   inputForm: requireElement('aiInputForm'),
   input: requireElement('aiInput'),
   sendButton: requireElement('aiSendButton'),
+  statusQueryButton: requireElement('aiStatusQueryButton'),
   onTool(command) {
-    sendCommand(command);
     mirrorControlState(command);
+    sendCommand(command);
   },
   isWsConnected: () => client.isConnected(),
+  getSnapshot: () => controlPanel.snapshot(),
 });
 
 const viewSwitcher = createViewSwitcher({

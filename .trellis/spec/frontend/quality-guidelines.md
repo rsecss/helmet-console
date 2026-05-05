@@ -146,8 +146,8 @@ export function createCommandPanel({ form, input, sendButton, onSend });
 export function createControlPanel({
   ledOnButton,
   ledOffButton,
-  ledStatus, // .led-status — receives [data-state='on'|'off']
-  ledStatusValue, // text node for "已开启 / 已关闭"
+  ledStatus, // .led-status — receives [data-state='off'|'white'|'red'|'green']
+  ledStatusValue, // text node for "已关闭 / 白光 / 红光 / 绿光"
   motorOnButton, // segmented switch [开]
   motorOffButton, // segmented switch [关]
   motorGearButtons, // Array<HTMLButtonElement> with data-gear="1|2|3"
@@ -158,7 +158,11 @@ export function createControlPanel({
   onLedOff, // () => void
   onMotorSpeed, // (n: number) => void  — n in [0..3]
 });
-// returns { setLedState(isOn: boolean), setMotorSpeed(n: number) }
+// returns {
+//   setLedState(state), // state ∈ 'off' | 'white' | 'red' | 'green'
+//   setMotorSpeed(n),
+//   snapshot(), // { led, motorOn, motorGear }
+// }
 ```
 
 #### 3. Contracts
@@ -222,21 +226,26 @@ Multi-line input from the command textarea is split on `\n` in `main.js`
 before sending; each non-empty line becomes its own frame so devices
 never need to handle frame boundaries.
 
-**Control frames** (LED + motor via control-panel → main.js `sendCommand`):
+**Control frames** (LED + motor via control-panel / AI tool → main.js `sendCommand`):
 
 ```js
 // LED on / off
-client.send('led_on\n');
+client.send('led_on\n'); // device resolves this to white
 client.send('led_off\n');
+client.send('led_color_red\n'); // color ∈ white | red | green
 // Motor speed
 client.send(`motor_speed_${value}\n`); // value ∈ [0..3]; 0 emitted by switch OFF, 1..3 by switch ON
+// Best-effort state snapshot after every successful control send
+client.send(`state:led=${led},motor=${motor}\n`); // led ∈ off|white|red|green; motor ∈ [0..3]
 ```
 
 `control-panel.js` updates LED status text/dot **locally** based on click
-intent (not device confirmation). When `ws-client` learns to dispatch
-device status frames to per-card subscribers, `main.js` will call
-`controlPanel.setLedState(isOn)` from inbound text instead. The exported
-`setLedState` / `setMotorSpeed` are wired now to make that hookup drop-in.
+intent (not device confirmation). Manual LED "开启" resolves to `white`,
+matching the device-side `led_on -> WHITE` mapping. AI-issued
+`led_color_<white|red|green>` updates the local mirror to that color via
+`main.js#mirrorControlState` before `sendCommand()` emits the control
+frame and `state:` snapshot. Future inbound `state:` parsing belongs in
+`main.js#onFrame`, not in `ws-client.js` or `control-panel.js`.
 
 **LocalStorage keys**:
 
@@ -279,6 +288,9 @@ pre-rose multi-field forms); otherwise `defaultUrl()` derived from
 | Incoming `pong\n`                   | Update activity only; do not print to terminal                                   |
 | Incoming non-pong text              | `main.js#onFrame` writes `${RX_PREFIX}${body}` via `terminal.writeText`; `body` is the byte-passthrough text with a guaranteed trailing `\n` |
 | Outgoing command (cmd / control / ai-tool) | `main.js#sendCommand` calls `client.send(<text>\n)`; if the call returns `true`, write `${TX_PREFIX}${command}\n` via `terminal.writeText`; on `false`, no echo (ws-client already emits `[ws] not connected`) |
+| Outgoing control / ai-tool command success | `main.js#emitStateSnapshot` immediately sends `state:led=<off|white|red|green>,motor=<0..3>\n` and echoes it with `${TX_PREFIX}`; this frame is best-effort and uses `controlPanel.snapshot()` |
+| Manual LED 开启                    | `control-panel.js` sets local LED state to `white`, emits `led_on\n`, then `main.js` emits `state:led=white,motor=<current>\n` |
+| AI `led_color` tool                | `main.js#mirrorControlState` sets local LED state to the requested color before `sendCommand`, so the following `state:` frame reflects post-command state |
 | URL input empty                     | `parseWsUrl` → `{ok:false, reason:'请输入连接地址'}`; inline error; keep focus   |
 | URL input not parseable as URL      | reason: `'无法解析 URL，请使用 ws:// 或 wss:// 开头的完整地址'`                   |
 | URL protocol not `ws:` / `wss:`     | reason: `'协议必须是 ws:// 或 wss://'`                                           |
@@ -300,9 +312,13 @@ pre-rose multi-field forms); otherwise `defaultUrl()` derived from
   clicks 发送; `main.js` sends the text frame `'AT+PING\n'`, textarea
   clears, terminal stays display-only.
 - **Good (control)**: user clicks LED 开启; `control-panel.js` sets
-  `aria-pressed='true'`, status text "已开启", `.led-status[data-state='on']`,
-  and emits the text frame `'led_on\n'` via the injected `onLedOn`
-  callback.
+  `aria-pressed='true'`, status text "白光", `.led-status[data-state='white']`,
+  and emits `'led_on\n'` via the injected `onLedOn` callback. `main.js`
+  then emits `state:led=white,motor=<0..3>\n` as a best-effort snapshot.
+- **Good (AI color)**: AI emits `led_color({color:'red'})`; `ai-panel.js`
+  translates it to `'led_color_red'`; `main.js#mirrorControlState` updates
+  the local LED mirror to `red` before `sendCommand`; terminal shows both
+  `[↓]led_color_red` and `[↓]state:led=red,motor=<0..3>`.
 - **Base**: page loads disconnected; action button shows 连接; command-bar
   and control-cards at 50% opacity; xterm mounted with `#ffffff` background
   and `#dc2626` cursor; placeholder buttons present but no console errors.

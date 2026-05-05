@@ -1,14 +1,25 @@
 /**
  * Control panel — LED segmented toggle + Motor switch/gear segmented controls.
- * LED status text is driven by local click intent for now; once
- * ws-client dispatches device-confirmed status frames the same
- * `setLedState` hook can be called from `main.js` instead.
+ *
+ * LED state model: 4-token string aligned with the on-device
+ * `helmet_led_state_t` (off/white/red/green). Manual click "开启"
+ * resolves to 'white' to match the device's `led_on -> WHITE` mapping
+ * in APP/m100pg_protocol.c. AI-issued `led_color_<color>` updates the
+ * UI to that exact color; the panel buttons stay binary on/off.
  *
  * Motor model (per PRD 05-04-panel-view): switch is the power gate, gear is
  * the target speed (1..3). Switch OFF sends `motor_speed_0`; switch ON sends
  * `motor_speed_<gear>`. While switch is OFF, clicking a gear button only
  * updates the in-memory target — no WS frame is emitted (passive memory).
  */
+
+const LED_STATES = ['off', 'white', 'red', 'green'];
+const LED_LABEL = {
+  off: '已关闭',
+  white: '白光',
+  red: '红光',
+  green: '绿光',
+};
 
 export function createControlPanel({
   ledOnButton,
@@ -25,20 +36,26 @@ export function createControlPanel({
   onLedOff,
   onMotorSpeed,
 }) {
-  function setLedState(isOn) {
+  function setLedState(state) {
+    const next = LED_STATES.includes(state) ? state : 'off';
+    const isOn = next !== 'off';
     ledOnButton.setAttribute('aria-pressed', isOn ? 'true' : 'false');
     ledOffButton.setAttribute('aria-pressed', isOn ? 'false' : 'true');
-    ledStatus.dataset.state = isOn ? 'on' : 'off';
-    ledStatusValue.textContent = isOn ? '已开启' : '已关闭';
+    ledStatus.dataset.state = next;
+    ledStatusValue.textContent = LED_LABEL[next];
+    ledState = next;
   }
 
+  let ledState = 'off';
+
   ledOnButton.addEventListener('click', () => {
-    setLedState(true);
+    // led_on on the device resolves to WHITE (m100pg_protocol.c#dispatch_line)
+    setLedState('white');
     onLedOn();
   });
 
   ledOffButton.addEventListener('click', () => {
-    setLedState(false);
+    setLedState('off');
     onLedOff();
   });
 
@@ -115,9 +132,15 @@ export function createControlPanel({
 
   // Initial render — uses defaults (off + gear 1). No command emitted.
   renderMotor();
+  setLedState('off');
+
+  function snapshot() {
+    return { led: ledState, motorOn, motorGear };
+  }
 
   return {
     setLedState,
     setMotorSpeed,
+    snapshot,
   };
 }
