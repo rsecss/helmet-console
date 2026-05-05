@@ -1,0 +1,19 @@
+# Tooling and framework files (managed by other tools, do not format)
+.trellis/
+.claude/
+.codex/
+.agents/
+.ace-tool/
+.git/
+
+# Generated / installed
+node_modules/
+package-lock.json
+dist/
+build/
+coverage/
+*.log
+web/vendor/
+
+# Contains tool markers (e.g. <!-- TRELLIS:START -->)
+AGENTS.md

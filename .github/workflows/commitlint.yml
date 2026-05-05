@@ -1,0 +1,38 @@
+name: Commitlint
+
+# Validates that every commit on a PR follows Conventional Commits.
+# This is the CI counterpart of the local simple-git-hooks `commit-msg`
+# hook — defence in depth for contributors without the hook installed.
+
+on:
+  pull_request:
+    branches: [main, dev]
+
+permissions:
+  contents: read
+
+jobs:
+  commitlint:
+    name: Validate commit messages
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (full history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install (npm ci)
+        run: npm ci
+
+      - name: Lint commits in PR range
+        run: |
+          npx --no-install commitlint \
+            --from "${{ github.event.pull_request.base.sha }}" \
+            --to "${{ github.event.pull_request.head.sha }}" \
+            --verbose

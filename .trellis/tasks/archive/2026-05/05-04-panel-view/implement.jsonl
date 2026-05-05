@@ -1,0 +1,8 @@
+{"file": ".trellis/workflow.md", "reason": "Project workflow and conventions"}
+{"file": ".trellis/spec/frontend/index.md", "reason": "Frontend development guide"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "View enum, control widget contracts, mirrorControlState, motor command range"}
+{"file": ".trellis/spec/frontend/state-management.md", "reason": "Motor state model migration single-value to dual-axis; data-view enum extension"}
+{"file": ".trellis/spec/frontend/directory-structure.md", "reason": "web/ layout; module ownership for view-switcher, control-panel"}
+{"file": ".trellis/spec/frontend/type-safety.md", "reason": "JSDoc + runtime guards; motor range validator example"}
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Flat string protocol; no envelope; motor command row needs range update; telemetry deferred section"}
+{"file": ".trellis/spec/guides/code-reuse-thinking-guide.md", "reason": "Multiple sites reference 0..5; pre-modification grep rule"}

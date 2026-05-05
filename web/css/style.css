@@ -1,0 +1,1162 @@
+/* ============================================================
+ * Design Tokens — Rose variant (replicated from prototype-rose.html).
+ * The primary surface of truth for this design lives in
+ * docs/design/prototype-rose.html.
+ * ============================================================ */
+:root {
+  color-scheme: light;
+
+  /* Surface */
+  --c-bg: #fafaf9;
+  --c-card: #ffffff;
+  --c-hairline: #e7e5e4;
+  --c-border: #d6d3d1;
+  --c-track: #f4f4f5;
+
+  /* Text */
+  --c-ink: #18181b;
+  --c-body: #3f3f46;
+  --c-muted: #71717a;
+  --c-subtle: #a1a1aa;
+
+  /* Action — rose (primary) */
+  --c-rose: #e11d48;
+  --c-rose-strong: #be123c;
+  --c-rose-soft: #fff1f2;
+  --c-rose-border: #fecdd3;
+
+  /* Status — emerald (connected, ok) */
+  --c-emerald: #16a34a;
+  --c-emerald-strong: #15803d;
+  --c-emerald-soft: #dcfce7;
+
+  /* Log palette — calibrated for WCAG AA on white (>=4.5:1) */
+  --c-blue: #2563eb;
+  --c-orange: #c2410c;
+
+  /* Prompt (command bar `>`) */
+  --c-prompt: #dc2626;
+
+  /* Radius */
+  --r-sm: 6px;
+  --r-md: 8px;
+  --r-lg: 12px;
+  --r-xl: 16px;
+  --r-full: 9999px;
+
+  /* Spacing */
+  --s-xs: 4px;
+  --s-sm: 8px;
+  --s-md: 12px;
+  --s-base: 16px;
+  --s-lg: 24px;
+  --s-xl: 32px;
+
+  /* Type */
+  --font-sans:
+    'Inter', 'PingFang SC', 'Microsoft YaHei', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    sans-serif;
+  --font-mono: 'JetBrains Mono', 'Cascadia Mono', Consolas, 'SFMono-Regular', Menlo, monospace;
+
+  /* Motion */
+  --motion-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --motion-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  min-width: 320px;
+  background: var(--c-bg);
+  color: var(--c-ink);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+/* ============================================================
+ * App shell — locked to viewport. No page-level scrolling.
+ * ============================================================ */
+.app-shell {
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  height: 100vh;
+  max-width: 1480px;
+  margin: 0 auto;
+  padding: 0 var(--s-xl) var(--s-base);
+  gap: var(--s-md);
+  overflow: hidden;
+}
+
+/* ============================================================
+ * Topbar
+ * ============================================================ */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 64px;
+  margin: 0 calc(var(--s-xl) * -1);
+  padding: 0 var(--s-xl);
+  border-bottom: 1px solid var(--c-hairline);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-sm);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  color: var(--c-ink);
+}
+
+.topbar-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-md);
+}
+
+.view-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+  background: var(--c-track);
+  border-radius: var(--r-md);
+}
+
+.view-toggle button {
+  padding: 6px 16px;
+  border-radius: var(--r-sm);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--c-muted);
+  transition:
+    background var(--motion-fast),
+    color var(--motion-fast);
+}
+
+.view-toggle button[aria-pressed='true'] {
+  background: var(--c-card);
+  color: var(--c-ink);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+}
+
+.view-toggle button:not([aria-pressed='true']):hover {
+  color: var(--c-ink);
+}
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--r-md);
+  color: var(--c-body);
+  transition: background var(--motion-fast);
+}
+
+.icon-btn:hover {
+  background: var(--c-track);
+}
+
+.icon-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* ============================================================
+ * Connection bar — single row, single URL field across states
+ * ============================================================ */
+.connection-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--s-base);
+  height: 56px;
+  padding: 0 var(--s-lg);
+  background: var(--c-card);
+  border: 1px solid var(--c-hairline);
+  border-radius: var(--r-xl);
+  transition: border-color var(--motion-base);
+}
+
+.connection-bar:focus-within {
+  border-color: var(--c-border);
+}
+
+.conn-url {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--c-ink);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  outline: none;
+  text-overflow: ellipsis;
+}
+
+.conn-url::placeholder {
+  color: var(--c-subtle);
+}
+
+.conn-url[readonly] {
+  color: var(--c-muted);
+  cursor: default;
+}
+
+.conn-url[aria-invalid='true'] {
+  color: var(--c-rose-strong);
+  animation: shake 220ms ease;
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-3px);
+  }
+  75% {
+    transform: translateX(3px);
+  }
+}
+
+.conn-action {
+  flex: 0 0 auto;
+  font-size: 14px;
+  font-weight: 500;
+  transition:
+    background var(--motion-fast),
+    color var(--motion-fast);
+}
+
+/* ghost red — used for "断开连接" in connected state */
+.conn-action[data-variant='ghost'] {
+  padding: 6px 4px;
+  color: var(--c-rose);
+  background: transparent;
+}
+
+.conn-action[data-variant='ghost']:hover {
+  color: var(--c-rose-strong);
+}
+
+/* solid red — used for "连接" / "重试" in disconnected/error states */
+.conn-action[data-variant='solid'] {
+  padding: 8px 22px;
+  background: var(--c-rose);
+  color: #fff;
+  border-radius: var(--r-md);
+}
+
+.conn-action[data-variant='solid']:hover:not(:disabled) {
+  background: var(--c-rose-strong);
+}
+
+.conn-action:disabled {
+  opacity: 0.6;
+}
+
+/* ============================================================
+ * Status pill
+ * ============================================================ */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-xs);
+  height: 28px;
+  padding: 0 12px;
+  border-radius: var(--r-full);
+  font-size: 13px;
+  font-weight: 500;
+  flex: 0 0 auto;
+}
+
+.status-pill::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: var(--r-full);
+  background: currentColor;
+}
+
+.status-pill[data-variant='connected'] {
+  background: var(--c-emerald-soft);
+  color: var(--c-emerald-strong);
+}
+
+.status-pill[data-variant='disconnected'] {
+  background: var(--c-track);
+  color: var(--c-muted);
+}
+
+.status-pill[data-variant='error'] {
+  background: var(--c-rose-soft);
+  color: var(--c-rose-strong);
+}
+
+/* ============================================================
+ * Terminal card
+ * ============================================================ */
+.terminal-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: var(--s-lg);
+  background: var(--c-card);
+  border: 1px solid var(--c-hairline);
+  border-radius: var(--r-xl);
+  overflow: hidden;
+}
+
+.terminal-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--s-base);
+}
+
+.terminal-label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--c-muted);
+}
+
+.terminal-actions {
+  display: inline-flex;
+  gap: var(--s-xs);
+}
+
+.terminal-actions .icon-btn {
+  width: 28px;
+  height: 28px;
+  color: var(--c-muted);
+}
+
+.terminal-actions .icon-btn:hover {
+  color: var(--c-ink);
+}
+
+.terminal-actions .icon-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.terminal-window {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+#terminal {
+  width: 100%;
+  height: 100%;
+}
+
+/* xterm light theme overrides */
+.terminal-window .xterm,
+.terminal-window .xterm .xterm-viewport {
+  background-color: var(--c-card) !important;
+}
+
+.terminal-window .xterm-viewport::-webkit-scrollbar {
+  width: 6px;
+}
+
+.terminal-window .xterm-viewport::-webkit-scrollbar-thumb {
+  background: var(--c-border);
+  border-radius: var(--r-full);
+}
+
+.terminal-window .xterm-viewport::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.inline-error {
+  display: none;
+  margin: var(--s-xs) 0 0;
+  font-size: 13px;
+  color: var(--c-rose-strong);
+}
+
+[data-state='error'] .inline-error {
+  display: block;
+}
+
+/* ============================================================
+ * AI card — DeepSeek chat panel; sibling of .terminal-card.
+ * Visibility driven by [data-view] (see end of file).
+ * ============================================================ */
+.ai-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: var(--s-lg);
+  gap: var(--s-md);
+  background: var(--c-card);
+  border: 1px solid var(--c-hairline);
+  border-radius: var(--r-xl);
+  overflow: hidden;
+}
+
+.ai-config-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--s-base);
+  padding-bottom: var(--s-sm);
+  border-bottom: 1px solid var(--c-hairline);
+}
+
+/* Restore HTML5 [hidden] semantics — class rules with explicit
+   `display: flex` would otherwise win against the UA stylesheet. */
+.ai-config-bar[hidden],
+.ai-config-form[hidden],
+.ai-bubbles[hidden] {
+  display: none;
+}
+
+.ai-config-key {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--c-muted);
+}
+
+.ai-config-model {
+  padding: 4px 10px;
+  background: var(--c-track);
+  border: 1px solid var(--c-hairline);
+  border-radius: var(--r-sm);
+  font-size: 13px;
+  color: var(--c-ink);
+  cursor: pointer;
+}
+
+.ai-config-edit {
+  margin-left: auto;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--c-rose);
+  border-radius: var(--r-sm);
+  transition: color var(--motion-fast);
+}
+
+.ai-config-edit:hover {
+  color: var(--c-rose-strong);
+}
+
+.ai-config-query {
+  margin-left: auto;
+  padding: 6px 12px;
+  background: var(--c-track);
+  border: 1px solid var(--c-hairline);
+  border-radius: var(--r-sm);
+  font-size: 13px;
+  color: var(--c-body);
+  transition:
+    color var(--motion-fast),
+    border-color var(--motion-fast),
+    background var(--motion-fast);
+}
+
+.ai-config-query + .ai-config-edit {
+  margin-left: 0;
+}
+
+.ai-config-query:hover {
+  color: var(--c-ink);
+  border-color: var(--c-border);
+  background: var(--c-card);
+}
+
+.ai-config-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-sm);
+  padding: var(--s-base) 0;
+}
+
+.ai-config-form-title {
+  margin: 0 0 var(--s-md);
+  text-align: center;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--c-body);
+}
+
+.ai-config-input {
+  padding: 10px 14px;
+  background: var(--c-card);
+  border: 1px solid var(--c-hairline);
+  border-radius: var(--r-md);
+  color: var(--c-ink);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  outline: none;
+  transition: border-color var(--motion-fast);
+}
+
+.ai-config-input:focus {
+  border-color: var(--c-rose-border);
+}
+
+.ai-config-form-actions {
+  display: flex;
+  gap: var(--s-sm);
+  justify-content: center;
+  margin-top: var(--s-sm);
+}
+
+.ai-config-save {
+  padding: 8px 22px;
+  background: var(--c-rose);
+  color: #fff;
+  border-radius: var(--r-md);
+  font-size: 14px;
+  font-weight: 500;
+  transition: background var(--motion-fast);
+}
+
+.ai-config-save:hover {
+  background: var(--c-rose-strong);
+}
+
+.ai-config-cancel {
+  padding: 8px 16px;
+  color: var(--c-muted);
+  border-radius: var(--r-md);
+  font-size: 14px;
+  transition: color var(--motion-fast);
+}
+
+.ai-config-cancel:hover {
+  color: var(--c-body);
+}
+
+.ai-bubbles {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-md);
+  padding: var(--s-sm) 0;
+}
+
+.ai-bubbles::-webkit-scrollbar {
+  width: 6px;
+}
+
+.ai-bubbles::-webkit-scrollbar-thumb {
+  background: var(--c-border);
+  border-radius: var(--r-full);
+}
+
+.ai-bubble {
+  max-width: 80%;
+  padding: 10px 14px;
+  border-radius: var(--r-lg);
+  font-size: 14px;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.ai-bubble-body {
+  display: block;
+  white-space: pre-wrap;
+}
+
+.ai-bubble-body:empty {
+  display: none;
+}
+
+.ai-bubble-user {
+  align-self: flex-end;
+  background: var(--c-rose-soft);
+  color: var(--c-rose-strong);
+  border: 1px solid var(--c-rose-border);
+}
+
+.ai-bubble-ai {
+  align-self: flex-start;
+  background: var(--c-card);
+  color: var(--c-ink);
+  border: 1px solid var(--c-hairline);
+}
+
+.ai-bubble-system {
+  align-self: center;
+  max-width: 90%;
+  padding: 8px 14px;
+  background: var(--c-rose-soft);
+  color: var(--c-rose-strong);
+  border: 1px solid var(--c-rose-border);
+  font-size: 13px;
+  text-align: center;
+}
+
+.ai-bubble-tool {
+  margin-top: var(--s-xs);
+  padding-left: var(--s-sm);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--c-muted);
+}
+
+.ai-bubble-tool-error {
+  color: var(--c-rose-strong);
+}
+
+.ai-bubble-state-card {
+  margin-top: var(--s-sm);
+  padding: 8px 12px;
+  background: var(--c-track);
+  border: 1px solid var(--c-hairline);
+  border-left: 3px solid var(--c-emerald);
+  border-radius: var(--r-sm);
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--c-body);
+}
+
+.ai-bubble-state-card:first-child {
+  margin-top: 0;
+}
+
+.ai-bubble-body:empty + .ai-bubble-state-card {
+  margin-top: 0;
+}
+
+.ai-bubble-state-card[data-led='off'] {
+  border-left-color: var(--c-subtle);
+}
+.ai-bubble-state-card[data-led='white'] {
+  border-left-color: var(--c-emerald);
+}
+.ai-bubble-state-card[data-led='red'] {
+  border-left-color: var(--c-rose);
+}
+.ai-bubble-state-card[data-led='green'] {
+  border-left-color: var(--c-emerald-strong);
+}
+
+.ai-bubble-state-card-title {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--c-muted);
+  margin-bottom: 2px;
+}
+
+.ai-bubble-state-card-row {
+  font-family: var(--font-mono);
+}
+
+.ai-bubble-state-card-note {
+  margin-top: 4px;
+  color: var(--c-orange);
+  font-size: 11px;
+}
+
+.ai-input-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--s-md);
+  padding: var(--s-sm) var(--s-base);
+  background: var(--c-track);
+  border: 1px solid var(--c-hairline);
+  border-radius: var(--r-lg);
+}
+
+.ai-input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 0;
+  border: none;
+  background: transparent;
+  color: var(--c-ink);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  outline: none;
+  resize: none;
+}
+
+.ai-input::placeholder {
+  color: var(--c-subtle);
+}
+
+.ai-send-btn {
+  flex: 0 0 auto;
+  padding: 8px 22px;
+  background: var(--c-rose);
+  color: #fff;
+  border-radius: var(--r-md);
+  font-size: 14px;
+  font-weight: 500;
+  transition: background var(--motion-fast);
+}
+
+.ai-send-btn:hover:not(:disabled) {
+  background: var(--c-rose-strong);
+}
+
+.ai-send-btn:disabled {
+  opacity: 0.6;
+}
+
+/* ============================================================
+ * Command bar
+ * ============================================================ */
+.command-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--s-md);
+  height: 60px;
+  padding: 0 var(--s-lg);
+  background: var(--c-card);
+  border: 1px solid var(--c-hairline);
+  border-radius: var(--r-xl);
+  transition: opacity var(--motion-base);
+}
+
+.command-prompt {
+  flex: 0 0 auto;
+  color: var(--c-prompt);
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.command-input {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--c-ink);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  outline: none;
+  resize: none;
+}
+
+.command-input::placeholder {
+  color: var(--c-subtle);
+}
+
+.send-btn {
+  flex: 0 0 auto;
+  padding: 8px 22px;
+  background: var(--c-rose);
+  color: #fff;
+  border-radius: var(--r-md);
+  font-size: 14px;
+  font-weight: 500;
+  transition: background var(--motion-fast);
+}
+
+.send-btn:hover:not(:disabled) {
+  background: var(--c-rose-strong);
+}
+
+.send-btn:disabled {
+  opacity: 0.6;
+}
+
+/* ============================================================
+ * Panel view — owns LED + Motor + reserved data card.
+ * Lives in the 1fr row; competes with .terminal-card / .ai-card
+ * via [data-view] visibility rules at the bottom of the file.
+ * ============================================================ */
+.panel-view {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-base);
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ============================================================
+ * Control cards (LED + Motor) — child of .panel-view.
+ * ============================================================ */
+.control-cards {
+  display: grid;
+  grid-template-columns: 2fr 3fr;
+  gap: var(--s-base);
+  flex: 0 0 auto;
+  transition: opacity var(--motion-base);
+}
+
+.control-card {
+  display: flex;
+  flex-direction: column;
+  padding: var(--s-lg) var(--s-xl);
+  background: var(--c-card);
+  border: 1px solid var(--c-hairline);
+  border-radius: var(--r-xl);
+}
+
+.control-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--s-base);
+}
+
+.control-card-head h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--c-ink);
+}
+
+.control-card-head svg {
+  width: 18px;
+  height: 18px;
+  color: var(--c-subtle);
+}
+
+/* LED card body */
+.led-body {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: 1;
+}
+
+.led-status {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-sm);
+}
+
+.led-status-label {
+  font-size: 13px;
+  color: var(--c-muted);
+}
+
+.led-status-value {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-xs);
+  font-size: 14px;
+  color: var(--c-ink);
+}
+
+.led-status-value::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: var(--r-full);
+  background: var(--c-emerald);
+}
+
+.led-status[data-state='off'] .led-status-value::before {
+  background: var(--c-subtle);
+}
+
+.led-status[data-state='white'] .led-status-value::before {
+  background: var(--c-ink);
+}
+
+.led-status[data-state='red'] .led-status-value::before {
+  background: var(--c-rose);
+}
+
+.led-status[data-state='green'] .led-status-value::before {
+  background: var(--c-emerald);
+}
+
+.led-toggle {
+  display: inline-flex;
+  gap: var(--s-sm);
+}
+
+.led-btn {
+  padding: 8px 22px;
+  background: transparent;
+  color: var(--c-muted);
+  border: 1px solid var(--c-hairline);
+  border-radius: var(--r-md);
+  font-size: 14px;
+  font-weight: 500;
+  transition:
+    color var(--motion-fast),
+    background var(--motion-fast),
+    border-color var(--motion-fast);
+}
+
+.led-btn:hover:not([aria-pressed='true']) {
+  color: var(--c-body);
+  border-color: var(--c-border);
+}
+
+.led-btn[aria-pressed='true'] {
+  background: var(--c-rose-soft);
+  color: var(--c-rose-strong);
+  border-color: var(--c-rose-border);
+}
+
+/* Motor card body — display section + switch + gear segmented controls.
+   Shares visual contract with .led-toggle / .led-btn. */
+.motor-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-base);
+  flex: 1;
+}
+
+.motor-display {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-xs);
+}
+
+.motor-display-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-base);
+}
+
+.motor-display-row dt {
+  margin: 0;
+  font-size: 13px;
+  color: var(--c-muted);
+}
+
+.motor-display-row dd {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--c-ink);
+}
+
+.motor-display-row-muted dd {
+  color: var(--c-subtle);
+  font-weight: 400;
+}
+
+.motor-rpm-note {
+  color: var(--c-subtle);
+  font-weight: 400;
+}
+
+#motorStateValue::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: var(--r-full);
+  background: var(--c-emerald);
+  margin-right: var(--s-xs);
+  vertical-align: middle;
+}
+
+.motor-display[data-state='off'] #motorStateValue::before {
+  background: var(--c-subtle);
+}
+
+.motor-controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-sm);
+  margin-top: auto;
+}
+
+.motor-control-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-base);
+}
+
+.motor-control-label {
+  font-size: 13px;
+  color: var(--c-muted);
+}
+
+.motor-switch,
+.motor-gears {
+  display: inline-flex;
+  gap: var(--s-sm);
+}
+
+.motor-switch-btn,
+.motor-gear-btn {
+  padding: 6px 18px;
+  background: transparent;
+  color: var(--c-muted);
+  border: 1px solid var(--c-hairline);
+  border-radius: var(--r-md);
+  font-size: 14px;
+  font-weight: 500;
+  transition:
+    color var(--motion-fast),
+    background var(--motion-fast),
+    border-color var(--motion-fast);
+}
+
+.motor-gear-btn {
+  padding: 6px 16px;
+  min-width: 40px;
+}
+
+.motor-switch-btn:hover:not([aria-pressed='true']),
+.motor-gear-btn:hover:not([aria-pressed='true']) {
+  color: var(--c-body);
+  border-color: var(--c-border);
+}
+
+.motor-switch-btn[aria-pressed='true'],
+.motor-gear-btn[aria-pressed='true'] {
+  background: var(--c-rose-soft);
+  color: var(--c-rose-strong);
+  border-color: var(--c-rose-border);
+}
+
+/* ============================================================
+ * Data card — reserved telemetry slot.
+ * Click → console.info via reservePlaceholder() in main.js.
+ * Stays at normal opacity in disconnected/error states (it's a
+ * placeholder, not an active control).
+ * ============================================================ */
+.data-card {
+  flex: 1 1 auto;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-md);
+  padding: var(--s-xl);
+  background: var(--c-card);
+  border: 1px dashed var(--c-border);
+  border-radius: var(--r-xl);
+  text-align: center;
+  cursor: pointer;
+  transition: border-color var(--motion-base);
+}
+
+.data-card:hover {
+  border-color: var(--c-rose-border);
+}
+
+.data-card-icon svg {
+  width: 40px;
+  height: 40px;
+  color: var(--c-subtle);
+}
+
+.data-card h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--c-body);
+}
+
+.data-card p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--c-muted);
+}
+
+/* ============================================================
+ * State machine — driven by [data-state] on .app-shell.
+ * Three visual states: disconnected / connected / error.
+ * Connected = controls + command bar active.
+ * Disconnected/Error = controls + command bar dimmed.
+ * ============================================================ */
+[data-state='disconnected'] .control-cards,
+[data-state='error'] .control-cards {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+[data-state='disconnected'] .command-bar,
+[data-state='error'] .command-bar {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* ============================================================
+ * View switching — driven by [data-view] on .app-shell.
+ * Three values:
+ *   'terminal' (default): terminal-card + command-bar visible.
+ *   'ai': ai-card visible.
+ *   'panel': panel-view visible (LED + motor + reserved data card).
+ * Whichever section is visible fills the 1fr row.
+ * ============================================================ */
+[data-view='terminal'] .ai-card,
+[data-view='terminal'] .panel-view {
+  display: none;
+}
+
+[data-view='ai'] .terminal-card,
+[data-view='ai'] .command-bar,
+[data-view='ai'] .panel-view {
+  display: none;
+}
+
+[data-view='panel'] .terminal-card,
+[data-view='panel'] .ai-card,
+[data-view='panel'] .command-bar {
+  display: none;
+}
+
+/* ============================================================
+ * Responsive
+ * ============================================================ */
+@media (max-width: 768px) {
+  .app-shell {
+    padding: 0 var(--s-base) var(--s-sm);
+  }
+  .control-cards {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+  .data-card {
+    min-height: 160px;
+  }
+}

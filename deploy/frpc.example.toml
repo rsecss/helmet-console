@@ -1,0 +1,25 @@
+# ============================================
+# frpc 客户端配置示例（不含真实凭据）
+# ============================================
+#
+# 用法：
+#   1. 复制本文件为 deploy/frpc.toml
+#   2. 把 YOUR_SERVER_IP / YOUR_TOKEN 替换为真实值
+#   3. 启动：python deploy/start.py
+#
+# 注意：
+#   - frpc.toml 已加入 .gitignore，请勿提交真实凭据
+#   - localPort 必须与 helmet-console server 端口一致（默认 8080）
+#   - remotePort 必须与 frps 上配置的暴露端口一致
+
+serverAddr = "YOUR_SERVER_IP"
+serverPort = 7000
+
+auth.token = "YOUR_TOKEN"
+
+[[proxies]]
+name = "ws-relay"
+type = "tcp"
+localIP = "127.0.0.1"
+localPort = 8080
+remotePort = 13000

@@ -1,59 +1,15 @@
-# Component Guidelines
+# Frontend Component Guidelines
 
-> How components are built in this project.
+> **Status: Deferred** — no UI framework.
 
----
+The unit of reuse is a **factory function** (`createXxxPanel({...deps})`)
+in `web/js/`. Styling lives in `web/css/style.css` and is driven by
+`data-state` / `data-variant` / `aria-pressed` attributes.
 
-## Overview
+For factory patterns and ownership rules, see
+[`./quality-guidelines.md`](./quality-guidelines.md). For module
+locations, see [`./directory-structure.md`](./directory-structure.md).
 
-<!--
-Document your project's component conventions here.
-
-Questions to answer:
-- What component patterns do you use?
-- How are props defined?
-- How do you handle composition?
-- What accessibility standards apply?
--->
-
-(To be filled by the team)
-
----
-
-## Component Structure
-
-<!-- Standard structure of a component file -->
-
-(To be filled by the team)
-
----
-
-## Props Conventions
-
-<!-- How props should be defined and typed -->
-
-(To be filled by the team)
-
----
-
-## Styling Patterns
-
-<!-- How styles are applied (CSS modules, styled-components, Tailwind, etc.) -->
-
-(To be filled by the team)
-
----
-
-## Accessibility
-
-<!-- A11y requirements and patterns -->
-
-(To be filled by the team)
-
----
-
-## Common Mistakes
-
-<!-- Component-related mistakes your team has made -->
-
-(To be filled by the team)
+This file becomes relevant only if the PRD explicitly approves a UI
+framework. Until then, treat any framework runtime import in `web/js/`
+as a code-review blocker.

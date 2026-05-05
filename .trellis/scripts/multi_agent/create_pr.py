@@ -1,9 +1,9 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 """
 Multi-Agent Pipeline: Create PR.
 
 Usage:
-    python3 create_pr.py [task-dir] [--dry-run]
+    python create_pr.py [task-dir] [--dry-run]
 
 This script:
 1. Handles submodule changes (commit, push, PR) if any submodules are configured
@@ -340,7 +340,7 @@ def main() -> int:
         print(
             f"{Colors.RED}Error: No task directory specified and no current task set{Colors.NC}"
         )
-        print("Usage: python3 create_pr.py [task-dir] [--dry-run]")
+        print("Usage: python create_pr.py [task-dir] [--dry-run]")
         return 1
 
     # Support relative paths

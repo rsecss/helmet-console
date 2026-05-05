@@ -1,51 +1,16 @@
-# Hook Guidelines
+# Frontend Hook Guidelines
 
-> How hooks are used in this project.
+> **Status: Deferred** — no framework, so no hooks.
 
----
+Stateful logic that would be a hook in React is expressed as closure
+state inside the relevant factory function (`ws-client.js`,
+`config-panel.js`, `control-panel.js`, …). Inbound frame routing happens
+through `main.js` callbacks (`onFrame`, `onStatus`, …).
 
-## Overview
+See [`./quality-guidelines.md`](./quality-guidelines.md) and
+[`./state-management.md`](./state-management.md) for the callback-injection
+wiring style.
 
-<!--
-Document your project's hook conventions here.
-
-Questions to answer:
-- What custom hooks do you have?
-- How do you handle data fetching?
-- What are the naming conventions?
-- How do you share stateful logic?
--->
-
-(To be filled by the team)
-
----
-
-## Custom Hook Patterns
-
-<!-- How to create and structure custom hooks -->
-
-(To be filled by the team)
-
----
-
-## Data Fetching
-
-<!-- How data fetching is handled (React Query, SWR, etc.) -->
-
-(To be filled by the team)
-
----
-
-## Naming Conventions
-
-<!-- Hook naming rules (use*, etc.) -->
-
-(To be filled by the team)
-
----
-
-## Common Mistakes
-
-<!-- Hook-related mistakes your team has made -->
-
-(To be filled by the team)
+This file becomes relevant only if the PRD explicitly approves a
+hook-based framework. Until then, treat any framework runtime import in
+`web/js/` as a code-review blocker.

@@ -1,0 +1,105 @@
+name: Release
+
+# Triggered by a `vX.Y.Z` tag push.
+# Pipeline:
+#   1. validate     — tag must equal package.json#version
+#   2. quality-gate — full CI matrix re-run (Node 18 / 20 / 22)
+#   3. release      — extract CHANGELOG section + create GitHub Release
+#
+# Local prerequisite: run `npm run release -- X.Y.Z` to bump version,
+# move CHANGELOG entries, commit, and tag. Then `git push origin main
+# --follow-tags` fires this workflow.
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    name: Validate tag matches package.json
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.check.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify tag = package.json#version
+        id: check
+        run: |
+          set -euo pipefail
+          TAG="${GITHUB_REF_NAME#v}"
+          PKG=$(node -p "require('./package.json').version")
+          echo "Tag (without 'v'): $TAG"
+          echo "package.json:      $PKG"
+          if [ "$TAG" != "$PKG" ]; then
+            echo "::error::Tag '$GITHUB_REF_NAME' does not match package.json version '$PKG'"
+            exit 1
+          fi
+          echo "version=$TAG" >> "$GITHUB_OUTPUT"
+
+  quality-gate:
+    name: Quality Gate (Node ${{ matrix.node }})
+    needs: validate
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        node: ['18', '20', '22']
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node ${{ matrix.node }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+
+      - name: Install (npm ci)
+        run: npm ci
+
+      - name: Format check (Prettier)
+        run: npm run format:check
+
+      - name: Lint (ESLint)
+        run: npm run lint
+
+      - name: Smoke (HTTP + WS broadcast + ping + binary close)
+        run: npm run smoke
+
+  release:
+    name: Publish GitHub Release
+    needs: [validate, quality-gate]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Extract release notes from CHANGELOG.md
+        env:
+          VERSION: ${{ needs.validate.outputs.version }}
+        run: |
+          set -euo pipefail
+          node scripts/extract-changelog.mjs "$VERSION" > release-notes.md
+          echo '----- release notes preview -----'
+          cat release-notes.md
+          echo '---------------------------------'
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            --title "$GITHUB_REF_NAME" \
+            --notes-file release-notes.md \
+            --verify-tag

@@ -1,0 +1,7 @@
+{"file": ".trellis/workflow.md", "reason": "Project workflow and conventions"}
+{"file": ".trellis/spec/frontend/index.md", "reason": "Frontend development guide"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "Module boundaries, single-writer rule, reserved-placeholder pattern, code review checklist"}
+{"file": ".trellis/spec/frontend/directory-structure.md", "reason": "kebab-case files, createXxx({...}) factory, named exports only"}
+{"file": ".trellis/spec/frontend/state-management.md", "reason": "3 state locations, single-writer for localStorage namespace"}
+{"file": ".trellis/spec/frontend/type-safety.md", "reason": "JSDoc selectively, discriminated union, JSON.parse + try/catch on stream chunks"}
+{"file": ".trellis/spec/guides/code-reuse-thinking-guide.md", "reason": "Search before adding new helpers"}

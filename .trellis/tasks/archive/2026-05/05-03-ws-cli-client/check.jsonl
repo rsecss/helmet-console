@@ -1,0 +1,4 @@
+{"file": ".claude/commands/trellis/finish-work.md", "reason": "Finish work checklist"}
+{"file": ".claude/commands/trellis/check.md", "reason": "Code quality check spec"}
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Verify text-only protocol, no console.log, no business parsing in CLI"}
+{"file": ".trellis/spec/backend/operational-scripts.md", "reason": "Verify port constant comes from server/src/config.js, not hardcoded"}

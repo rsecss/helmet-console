@@ -1,0 +1,7 @@
+{"file": ".claude/commands/trellis/finish-work.md", "reason": "Finish work checklist"}
+{"file": ".claude/commands/trellis/check.md", "reason": "Code quality check spec"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "Code Review Checklist: view enum, single-writer patterns, terminal display-only, control widget callbacks"}
+{"file": ".trellis/spec/frontend/state-management.md", "reason": "Verify single-writer of data-view, single-writer of widget state, mirrorControlState contract"}
+{"file": ".trellis/spec/frontend/type-safety.md", "reason": "JSDoc + runtime guards; motor range validator alignment with new bound"}
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Verify telemetry section added; motor row updated; no new verbs introduced"}
+{"file": ".trellis/spec/guides/code-reuse-thinking-guide.md", "reason": "Verify all sites referencing 0..5 are updated to 0..3"}

@@ -1,54 +1,53 @@
-# Directory Structure
+# Backend Directory Structure
 
-> How backend code is organized in this project.
+> Where backend code lives.
 
----
-
-## Overview
-
-<!--
-Document your project's backend directory structure here.
-
-Questions to answer:
-- How are modules/packages organized?
-- Where does business logic live?
-- Where are API endpoints defined?
-- How are utilities and helpers organized?
--->
-
-(To be filled by the team)
-
----
-
-## Directory Layout
-
-```
-<!-- Replace with your actual structure -->
-src/
-├── ...
-└── ...
+```text
+server/
+├── scripts/
+│   ├── smoke.js          # `npm run smoke` — HTTP / WS smoke test
+│   └── ws-cli.js         # Manual e2e client; plays the device role
+└── src/
+    ├── index.js          # Process entry: composes static + relay, listens
+    ├── config.js         # Reads env vars, exports `config`
+    ├── static.js         # `createStaticHandler` — sirv + /healthz + 405
+    └── ws-relay.js       # `createWsRelay` — /ws upgrade, validate, broadcast
 ```
 
----
-
-## Module Organization
-
-<!-- How should new features/modules be organized? -->
-
-(To be filled by the team)
+Runtime artifacts (`logs/`, `node_modules/`) are at the repo root and gitignored.
 
 ---
 
-## Naming Conventions
+## Module Responsibilities
 
-<!-- File and folder naming rules -->
+| Module        | Owns                                            | Does NOT own                                    |
+| ------------- | ----------------------------------------------- | ----------------------------------------------- |
+| `index.js`    | Composition, `listen`, signal handling          | Routing logic, frame parsing                    |
+| `config.js`   | Env reading, defaults                           | I/O, side effects                               |
+| `static.js`   | sirv, `/healthz`, 405 fallback                  | WebSocket, frame validation                     |
+| `ws-relay.js` | `wss.handleUpgrade`, binary reject, ping intercept, byte-passthrough broadcast | Interpreting text frame contents |
 
-(To be filled by the team)
+A new responsibility deserves a new file in `server/src/` only if it
+does not fit one of the four above.
 
 ---
 
-## Examples
+## Naming
 
-<!-- Link to well-organized modules as examples -->
+- **Files**: kebab-case `.js`.
+- **Factories**: `createXxx({...deps})` returning `{ ... }` (no default exports).
+- **Constants**: `UPPER_SNAKE`.
+- **Imports**: `node:` prefix for built-ins; `.js` suffix required for ESM.
 
-(To be filled by the team)
+---
+
+## Examples to Mirror
+
+- **Add a config field**: `server/src/config.js` — see `readNumber` /
+  `readPath`. Document new env vars in `quality-guidelines.md` *and*
+  `docs/deployment.md`.
+- **Add an HTTP route**: `server/src/static.js` — branch before the
+  `sirv` fallback; return JSON via `sendJson`.
+- **Add a WS frame rule**: usually wrong — push verb negotiation to
+  browser/device instead. If genuinely wire-level (e.g. `maxPayload`),
+  cover it with a new smoke assertion.

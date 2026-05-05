@@ -1,0 +1,27 @@
+.ace-tool/
+
+# Design prototypes (large HTML mockups; reference-only)
+docs/design/
+
+# Node
+node_modules/
+.env
+.env.local
+*.log
+logs/
+
+# Deploy（含 token / 二进制不入库；用 frpc.example.toml 作为模板）
+deploy/frpc.toml
+deploy/frpc.exe
+deploy/frpc
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Build artifacts (reserved for future)
+dist/
+build/
+coverage/

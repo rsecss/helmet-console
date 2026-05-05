@@ -1,0 +1,7 @@
+{"file": ".claude/commands/trellis/finish-work.md", "reason": "Finish work checklist"}
+{"file": ".claude/commands/trellis/check.md", "reason": "Code quality check spec"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "Check frontend implementation against native ESM and vendor constraints."}
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Check backend implementation against Node.js ws relay conventions and formatting constraints."}
+{"file": "docs/architecture.md", "reason": "Verify implementation follows documented module boundaries and protocol."}
+{"file": ".trellis/spec/guides/code-reuse-thinking-guide.md", "reason": "Check no unnecessary duplicated logic or constants after implementation."}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "Verify HTTP/WS/frontend boundary contracts and edge cases."}

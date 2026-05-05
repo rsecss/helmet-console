@@ -1,25 +1,25 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 Task Management Script for Multi-Agent Pipeline.
 
 Usage:
-    python3 task.py create "<title>" [--slug <name>] [--assignee <dev>] [--priority P0|P1|P2|P3] [--parent <dir>] [--package <pkg>]
-    python3 task.py init-context <dir> <type> [--package <pkg>]  # Initialize jsonl files
-    python3 task.py add-context <dir> <file> <path> [reason] # Add jsonl entry
-    python3 task.py validate <dir>              # Validate jsonl files
-    python3 task.py list-context <dir>          # List jsonl entries
-    python3 task.py start <dir>                 # Set as current task
-    python3 task.py finish                      # Clear current task
-    python3 task.py set-branch <dir> <branch>   # Set git branch
-    python3 task.py set-base-branch <dir> <branch>  # Set PR target branch
-    python3 task.py set-scope <dir> <scope>     # Set scope for PR title
-    python3 task.py create-pr [dir] [--dry-run] # Create PR from task
-    python3 task.py archive <task-name>         # Archive completed task
-    python3 task.py list                        # List active tasks
-    python3 task.py list-archive [month]        # List archived tasks
-    python3 task.py add-subtask <parent-dir> <child-dir>     # Link child to parent
-    python3 task.py remove-subtask <parent-dir> <child-dir>  # Unlink child from parent
+    python task.py create "<title>" [--slug <name>] [--assignee <dev>] [--priority P0|P1|P2|P3] [--parent <dir>] [--package <pkg>]
+    python task.py init-context <dir> <type> [--package <pkg>]  # Initialize jsonl files
+    python task.py add-context <dir> <file> <path> [reason] # Add jsonl entry
+    python task.py validate <dir>              # Validate jsonl files
+    python task.py list-context <dir>          # List jsonl entries
+    python task.py start <dir>                 # Set as current task
+    python task.py finish                      # Clear current task
+    python task.py set-branch <dir> <branch>   # Set git branch
+    python task.py set-base-branch <dir> <branch>  # Set PR target branch
+    python task.py set-scope <dir> <scope>     # Set scope for PR title
+    python task.py create-pr [dir] [--dry-run] # Create PR from task
+    python task.py archive <task-name>         # Archive completed task
+    python task.py list                        # List active tasks
+    python task.py list-archive [month]        # List archived tasks
+    python task.py add-subtask <parent-dir> <child-dir>     # Link child to parent
+    python task.py remove-subtask <parent-dir> <child-dir>  # Unlink child from parent
 """
 
 from __future__ import annotations
@@ -265,24 +265,24 @@ def show_usage() -> None:
     print("""Task Management Script for Multi-Agent Pipeline
 
 Usage:
-  python3 task.py create <title>                     Create new task directory
-  python3 task.py create <title> --package <pkg>     Create task for a specific package
-  python3 task.py create <title> --parent <dir>      Create task as child of parent
-  python3 task.py init-context <dir> <dev_type>      Initialize jsonl files
-  python3 task.py init-context <dir> <type> --package <pkg>  With explicit package
-  python3 task.py add-context <dir> <jsonl> <path> [reason]  Add entry to jsonl
-  python3 task.py validate <dir>                     Validate jsonl files
-  python3 task.py list-context <dir>                 List jsonl entries
-  python3 task.py start <dir>                        Set as current task
-  python3 task.py finish                             Clear current task
-  python3 task.py set-branch <dir> <branch>          Set git branch for multi-agent
-  python3 task.py set-scope <dir> <scope>            Set scope for PR title
-  python3 task.py create-pr [dir] [--dry-run]        Create PR from task
-  python3 task.py archive <task-name>                Archive completed task
-  python3 task.py add-subtask <parent> <child>       Link child task to parent
-  python3 task.py remove-subtask <parent> <child>    Unlink child from parent
-  python3 task.py list [--mine] [--status <status>]  List tasks
-  python3 task.py list-archive [YYYY-MM]             List archived tasks
+  python task.py create <title>                     Create new task directory
+  python task.py create <title> --package <pkg>     Create task for a specific package
+  python task.py create <title> --parent <dir>      Create task as child of parent
+  python task.py init-context <dir> <dev_type>      Initialize jsonl files
+  python task.py init-context <dir> <type> --package <pkg>  With explicit package
+  python task.py add-context <dir> <jsonl> <path> [reason]  Add entry to jsonl
+  python task.py validate <dir>                     Validate jsonl files
+  python task.py list-context <dir>                 List jsonl entries
+  python task.py start <dir>                        Set as current task
+  python task.py finish                             Clear current task
+  python task.py set-branch <dir> <branch>          Set git branch for multi-agent
+  python task.py set-scope <dir> <scope>            Set scope for PR title
+  python task.py create-pr [dir] [--dry-run]        Create PR from task
+  python task.py archive <task-name>                Archive completed task
+  python task.py add-subtask <parent> <child>       Link child task to parent
+  python task.py remove-subtask <parent> <child>    Unlink child from parent
+  python task.py list [--mine] [--status <status>]  List tasks
+  python task.py list-archive [YYYY-MM]             List archived tasks
 
 Arguments:
   dev_type: backend | frontend | fullstack | test | docs
@@ -295,23 +295,23 @@ List options:
   --status, -s <s>     Filter by status (planning, in_progress, review, completed)
 
 Examples:
-  python3 task.py create "Add login feature" --slug add-login
-  python3 task.py create "Add login feature" --slug add-login --package cli
-  python3 task.py create "Child task" --slug child --parent .trellis/tasks/01-21-parent
-  python3 task.py init-context .trellis/tasks/01-21-add-login backend
-  python3 task.py init-context .trellis/tasks/01-21-add-login backend --package cli
-  python3 task.py add-context <dir> implement .trellis/spec/cli/backend/auth.md "Auth guidelines"
-  python3 task.py set-branch <dir> task/add-login
-  python3 task.py start .trellis/tasks/01-21-add-login
-  python3 task.py create-pr                          # Uses current task
-  python3 task.py create-pr <dir> --dry-run          # Preview without changes
-  python3 task.py finish
-  python3 task.py archive add-login
-  python3 task.py add-subtask parent-task child-task  # Link existing tasks
-  python3 task.py remove-subtask parent-task child-task
-  python3 task.py list                               # List all active tasks
-  python3 task.py list --mine                        # List my tasks only
-  python3 task.py list --mine --status in_progress   # List my in-progress tasks
+  python task.py create "Add login feature" --slug add-login
+  python task.py create "Add login feature" --slug add-login --package cli
+  python task.py create "Child task" --slug child --parent .trellis/tasks/01-21-parent
+  python task.py init-context .trellis/tasks/01-21-add-login backend
+  python task.py init-context .trellis/tasks/01-21-add-login backend --package cli
+  python task.py add-context <dir> implement .trellis/spec/cli/backend/auth.md "Auth guidelines"
+  python task.py set-branch <dir> task/add-login
+  python task.py start .trellis/tasks/01-21-add-login
+  python task.py create-pr                          # Uses current task
+  python task.py create-pr <dir> --dry-run          # Preview without changes
+  python task.py finish
+  python task.py archive add-login
+  python task.py add-subtask parent-task child-task  # Link existing tasks
+  python task.py remove-subtask parent-task child-task
+  python task.py list                               # List all active tasks
+  python task.py list --mine                        # List my tasks only
+  python task.py list --mine --status in_progress   # List my in-progress tasks
 """)
 
 

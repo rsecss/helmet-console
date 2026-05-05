@@ -1,0 +1,13 @@
+{"file": ".trellis/workflow.md", "reason": "Workflow"}
+{"file": ".trellis/tasks/05-03-ws-string-protocol/prd.md", "reason": "PRD with locked decisions and acceptance criteria"}
+{"file": ".trellis/spec/backend/index.md", "reason": "Backend spec entry"}
+{"file": ".trellis/spec/frontend/index.md", "reason": "Frontend spec entry"}
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "WS frame contract — rewrite to string protocol"}
+{"file": ".trellis/spec/backend/error-handling.md", "reason": "BAD_FRAME envelope removed; binary -> close 1003"}
+{"file": ".trellis/spec/backend/logging-guidelines.md", "reason": "Drop BAD_FRAME log mention"}
+{"file": ".trellis/spec/backend/directory-structure.md", "reason": "Remove VALID_TYPES / parseFrame helper references"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "ws-client/terminal/main signatures + cmd/control frame examples + AI tool table"}
+{"file": ".trellis/spec/frontend/state-management.md", "reason": "writeFrame->writeText; frame.type references"}
+{"file": ".trellis/spec/frontend/type-safety.md", "reason": "Drop JSON.parse / VALID_TYPES at WS boundary"}
+{"file": "docs/architecture.md", "reason": "Sections 3 (sequences), 4 (protocol), 6 (errors+heartbeat), 9 (extensions), 10 (principles)"}
+{"file": "docs/interface.md", "reason": "WebSocket section full rewrite"}

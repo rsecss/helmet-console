@@ -1,0 +1,8 @@
+{"file": ".trellis/workflow.md", "reason": "Project workflow and conventions"}
+{"file": ".trellis/spec/backend/index.md", "reason": "Backend development guide"}
+{"file": ".trellis/spec/frontend/index.md", "reason": "Frontend development guide"}
+{"file": "docs/architecture.md", "reason": "System architecture and module boundaries for HTTP static server, WS relay, and native ESM web console."}
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Backend Node.js ws relay conventions and project-wide formatting constraints."}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "Frontend hard constraints: native ESM, separated JS/CSS, local vendor libraries, module boundaries."}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "Cross-layer HTTP/WS/frontend data-flow contract checks."}
+{"file": ".trellis/spec/guides/code-reuse-thinking-guide.md", "reason": "Search-first rule and avoiding duplicated constants across frontend/backend."}

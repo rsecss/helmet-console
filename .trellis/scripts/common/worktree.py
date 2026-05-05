@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 """
 Worktree utilities for Multi-Agent Pipeline.
 

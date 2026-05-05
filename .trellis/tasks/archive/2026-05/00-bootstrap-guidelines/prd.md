@@ -97,8 +97,8 @@ AI needs to match existing patterns, not introduce new ones.
 When done:
 
 ```bash
-python3 ./.trellis/scripts/task.py finish
-python3 ./.trellis/scripts/task.py archive 00-bootstrap-guidelines
+python ./.trellis/scripts/task.py finish
+python ./.trellis/scripts/task.py archive 00-bootstrap-guidelines
 ```
 
 ---

@@ -1,39 +1,33 @@
-# Frontend Development Guidelines
+# Frontend Spec Index
 
-> Best practices for frontend development in this project.
-
----
-
-## Overview
-
-This directory contains guidelines for frontend development. Fill in each file with your project's specific conventions.
+The console is a native browser ESM app under `web/` with no build tool.
+Visual surface mirrors `docs/design/prototype-rose.html` 1:1.
 
 ---
 
-## Guidelines Index
+## Pre-Development Checklist
 
-| Guide | Description | Status |
-|-------|-------------|--------|
-| [Directory Structure](./directory-structure.md) | Module organization and file layout | To fill |
-| [Component Guidelines](./component-guidelines.md) | Component patterns, props, composition | To fill |
-| [Hook Guidelines](./hook-guidelines.md) | Custom hooks, data fetching patterns | To fill |
-| [State Management](./state-management.md) | Local state, global state, server state | To fill |
-| [Quality Guidelines](./quality-guidelines.md) | Code standards, forbidden patterns | To fill |
-| [Type Safety](./type-safety.md) | Type patterns, validation | To fill |
+Before touching `web/`:
+1. [`quality-guidelines.md`](./quality-guidelines.md) — hard constraints, module ownership, signatures, validation matrix, design decisions
+2. `docs/design/prototype-rose.html` — visual surface of truth (gitignored prototype)
+3. `docs/architecture.md` §2 + §5 — module diagram and connection state machine
 
 ---
 
-## How to Fill These Guidelines
+## Index
 
-For each guideline file:
+| Guide                                              | Status     |
+| -------------------------------------------------- | ---------- |
+| [Quality Guidelines](./quality-guidelines.md)      | Filled     |
+| [Directory Structure](./directory-structure.md)    | Filled     |
+| [State Management](./state-management.md)          | Filled     |
+| [Type Safety](./type-safety.md)                    | Filled     |
+| [Component Guidelines](./component-guidelines.md)  | Deferred   |
+| [Hook Guidelines](./hook-guidelines.md)            | Deferred   |
 
-1. Document your project's **actual conventions** (not ideals)
-2. Include **code examples** from your codebase
-3. List **forbidden patterns** and why
-4. Add **common mistakes** your team has made
-
-The goal is to help AI assistants and new team members understand how YOUR project works.
+> "Deferred" means the topic does not apply to the current stack
+> (native ESM, no framework, no hooks). Revisit only if the stack changes.
 
 ---
 
-**Language**: All documentation should be written in **English**.
+**Language**: All documentation is written in English.
