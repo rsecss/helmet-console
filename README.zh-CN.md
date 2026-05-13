@@ -98,13 +98,13 @@ echo "temp=42.3" | node server/scripts/ws-cli.js
 任何以 `\n` 结尾的 UTF-8 文本行都是一帧。浏览器命令栏会按 `\n` 拆分
 多行输入，所以设备永远不必处理帧边界。
 
-| 帧                                | 方向         | 含义                |
-| --------------------------------- | ------------ | ------------------- |
-| `led_on\n` · `led_off\n`          | 浏览器 → 设备 | LED 开关            |
-| `led_color_<white\|red\|green>\n` | 浏览器 → 设备 | 设置 LED 颜色       |
-| `motor_speed_<0..3>\n`            | 浏览器 → 设备 | 设置电机挡位        |
-| `state:led=…,motor=…\n`           | 浏览器 → 对端 | 尽力广播的 UI 快照  |
-| 任意 UTF-8 文本（`temp=42.3\n`…） | 设备 → 浏览器 | 自由格式遥测        |
+| 帧                                | 方向            | 含义               |
+| --------------------------------- | --------------- | ------------------ |
+| `led_on\n` · `led_off\n`          | 浏览器 → 设备   | LED 开关           |
+| `led_color_<white\|red\|green>\n` | 浏览器 → 设备   | 设置 LED 颜色      |
+| `motor_speed_<0..3>\n`            | 浏览器 → 设备   | 设置电机挡位       |
+| `state:led=…,motor=…\n`           | 浏览器 → 对端   | 尽力广播的 UI 快照 |
+| 任意 UTF-8 文本（`temp=42.3\n`…） | 设备 → 浏览器   | 自由格式遥测       |
 | `ping\n` / `pong\n`               | 客户端 ↔ 服务器 | 心跳               |
 
 新动词随便加 —— 服务器不维护任何注册表。浏览器与设备的"词汇表"是双方
@@ -203,14 +203,14 @@ npm run lint          # 仅 ESLint
 
 ## 文档
 
-| 文档                                           | 读者                              |
-| ---------------------------------------------- | --------------------------------- |
-| [`docs/architecture.md`](docs/architecture.md) | 系统形态、模块、协议、状态机      |
-| [`docs/interface.md`](docs/interface.md)       | HTTP 路由 + WebSocket 契约        |
-| [`docs/deployment.md`](docs/deployment.md)     | 环境变量、反向代理、冒烟检查      |
-| [`docs/contributing.md`](docs/contributing.md) | 分支流程、提交规范、格式化        |
-| [`deploy/deploy.md`](deploy/deploy.md)         | 本地优先的 frp 隧道部署（自带配置）|
-| [`CHANGELOG.md`](CHANGELOG.md)                 | 发布记录                          |
+| 文档                                           | 读者                                |
+| ---------------------------------------------- | ----------------------------------- |
+| [`docs/architecture.md`](docs/architecture.md) | 系统形态、模块、协议、状态机        |
+| [`docs/interface.md`](docs/interface.md)       | HTTP 路由 + WebSocket 契约          |
+| [`docs/deployment.md`](docs/deployment.md)     | 环境变量、反向代理、冒烟检查        |
+| [`docs/contributing.md`](docs/contributing.md) | 分支流程、提交规范、格式化          |
+| [`deploy/deploy.md`](deploy/deploy.md)         | 本地优先的 frp 隧道部署（自带配置） |
+| [`CHANGELOG.md`](CHANGELOG.md)                 | 发布记录                            |
 
 供 AI 协作者使用的编码规则在 [`.trellis/spec/`](.trellis/spec/)
 （backend / frontend / 共享指南）。
