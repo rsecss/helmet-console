@@ -2,13 +2,20 @@
 
 # Helmet Console
 
-**Lightweight host-side WebSocket relay & web console for embedded devices**
+---
+
+### The Host-Side WebSocket Relay for Embedded Devices
+
+**Zero parsing on the server. Zero build tools on the front-end.**
 
 ![Node.js](https://img.shields.io/badge/Node.js-18%2B-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-1f6feb?style=for-the-badge)
 ![Build](https://img.shields.io/badge/Build-no%20bundler-dc2626?style=for-the-badge&logo=javascript&logoColor=white)
 ![WebSocket](https://img.shields.io/badge/WebSocket-flat%20text-8250df?style=for-the-badge&logo=socketdotio&logoColor=white)
-![AI](https://img.shields.io/badge/AI-DeepSeek%20V4-1b7c83?style=for-the-badge&logo=openai&logoColor=white)
+
+[English](README.md) | [简体中文](README.zh-CN.md)
+
+---
 
 </div>
 
@@ -222,4 +229,4 @@ For coding rules used by AI collaborators, see
 
 ## License
 
-MIT. See [`LICENSE`](LICENSE).
+[MIT](LICENSE)
