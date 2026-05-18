@@ -812,7 +812,7 @@ button:disabled {
   flex-direction: column;
   gap: var(--s-base);
   min-height: 0;
-  overflow: hidden;
+  overflow-y: auto;
 }
 
 /* ============================================================
@@ -823,13 +823,14 @@ button:disabled {
   grid-template-columns: 2fr 3fr;
   gap: var(--s-base);
   flex: 0 0 auto;
+  align-items: stretch;
   transition: opacity var(--motion-base);
 }
 
 .control-card {
   display: flex;
   flex-direction: column;
-  padding: var(--s-lg) var(--s-xl);
+  padding: var(--s-md) var(--s-lg);
   background: var(--c-card);
   border: 1px solid var(--c-hairline);
   border-radius: var(--r-xl);
@@ -839,7 +840,7 @@ button:disabled {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: var(--s-base);
+  margin-bottom: var(--s-sm);
 }
 
 .control-card-head h2 {
@@ -857,16 +858,17 @@ button:disabled {
 
 /* LED card body */
 .led-body {
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  flex: 1;
+  gap: var(--s-lg);
 }
 
 .led-status {
   display: flex;
   flex-direction: column;
-  gap: var(--s-sm);
+  gap: var(--s-xs);
 }
 
 .led-status-label {
@@ -940,17 +942,17 @@ button:disabled {
 /* Motor card body — display section + switch + gear segmented controls.
    Shares visual contract with .led-toggle / .led-btn. */
 .motor-body {
-  display: flex;
-  flex-direction: column;
-  gap: var(--s-base);
-  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+  gap: var(--s-lg);
+  align-items: start;
 }
 
 .motor-display {
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--s-xs);
+  gap: 6px;
 }
 
 .motor-display-row {
@@ -973,7 +975,38 @@ button:disabled {
   color: var(--c-ink);
 }
 
+#motorStateValue {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-xs);
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+#motorStateValue::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: var(--r-full);
+  background: var(--c-emerald);
+}
+
+.motor-display[data-state='off'] #motorStateValue::before {
+  background: var(--c-subtle);
+}
+
+#motorGearValue {
+  font-family: var(--font-mono);
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--c-ink);
+}
+
+.motor-display-row-muted dt,
 .motor-display-row-muted dd {
+  font-size: 13px;
   color: var(--c-subtle);
   font-weight: 400;
 }
@@ -983,26 +1016,10 @@ button:disabled {
   font-weight: 400;
 }
 
-#motorStateValue::before {
-  content: '';
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  border-radius: var(--r-full);
-  background: var(--c-emerald);
-  margin-right: var(--s-xs);
-  vertical-align: middle;
-}
-
-.motor-display[data-state='off'] #motorStateValue::before {
-  background: var(--c-subtle);
-}
-
 .motor-controls {
   display: flex;
   flex-direction: column;
-  gap: var(--s-sm);
-  margin-top: auto;
+  gap: var(--s-xs);
 }
 
 .motor-control-row {
@@ -1057,49 +1074,220 @@ button:disabled {
 }
 
 /* ============================================================
- * Data card — reserved telemetry slot.
- * Click → console.info via reservePlaceholder() in main.js.
- * Stays at normal opacity in disconnected/error states (it's a
- * placeholder, not an active control).
+ * MQ2 telemetry card — real-time smoke trend chart.
+ * Stays at normal opacity in disconnected/error states so operators
+ * can inspect the last received samples after a connection drops.
  * ============================================================ */
 .data-card {
   flex: 1 1 auto;
-  min-height: 200px;
+  min-height: 260px;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--s-md);
-  padding: var(--s-xl);
+  gap: var(--s-sm);
+  padding: var(--s-md) var(--s-lg);
   background: var(--c-card);
-  border: 1px dashed var(--c-border);
+  border: 1px solid var(--c-hairline);
   border-radius: var(--r-xl);
-  text-align: center;
-  cursor: pointer;
-  transition: border-color var(--motion-base);
+  overflow: hidden;
+  transition:
+    border-color var(--motion-base),
+    background var(--motion-base);
 }
 
-.data-card:hover {
+.data-card[data-mq2-alarm='true'] {
   border-color: var(--c-rose-border);
 }
 
-.data-card-icon svg {
-  width: 40px;
-  height: 40px;
-  color: var(--c-subtle);
+.mq2-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--s-base);
+}
+
+.mq2-kicker {
+  margin: 0 0 2px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--c-muted);
 }
 
 .data-card h2 {
   margin: 0;
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 600;
-  color: var(--c-body);
+  color: var(--c-ink);
 }
 
-.data-card p {
-  margin: 0;
+.mq2-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-xs);
+  flex: 0 0 auto;
+  min-height: 28px;
+  padding: 4px 12px;
+  background: var(--c-emerald-soft);
+  color: var(--c-emerald-strong);
+  border-radius: var(--r-full);
   font-size: 13px;
+  font-weight: 600;
+}
+
+.mq2-status::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  background: currentColor;
+  border-radius: var(--r-full);
+}
+
+.data-card[data-mq2-alarm='true'] .mq2-status {
+  background: var(--c-rose);
+  color: #fff;
+}
+
+.mq2-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--s-md) var(--s-lg);
+}
+
+.mq2-current-value {
+  flex: 0 0 auto;
+  font-family: var(--font-mono);
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--c-ink);
+  letter-spacing: -0.02em;
+  transition: color var(--motion-base);
+}
+
+.data-card[data-mq2-alarm='true'] .mq2-current-value {
+  color: var(--c-rose-strong);
+}
+
+.mq2-chart {
+  flex: 1;
+  min-height: 360px;
+  border: 1px solid var(--c-hairline);
+  border-radius: var(--r-lg);
+  background: #fff;
+  overflow: hidden;
+}
+
+.mq2-chart-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 360px;
+}
+
+.mq2-plot-bg {
+  fill: #fafafa;
+}
+
+.mq2-alarm-band {
+  fill: rgba(225, 29, 72, 0.1);
+}
+
+.mq2-reference-clean,
+.mq2-reference-recovery,
+.mq2-reference-alarm {
+  fill: none;
+  stroke-width: 1.5;
+  stroke-dasharray: 5 5;
+}
+
+.mq2-reference-clean {
+  stroke: var(--c-emerald);
+}
+
+.mq2-reference-recovery {
+  stroke: var(--c-orange);
+}
+
+.mq2-reference-alarm {
+  stroke: var(--c-rose);
+}
+
+.mq2-reference-label,
+.mq2-axis-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  fill: var(--c-muted);
+}
+
+.mq2-reference-label {
+  text-anchor: end;
+  font-weight: 600;
+}
+
+.mq2-axis-label-end {
+  text-anchor: end;
+}
+
+.mq2-axis {
+  stroke: var(--c-border);
+  stroke-width: 1;
+}
+
+.mq2-curve {
+  fill: none;
+  stroke: var(--c-blue);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.data-card[data-mq2-alarm='true'] .mq2-curve,
+.data-card[data-mq2-alarm='true'] .mq2-latest-point {
+  stroke: var(--c-rose);
+}
+
+.mq2-latest-point {
+  fill: var(--c-card);
+  stroke: var(--c-blue);
+  stroke-width: 3;
+}
+
+.mq2-legend {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+  flex: 1 1 240px;
+  gap: var(--s-md);
+  font-size: 12px;
   color: var(--c-muted);
+}
+
+.mq2-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-xs);
+}
+
+.mq2-legend i {
+  width: 18px;
+  height: 0;
+  border-top: 2px dashed currentColor;
+}
+
+.mq2-legend-clean {
+  color: var(--c-emerald);
+}
+
+.mq2-legend-recovery {
+  color: var(--c-orange);
+}
+
+.mq2-legend-alarm {
+  color: var(--c-rose);
 }
 
 /* ============================================================
@@ -1156,7 +1344,30 @@ button:disabled {
     grid-template-columns: 1fr;
     height: auto;
   }
+  .motor-body {
+    grid-template-columns: 1fr;
+    gap: var(--s-base);
+  }
   .data-card {
     min-height: 160px;
+  }
+  .mq2-chart {
+    min-height: 240px;
+  }
+  .mq2-chart-svg {
+    min-height: 240px;
+  }
+  .mq2-current-value {
+    font-size: 28px;
+  }
+  .mq2-hero {
+    align-items: flex-start;
+  }
+  .mq2-card-head {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .mq2-status {
+    align-self: flex-start;
   }
 }

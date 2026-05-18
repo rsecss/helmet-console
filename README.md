@@ -56,15 +56,17 @@ side dispatches with `strncmp`; the browser shows raw bytes in xterm.
 
 ```mermaid
 flowchart LR
-    eng["👤 Engineer<br/>(Browser)"]
-    ai["🤖 AI Assistant<br/>(DeepSeek V4)"]
-    server["🖥️ Helmet Console<br/>Node.js relay<br/>HTTP + /ws"]
-    dev["📡 Device<br/>(MCU + 4G)"]
+    eng[Engineer browser]
+    ai[AI Assistant DeepSeek V4]
+    server[Helmet Console Node.js relay]
+    dev[Device MCU and 4G]
 
-    eng <-->|"HTTP + WS /ws"| server
-    eng <-->|"HTTPS + SSE<br/>(direct, no proxy)"| ai
-    ai -. "tool_calls → cmd" .-> eng
-    dev <-->|"WS /ws (over 4G)"| server
+    eng -->|HTTP and WS /ws| server
+    server -->|HTTP and WS /ws| eng
+    eng -->|HTTPS and SSE direct| ai
+    ai -->|tool calls to cmd| eng
+    dev -->|WS /ws over 4G| server
+    server -->|WS /ws over 4G| dev
 ```
 
 The browser is the only place that knows about commands. AI runs in the
@@ -132,26 +134,26 @@ helmet-console/
 
 ```mermaid
 flowchart TB
-    subgraph server["server/ — Node.js relay"]
-        idx["index.js<br/>entry"]
-        st["static.js<br/>HTTP + /healthz"]
-        rl["ws-relay.js<br/>broadcast + ping"]
-        cf["config.js<br/>env"]
+    subgraph serverGroup[server - Node.js relay]
+        idx[index.js entry]
+        st[static.js HTTP healthz]
+        rl[ws-relay.js broadcast and ping]
+        cf[config.js env]
         idx --> st
         idx --> rl
-        cf -.-> st
-        cf -.-> rl
+        cf --> st
+        cf --> rl
     end
 
-    subgraph web["web/js/ — browser, native ESM"]
-        m["main.js<br/>composition"]
-        wsc["ws-client.js<br/>5-state + heartbeat"]
-        cp["config-panel.js<br/>URL + data-state"]
-        cmd["command-panel.js<br/>textarea"]
-        ctrl["control-panel.js<br/>LED + motor"]
-        vsw["view-switcher.js<br/>data-view"]
-        ai["ai-panel.js<br/>DeepSeek + tools"]
-        term["terminal.js<br/>xterm display"]
+    subgraph webGroup[web/js - browser native ESM]
+        m[main.js composition]
+        wsc[ws-client.js state and heartbeat]
+        cp[config-panel.js URL and data-state]
+        cmd[command-panel.js textarea]
+        ctrl[control-panel.js LED and motor]
+        vsw[view-switcher.js data-view]
+        ai[ai-panel.js DeepSeek tools]
+        term[terminal.js xterm display]
         m --> wsc
         m --> cp
         m --> cmd
@@ -161,13 +163,13 @@ flowchart TB
         m --> term
     end
 
-    subgraph scripts["server/scripts/ + deploy/"]
-        smk["smoke.js<br/>HTTP+WS test"]
-        cli["ws-cli.js<br/>device-role peer"]
-        sp["start.py<br/>Node + frpc supervisor"]
+    subgraph scriptsGroup[server scripts and deploy]
+        smk[smoke.js HTTP and WS test]
+        cli[ws-cli.js device-role peer]
+        sp[start.py Node and frpc supervisor]
     end
 
-    server -. uses .- scripts
+    serverGroup -->|uses| scriptsGroup
 ```
 
 > Modules never import each other directly — `main.js` wires everything

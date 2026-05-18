@@ -53,15 +53,17 @@
 
 ```mermaid
 flowchart LR
-    eng["👤 工程师<br/>(浏览器)"]
-    ai["🤖 AI 助手<br/>(DeepSeek V4)"]
-    server["🖥️ Helmet Console<br/>Node.js 中继<br/>HTTP + /ws"]
-    dev["📡 设备<br/>(MCU + 4G)"]
+    eng[工程师浏览器]
+    ai[AI 助手 DeepSeek V4]
+    server[Helmet Console Node.js 中继]
+    dev[设备 MCU 和 4G]
 
-    eng <-->|"HTTP + WS /ws"| server
-    eng <-->|"HTTPS + SSE<br/>(直连，不经服务器)"| ai
-    ai -. "tool_calls → cmd" .-> eng
-    dev <-->|"WS /ws (走 4G)"| server
+    eng -->|HTTP 和 WS /ws| server
+    server -->|HTTP 和 WS /ws| eng
+    eng -->|HTTPS 和 SSE 直连| ai
+    ai -->|tool calls 转 cmd| eng
+    dev -->|WS /ws 走 4G| server
+    server -->|WS /ws 走 4G| dev
 ```
 
 只有浏览器知道命令含义。AI 也在浏览器里跑 —— API key 留在
@@ -125,26 +127,26 @@ helmet-console/
 
 ```mermaid
 flowchart TB
-    subgraph server["server/ — Node.js 中继"]
-        idx["index.js<br/>入口"]
-        st["static.js<br/>HTTP + /healthz"]
-        rl["ws-relay.js<br/>广播 + 心跳"]
-        cf["config.js<br/>env"]
+    subgraph serverGroup[server - Node.js 中继]
+        idx[index.js 入口]
+        st[static.js HTTP healthz]
+        rl[ws-relay.js 广播和心跳]
+        cf[config.js env]
         idx --> st
         idx --> rl
-        cf -.-> st
-        cf -.-> rl
+        cf --> st
+        cf --> rl
     end
 
-    subgraph web["web/js/ — 浏览器，原生 ESM"]
-        m["main.js<br/>composition"]
-        wsc["ws-client.js<br/>5 态 + 心跳"]
-        cp["config-panel.js<br/>URL + data-state"]
-        cmd["command-panel.js<br/>textarea"]
-        ctrl["control-panel.js<br/>LED + 电机"]
-        vsw["view-switcher.js<br/>data-view"]
-        ai["ai-panel.js<br/>DeepSeek + tools"]
-        term["terminal.js<br/>xterm 显示"]
+    subgraph webGroup[web/js - 浏览器原生 ESM]
+        m[main.js composition]
+        wsc[ws-client.js 状态和心跳]
+        cp[config-panel.js URL 和 data-state]
+        cmd[command-panel.js textarea]
+        ctrl[control-panel.js LED 和电机]
+        vsw[view-switcher.js data-view]
+        ai[ai-panel.js DeepSeek tools]
+        term[terminal.js xterm 显示]
         m --> wsc
         m --> cp
         m --> cmd
@@ -154,13 +156,13 @@ flowchart TB
         m --> term
     end
 
-    subgraph scripts["server/scripts/ + deploy/"]
-        smk["smoke.js<br/>HTTP+WS 测试"]
-        cli["ws-cli.js<br/>充当设备端"]
-        sp["start.py<br/>Node + frpc 守护"]
+    subgraph scriptsGroup[server scripts 和 deploy]
+        smk[smoke.js HTTP 和 WS 测试]
+        cli[ws-cli.js 充当设备端]
+        sp[start.py Node 和 frpc 守护]
     end
 
-    server -. uses .- scripts
+    serverGroup -->|uses| scriptsGroup
 ```
 
 > 模块之间从不直接 import —— `main.js` 通过注入回调把它们拼起来。

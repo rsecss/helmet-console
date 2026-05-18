@@ -1,0 +1,4 @@
+{"file": ".trellis/workflow.md", "reason": "Project workflow and conventions"}
+{"file": ".trellis/spec/frontend/index.md", "reason": "Frontend development guide"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "frontend module boundaries, WS frame contract, panel data-card seam"}
+{"file": "docs/architecture.md", "reason": "client onFrame telemetry routing and panel extension point"}

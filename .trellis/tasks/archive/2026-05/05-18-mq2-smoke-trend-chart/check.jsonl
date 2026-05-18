@@ -1,0 +1,4 @@
+{"file": ".claude/commands/trellis/finish-work.md", "reason": "Finish work checklist"}
+{"file": ".claude/commands/trellis/check.md", "reason": "Code quality check spec"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "verify frontend module boundaries and WS frame contract"}
+{"file": "docs/interface.md", "reason": "validate flat UTF-8 newline WS protocol is preserved"}

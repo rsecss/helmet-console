@@ -6,7 +6,44 @@ adheres to [Semantic Versioning](https://semver.org/) once it ships.
 
 ## [Unreleased]
 
-_Nothing yet._
+### Added
+
+- **MQ2 smoke trend chart**: the panel view's `.data-card` now hosts a
+  live trend chart. `web/js/telemetry-panel.js` parses flat UTF-8
+  newline-delimited telemetry frames (`temp=23,hum=60,mq2=120,mq2_alarm=0\n`)
+  from `main.js#onFrame`, buffers across WS message boundaries, and
+  silently ignores blank / malformed / `mq2`-less lines (terminal still
+  echoes the raw frame). A small local SVG renderer draws a smooth
+  bezier curve with three reference lines (clean 100, recovery 130,
+  alarm 180) over a 90-second rolling window. When `mq2_alarm=1` the
+  card flips to alarm state — `data-mq2-alarm='true'`, status text
+  `烟雾异常`, curve recolors rose — and reverts on the next non-alarm
+  sample. Copy stays at "MQ2 烟雾趋势指数" (trend index, not ppm). No
+  chart library / CDN imports; wire and relay unchanged.
+
+### Changed
+
+- **Panel layout polish**: the data card hero block is tighter (smaller
+  current-value, denser padding, removed sample-count / updated-at meta
+  row) so the chart gets the remaining vertical space. LED card now
+  stretches to match the motor card's height via
+  `.control-cards { align-items: stretch }`.
+- **README mermaid diagrams**: stripped HTML-style labels (`<br/>`,
+  emoji, quoted text) in favor of plain-text labels with named-edge
+  arrows. Topology unchanged; fixes inconsistent rendering across
+  Markdown viewers.
+
+### Documentation
+
+- `docs/architecture.md` — module diagram now includes
+  `telemetry-panel.js`; "Telemetry chart" removed from the deferred-
+  extensions list.
+- `.trellis/spec/frontend/quality-guidelines.md` — added telemetry-panel
+  ownership row, `createTelemetryPanel` / `parseTelemetryLine`
+  signatures, validation-matrix entries for MQ2 framing, and MQ2 manual
+  test cases. `.data-card` removed from the reserved-placeholder table.
+- `.trellis/spec/frontend/directory-structure.md` — `telemetry-panel.js`
+  added to the module map.
 
 ## [0.1.0] - 2026-05-05
 

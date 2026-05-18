@@ -54,6 +54,7 @@
 | `control-panel.js` | LED `aria-pressed` + status, motor switch/gear, `controlPanel.snapshot()`           | WS object, `.app-shell[data-state]`     |
 | `view-switcher.js` | `.app-shell[data-view]` + `view-toggle aria-pressed`                                | WS object, terminal object              |
 | `ai-panel.js`      | DeepSeek fetch + SSE, tool_call dispatch, AI bubbles, state-card, `console.ai.*`    | WS object, `.app-shell[data-state]/[data-view]` |
+| `telemetry-panel.js` | MQ2 frame buffering / parsing, retention pruning, MQ2 trend SVG render, `.data-card[data-mq2-alarm]` | WS object, terminal object, command / control state |
 
 ---
 
@@ -115,6 +116,26 @@ export function createAiPanel({
   getSnapshot,               // () => { led, motorOn, motorGear }
 });
 // returns { focus(), triggerStatusQuery() }
+
+// web/js/telemetry-panel.js
+export function parseTelemetryLine(line);
+// returns { mq2: number, mq2Alarm: boolean } | null
+//   null when: empty line, no `mq2=` key, mq2 not finite
+//   ignores: unknown fields, malformed fields (no `=`, leading `=`)
+//   `mq2_alarm` truthy iff value === '1'
+
+export function createTelemetryPanel({ card, status, value, chart });
+// returns { acceptFrame(text), snapshot() }
+//   acceptFrame(text):
+//     - buffers across calls; splits on /\r?\n/; only complete lines are parsed
+//     - per-line parse → push { mq2, mq2Alarm, receivedAt: Date.now() }
+//     - prune samples older than 90s, then re-render
+//   snapshot(): shallow copy of current sample array (oldest first)
+//   render side effects:
+//     - card.dataset.mq2Alarm = 'true' | 'false' (latest sample's alarm)
+//     - status.textContent = '烟雾异常' | '趋势正常'
+//     - value.textContent = latest.mq2 (int if integral, else 1 decimal) | '--'
+//     - chart.innerHTML = SVG (viewBox 0 0 640 320; clean=100, recovery=130, alarm=180)
 ```
 
 ---
@@ -195,6 +216,12 @@ following `state:` frame reflects the post-command state.
 | Incoming binary frame                      | `ws-client.js` calls `onLog('[ws] dropped binary frame')`                         |
 | Incoming `pong\n`                          | Update activity only; not written to terminal                                     |
 | Incoming non-pong text                     | `main.js#onFrame` writes `${RX_PREFIX}${body}` (body has trailing `\n`)           |
+| Incoming text with `mq2=<n>` field         | `telemetry-panel.js#acceptFrame` parses; valid samples pushed to ring, chart re-renders |
+| Telemetry frame split across WS messages   | `telemetry-panel.js` buffers; lines emitted only on `\n`                          |
+| Incoming line missing `mq2`                | Ignored by `telemetry-panel.js`; terminal still receives it via `main.js#onFrame` |
+| Incoming `mq2=NaN` / unparseable value     | Ignored by `telemetry-panel.js`                                                   |
+| Sample older than 90s                      | Pruned from ring on every new sample                                              |
+| Latest sample has `mq2_alarm=1`            | `.data-card[data-mq2-alarm='true']`; status text `烟雾异常`; rose-colored curve   |
 | Outgoing command (cmd / control / ai-tool) | `main.js#sendCommand`; on `client.send` true → `${TX_PREFIX}${command}\n`         |
 | Successful control / ai-tool command       | `main.js#emitStateSnapshot` sends `state:led=…,motor=…\n` and echoes with TX_PREFIX |
 | Manual LED 开启                            | `control-panel.js` sets local LED → `white`, emits `led_on\n`                     |
@@ -278,7 +305,7 @@ user→assistant→user invariant.
 `view-switcher.js` is the **sole writer** of `.app-shell[data-view]`.
 Three valid values: `'terminal'` (default), `'ai'`, `'panel'`. CSS
 hides the other cards in each view. The `'panel'` view owns LED + motor
-cards plus the reserved `.data-card` telemetry slot.
+cards plus the MQ2 telemetry `.data-card` (owned by `telemetry-panel.js`).
 
 ### Validation Matrix (AI specific)
 
@@ -317,7 +344,6 @@ function reservePlaceholder(selector, label) {
 | Topbar 终端侧栏                    | `.icon-btn[data-action='sidebar']`      | 终端侧栏 |
 | Terminal card 复制                 | `.icon-btn[data-action='copy']`         | 复制     |
 | Terminal card 全屏                 | `.icon-btn[data-action='expand']`       | 全屏     |
-| `.data-card` (panel view)          | `.data-card`                            | 实时数据 |
 
 `console.info` is the only side effect. The AI 助手 view toggle is
 *not* a placeholder — it switches `view-switcher.js` to `'ai'`.
@@ -395,13 +421,21 @@ when the WS is down (snapshot may diverge from device reality).
 - `npm run lint`, `npm run format:check`, `npm test` (lint + smoke).
 - Browser / MCP manual: 3 visual states (reload disconnected → click
   连接 with server up → stop server / submit bad URL).
-- Reserved-placeholder check: click 文档 / 终端侧栏 / 复制 / 全屏 /
-  实时数据 — exactly one `console.info` per click, zero exceptions.
+- Reserved-placeholder check: click 文档 / 终端侧栏 / 复制 / 全屏 —
+  exactly one `console.info` per click, zero exceptions.
 - localStorage check: after a successful connect, all 5 `console.ws.*`
   keys derived from the same parsed URL.
 - AI manual: with key + ws-up, send `把灯打开` → LED card flips to 已开启
   and bubble carries a state card; with ws-down, tool line shows
   `⚠ 设备未连接`; invalid key (`sk-invalid`) → red 401 bubble.
+- MQ2 manual (via `ws-cli` or device):
+  - `temp=23,hum=60,mq2=120,mq2_alarm=0\n` → one sample, status 趋势正常
+  - `mq2=200,mq2_alarm=1\n` → status 烟雾异常, card data attr flips,
+    curve recolored rose; reverts when next sample drops below alarm.
+  - Frames split across messages (`mq2=` in one push, `120,mq2_alarm=0\n`
+    in the next) merge into a single sample.
+  - Frames with no `mq2`, blank lines, or `mq2=foo` are silently
+    ignored; terminal still echoes the raw line via `RX_PREFIX`.
 
 ---
 

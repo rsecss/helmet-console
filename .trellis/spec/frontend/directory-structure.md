@@ -13,6 +13,7 @@ web/
 │   ├── config-panel.js   # URL form + parseWsUrl + console.ws.* + .app-shell[data-state]
 │   ├── command-panel.js  # Command textarea + send-enabled state
 │   ├── control-panel.js  # LED toggle + motor switch/gear (passive memory)
+│   ├── telemetry-panel.js # MQ2 telemetry parser + SVG trend chart
 │   ├── view-switcher.js  # .app-shell[data-view] + view-toggle aria-pressed
 │   └── ai-panel.js       # DeepSeek V4 chat + tool_calls → cmd; sole writer of console.ai.*
 ├── vendor/

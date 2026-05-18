@@ -3,6 +3,7 @@ import { createCommandPanel } from './command-panel.js';
 import { createConfigPanel } from './config-panel.js';
 import { createControlPanel } from './control-panel.js';
 import { createConsoleTerminal } from './terminal.js';
+import { createTelemetryPanel } from './telemetry-panel.js';
 import { createViewSwitcher } from './view-switcher.js';
 import { createWsClient } from './ws-client.js';
 
@@ -74,6 +75,7 @@ const client = createWsClient({
       return;
     }
     // TODO(state-mirror): parse `state:` frames here for cross-client UI mirroring.
+    telemetryPanel.acceptFrame(text);
     const body = text.endsWith('\n') ? text : `${text}\n`;
     terminal.writeText(`${RX_PREFIX}${body}`);
   },
@@ -170,6 +172,13 @@ const controlPanel = createControlPanel({
   },
 });
 
+const telemetryPanel = createTelemetryPanel({
+  card: requireElement('dataCard'),
+  status: requireElement('mq2Status'),
+  value: requireElement('mq2Value'),
+  chart: requireElement('mq2Chart'),
+});
+
 const aiPanel = createAiPanel({
   configBar: requireElement('aiConfigBar'),
   configKey: requireElement('aiConfigKey'),
@@ -219,20 +228,6 @@ reservePlaceholder('.icon-btn[data-action="docs"]', '文档');
 reservePlaceholder('.icon-btn[data-action="sidebar"]', '终端侧栏');
 reservePlaceholder('.icon-btn[data-action="copy"]', '复制');
 reservePlaceholder('.icon-btn[data-action="expand"]', '全屏');
-
-// ============================================================
-// Reserved telemetry seam — `.data-card` in the panel view.
-// When the device-to-browser telemetry frame format is finalized:
-//   1. Add a parser branch in `client.onFrame` (above) that recognizes
-//      telemetry frames and routes them to a data-store / chart widget
-//      instead of (or in addition to) `terminal.writeText`.
-//   2. Replace the `.data-card` placeholder content with a chart widget
-//      (e.g. uPlot, vendored under `web/vendor/`).
-//   3. Drop the placeholder click handler below.
-// Frame format: TBD — flat string, no JSON envelope. See
-// `.trellis/spec/backend/quality-guidelines.md` §Telemetry (Deferred).
-// ============================================================
-reservePlaceholder('.data-card', '实时数据');
 
 // Re-exports for future integration (LED state mirroring from device frames).
 export { controlPanel };
