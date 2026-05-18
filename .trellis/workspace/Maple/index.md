@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 12
-- **Last Active**: 2026-05-05
+- **Total Sessions**: 13
+- **Last Active**: 2026-05-18
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~916 | Active |
+| `journal-1.md` | ~976 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 13 | 2026-05-18 | MQ2 烟雾趋势图 + 数据卡 UI 精修 | `4c3449d`, `dcf1069` | `dev` |
 | 12 | 2026-05-05 | Web AI 设备状态卡 + WS state snapshot | `1aa7935` | `dev` |
 | 11 | 2026-05-05 | 4G 模组上云端到端实机验证 | `8f7a3ed`, `4bb2d9f` | `dev` |
 | 10 | 2026-05-04 | Add direction markers to xterm (red [↓] sent / blue [↑] received) | `14f6bd7` | `dev` |
