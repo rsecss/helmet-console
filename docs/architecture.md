@@ -95,13 +95,13 @@ For per-module ownership see
 ```mermaid
 sequenceDiagram
     participant A as Browser A
-    participant S as Server (/ws)
+    participant S as Server
     participant B as Browser B
-    A->>S: WS connect
-    B->>S: WS connect
-    A->>S: text frame "AT+PING\n"
-    S->>B: text frame "AT+PING\n"
-    Note over S: not echoed to A; not persisted; byte passthrough
+    A->>S: WS connect /ws
+    B->>S: WS connect /ws
+    A->>S: text frame "hello\n"
+    S->>B: forward (excludes A)
+    Note over S: byte passthrough — not echoed to sender, not persisted
 ```
 
 ### 3.2 Device → Browser (telemetry)
