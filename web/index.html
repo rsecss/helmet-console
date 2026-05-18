@@ -290,22 +290,23 @@
             </div>
           </article>
         </section>
-        <section class="data-card" id="dataCard" aria-label="实时数据">
-          <div class="data-card-icon" aria-hidden="true">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M3 3v18h18" />
-              <path d="M7 15l4-6 4 4 5-7" />
-            </svg>
+        <section class="data-card mq2-card" id="dataCard" aria-label="MQ2 烟雾趋势指数">
+          <header class="mq2-card-head">
+            <div>
+              <p class="mq2-kicker">实时数据</p>
+              <h2>MQ2 烟雾趋势指数</h2>
+            </div>
+            <span class="mq2-status" id="mq2Status">趋势正常</span>
+          </header>
+          <div class="mq2-hero" aria-live="polite">
+            <strong class="mq2-current-value" id="mq2Value">--</strong>
+            <div class="mq2-legend" aria-label="参考线">
+              <span><i class="mq2-legend-clean"></i>清洁 100</span>
+              <span><i class="mq2-legend-recovery"></i>恢复 130</span>
+              <span><i class="mq2-legend-alarm"></i>报警 180</span>
+            </div>
           </div>
-          <h2>实时数据</h2>
-          <p>下位机上传实时数据后将在此显示</p>
+          <div class="mq2-chart" id="mq2Chart"></div>
         </section>
       </section>
     </main>

@@ -57,6 +57,7 @@ flowchart TB
         cp["config-panel.js<br/>URL + connection bar"]
         cmd["command-panel.js<br/>command textarea"]
         ctrl["control-panel.js<br/>LED + motor switch/gear"]
+        telemetry["telemetry-panel.js<br/>MQ2 parser + trend chart"]
         vsw["view-switcher.js<br/>terminal / ai / panel views"]
         ai["ai-panel.js<br/>DeepSeek + tool_calls → cmd"]
         deepseek["🌐 DeepSeek API<br/>(direct from browser)"]
@@ -65,6 +66,7 @@ flowchart TB
         main --> cp
         main --> cmd
         main --> ctrl
+        main --> telemetry
         main --> vsw
         main --> ai
         wsc -. emits data .-> term
@@ -297,7 +299,6 @@ Place-holders so the design isn't blocked, **not** implemented:
 | TCP ↔ WS bridge                         | Modem without WS        | Server-side `net` listener + frame layer                |
 | Persistence + replay                    | Need history            | ringbuffer / SQLite + replay UI                         |
 | Topic channels                          | Device groups           | Verb prefix (`helmet1:led_on`); relay still passthrough |
-| Telemetry chart                         | Device-side telemetry   | `client.onFrame` verb routing → chart in `.data-card`   |
 | Doc panel / sidebar / copy / fullscreen | Topbar / terminal icons | Reserved DOM slots already exist                        |
 
 > Wire stays flat strings — extending only changes browser + device.
