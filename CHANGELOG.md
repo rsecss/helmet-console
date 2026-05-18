@@ -6,6 +6,10 @@ adheres to [Semantic Versioning](https://semver.org/) once it ships.
 
 ## [Unreleased]
 
+_Nothing yet._
+
+## [0.1.1] - 2026-05-18
+
 ### Added
 
 - **MQ2 smoke trend chart**: the panel view's `.data-card` now hosts a
@@ -129,5 +133,6 @@ adheres to [Semantic Versioning](https://semver.org/) once it ships.
   `CHANGELOG.md` section as Release notes. Bundled with issue / PR
   templates, `CODEOWNERS`, and a `npm run release -- X.Y.Z` helper.
 
-[Unreleased]: https://github.com/rsecss/helmet-console/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/rsecss/helmet-console/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/rsecss/helmet-console/releases/tag/v0.1.1
 [0.1.0]: https://github.com/rsecss/helmet-console/releases/tag/v0.1.0
