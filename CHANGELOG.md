@@ -8,6 +8,10 @@ Writing style: see [`docs/release-notes.md`](docs/release-notes.md).
 
 ## [Unreleased]
 
+_Nothing yet._
+
+## [0.1.2] - 2026-05-19
+
 Mobile-friendly layout and a fix for the rapid disconnect/reconnect
 race in the WS client.
 
@@ -155,6 +159,7 @@ race in the WS client.
   `CHANGELOG.md` section as Release notes. Bundled with issue / PR
   templates, `CODEOWNERS`, and a `npm run release -- X.Y.Z` helper.
 
-[Unreleased]: https://github.com/rsecss/helmet-console/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/rsecss/helmet-console/compare/v0.1.2...HEAD
+[0.1.2]: https://github.com/rsecss/helmet-console/releases/tag/v0.1.2
 [0.1.1]: https://github.com/rsecss/helmet-console/releases/tag/v0.1.1
 [0.1.0]: https://github.com/rsecss/helmet-console/releases/tag/v0.1.0
