@@ -36,15 +36,24 @@ side dispatches with `strncmp`; the browser shows raw bytes in xterm.
 
 ---
 
-## What's New
+## Features
 
-| Date       | Update                                                                                                                                                                                               |
-| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-05-19 | **v0.1.2** — Mobile-friendly layout and a fix for the rapid disconnect/reconnect race in the WS client. ([release](https://github.com/rsecss/helmet-console/releases/tag/v0.1.2))                    |
-| 2026-05-18 | **v0.1.1** — MQ2 smoke trend chart with alarm state on the device panel. ([release](https://github.com/rsecss/helmet-console/releases/tag/v0.1.1))                                                   |
-| 2026-05-05 | **v0.1.0** — Initial open-source release: terminal, AI assistant, device panel; flat-string protocol; one-line frp tunnel. ([release](https://github.com/rsecss/helmet-console/releases/tag/v0.1.0)) |
-
-See the full [CHANGELOG](CHANGELOG.md).
+- **Forward-only relay** — server never reads command content (one
+  exception: `ping` → `pong\n`). No persistence, no allow-lists, no
+  schema. New verbs need no server change.
+- **Native browser ESM** — `web/` loads directly from `<script type="module">`.
+  No Vite, no Webpack, no framework runtime.
+- **Three views in one viewport** — terminal (xterm + command bar),
+  device control panel (LED + motor switch/gear), and an AI assistant
+  view that talks to DeepSeek V4 directly from the browser and
+  translates `tool_calls` into the same flat-text commands.
+- **Resilient WS client** — 5-state machine, exponential backoff
+  reconnect (1s · 2s · 4s · 8s · 16s), 30s heartbeat, 45s stale detect,
+  and stale-socket guards for rapid disconnect/reconnect cycles.
+- **MCU-friendly protocol** — `led_on\n`, `motor_speed_3\n`. Dispatch
+  with `strcmp`; no cJSON, no length prefix, no masking layer.
+- **Local-first deployment** — works on `localhost`; optional one-line
+  frp tunnel script for public ingress (BYO domain/VPS/token).
 
 ---
 
@@ -66,27 +75,6 @@ See the full [CHANGELOG](CHANGELOG.md).
     </td>
   </tr>
 </table>
-
----
-
-## Features
-
-- **Forward-only relay** — server never reads command content (one
-  exception: `ping` → `pong\n`). No persistence, no allow-lists, no
-  schema. New verbs need no server change.
-- **Native browser ESM** — `web/` loads directly from `<script type="module">`.
-  No Vite, no Webpack, no framework runtime.
-- **Three views in one viewport** — terminal (xterm + command bar),
-  device control panel (LED + motor switch/gear), and an AI assistant
-  view that talks to DeepSeek V4 directly from the browser and
-  translates `tool_calls` into the same flat-text commands.
-- **Resilient WS client** — 5-state machine, exponential backoff
-  reconnect (1s · 2s · 4s · 8s · 16s), 30s heartbeat, 45s stale detect,
-  and stale-socket guards for rapid disconnect/reconnect cycles.
-- **MCU-friendly protocol** — `led_on\n`, `motor_speed_3\n`. Dispatch
-  with `strcmp`; no cJSON, no length prefix, no masking layer.
-- **Local-first deployment** — works on `localhost`; optional one-line
-  frp tunnel script for public ingress (BYO domain/VPS/token).
 
 ---
 
