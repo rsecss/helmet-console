@@ -16,6 +16,10 @@
  *
  * The push step is deliberately manual: pushing the tag fires the
  * Release workflow which publishes a public GitHub Release.
+ *
+ * Release-notes style guide: docs/release-notes.md
+ * Sanity-check the `[Unreleased]` block against that guide BEFORE
+ * running this script — its contents become the GitHub Release body.
  */
 
 import { readFileSync, writeFileSync } from 'node:fs';
