@@ -41,7 +41,8 @@
   开关/挡位）、AI 助手视图（浏览器直连 DeepSeek V4，把 `tool_calls`
   翻译成同一套平铺文本命令）。
 - **弹性 WS 客户端** —— 5 态状态机、指数退避重连（1s · 2s · 4s · 8s ·
-  16s）、30s 心跳、45s 失活检测。
+  16s）、30s 心跳、45s 失活检测，并防护快速断开/重连时的旧 socket
+  事件串扰。
 - **对 MCU 友好的协议** —— `led_on\n`、`motor_speed_3\n`。用 `strcmp`
   派发即可；不需要 cJSON、不需要长度前缀、不需要掩码层。
 - **本地优先部署** —— 默认跑在 `localhost`；可选一行 frp 隧道脚本对公
@@ -175,10 +176,14 @@ flowchart TB
 ## 质量检查
 
 ```bash
-npm test              # ESLint + smoke（HTTP / WS 广播 / ping / 二进制关闭）
+npm test              # ESLint + unit + smoke
+npm run test:unit     # Node test runner 回归测试
 npm run format:check  # Prettier
 npm run lint          # 仅 ESLint
 ```
+
+单元测试覆盖浏览器侧状态机回归，例如 `web/js/ws-client.js` 的快速
+断开/重连竞态。
 
 冒烟脚本（`server/scripts/smoke.js`）会拉一个临时服务器并断言：
 

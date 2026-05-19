@@ -4,9 +4,31 @@ All notable changes to this project are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project
 adheres to [Semantic Versioning](https://semver.org/) once it ships.
 
+Writing style: see [`docs/release-notes.md`](docs/release-notes.md).
+
 ## [Unreleased]
 
-_Nothing yet._
+Mobile-friendly layout and a fix for the rapid disconnect/reconnect
+race in the WS client.
+
+### Fixed
+
+- Rapid disconnect/reconnect no longer leaves the UI in a stale state —
+  late events from old sockets are ignored.
+- Narrow viewports (≤768 px) now render the full console: vertical
+  stack, dynamic `100dvh` height, reflowed topbar and connection bar.
+
+### Added
+
+- `npm run test:unit` (Node built-in test runner) wired into `npm test`,
+  with coverage for the WS client active-socket guard.
+
+### Documentation
+
+- Frontend spec records the WS active-socket guard contract and the
+  unit tests it requires.
+- README mermaid diagram and WebSocket frame table render correctly on
+  GitHub again.
 
 ## [0.1.1] - 2026-05-18
 

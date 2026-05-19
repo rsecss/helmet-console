@@ -233,6 +233,8 @@ following `state:` frame reflects the post-command state.
 | `defaultUrl()` with explicit `:port`       | Pass through (e.g. `http://127.0.0.1:8080/` → `ws://127.0.0.1:8080/ws`)           |
 | `defaultUrl()` no port + reverse-proxied   | Use scheme-standard port (443/wss, 80/ws); never fall back to `:8080`             |
 | `defaultUrl()` no port + bare local origin | Default to `:8080` for the dev workflow                                           |
+| User disconnect followed by immediate reconnect | Stale events from the old `WebSocket` instance are ignored; only the current socket may update status or clear `socket` |
+| Older connection attempt opens after a newer attempt | Close the stale socket with code `1000` / reason `'stale connection'`; do not emit `connected` |
 | Reserved-placeholder click                 | One `console.info('[placeholder] <label>')`; no throw, no fetch                   |
 
 ---
@@ -367,6 +369,45 @@ copy-paste from a deployment doc trivial.
 `config-panel.js#applyView`. Single collapse point so future visual
 changes don't ripple into `ws-client.js`.
 
+### WS client active-socket guard
+
+**Context**: Browser `WebSocket` events are asynchronous. After a user
+clicks "断开连接" and immediately clicks "连接" again, the old socket's
+`close` event may arrive after the new socket has been assigned.
+
+**Contract**: `ws-client.js#connect` must capture the created socket in a
+local `activeSocket` and every `open` / `message` / `close` / `error`
+handler must first check `socket === activeSocket`. A stale `open` closes
+itself with code `1000` and reason `'stale connection'`; stale
+`message`, `close`, and `error` handlers return without changing status,
+clearing timers, logging, or mutating `socket`.
+
+```js
+const activeSocket = new WebSocket(url);
+socket = activeSocket;
+
+activeSocket.addEventListener('close', (event) => {
+  if (socket !== activeSocket) return;
+  socket = null;
+  // current-socket close handling only
+});
+```
+
+**Wrong**:
+
+```js
+socket = new WebSocket(url);
+socket.addEventListener('close', () => {
+  socket = null; // stale close can clear a newer connection
+});
+```
+
+**Tests required**: `test/ws-client.test.js` must cover at least:
+1. manual disconnect followed by immediate reconnect, then old
+   `close(1000)` arriving late;
+2. an older connection attempt opening after a newer attempt has already
+   replaced it.
+
 ### Display-layer direction markers in web xterm only (not ws-cli)
 
 **Why split**: ws-cli's contract is "play a dumb device peer";
@@ -418,7 +459,11 @@ when the WS is down (snapshot may diverge from device reality).
 
 ## Tests
 
-- `npm run lint`, `npm run format:check`, `npm test` (lint + smoke).
+- `npm run lint`, `npm run test:unit`, `npm run format:check`,
+  `npm test` (lint + unit + smoke).
+- `test/ws-client.test.js`: mock browser `WebSocket` and assert stale
+  socket events cannot mark the UI connected, clear the active socket, or
+  log false `[ws] error` / `[ws] not connected` messages.
 - Browser / MCP manual: 3 visual states (reload disconnected → click
   连接 with server up → stop server / submit bad URL).
 - Reserved-placeholder check: click 文档 / 终端侧栏 / 复制 / 全屏 —

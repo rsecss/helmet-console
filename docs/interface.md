@@ -29,12 +29,12 @@ ping\n
 pong\n
 ```
 
-| Direction       | Frame examples                           | Notes                           |
-| --------------- | ---------------------------------------- | ------------------------------- | -------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------ |
-| browser → MCU   | `led_on\n` `led_off\n` `led*color*<white | red                             | green>\n` `motor*speed*<0..3>\n` | Free-form text from the command bar also allowed |
-| browser → peers | `state:led=<off                          | white                           | red                              | green>,motor=<0..3>\n`                           | Best-effort UI snapshot emitted after controls; server still only relays |
-| MCU → browser   | any UTF-8 text (e.g. `temp=42.3\n`)      | Server passes through unchanged |
-| client ↔ server | `ping\n` / `pong\n`                      | See heartbeat below             |
+| Direction       | Frame examples                                                                  | Notes                                                                    |
+| --------------- | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| browser → MCU   | `led_on\n` `led_off\n` `led_color_<white\|red\|green>\n` `motor_speed_<0..3>\n` | Free-form text from the command bar also allowed                         |
+| browser → peers | `state:led=<off\|white\|red\|green>,motor=<0..3>\n`                             | Best-effort UI snapshot emitted after controls; server still only relays |
+| MCU → browser   | any UTF-8 text (e.g. `temp=42.3\n`)                                             | Server passes through unchanged                                          |
+| client ↔ server | `ping\n` / `pong\n`                                                             | See heartbeat below                                                      |
 
 The frame is the command. Multi-line input from the command bar is split
 on `\n` by the browser before sending; each non-empty line becomes its

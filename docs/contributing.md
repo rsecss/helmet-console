@@ -88,3 +88,13 @@ chore: bump prettier to 3.3
   `.trellis/spec/backend/quality-guidelines.md`).
 - No UI framework on the front-end (see
   `.trellis/spec/frontend/quality-guidelines.md`).
+
+---
+
+## Release notes
+
+`CHANGELOG.md` `[Unreleased]` is the source of truth for the next
+release; `npm run release -- X.Y.Z` migrates it into a versioned
+section that the tag-push workflow extracts as the GitHub Release body.
+
+Writing style: [`release-notes.md`](./release-notes.md).

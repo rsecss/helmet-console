@@ -1,0 +1,62 @@
+{
+  "id": "mobile-responsive",
+  "name": "mobile-responsive",
+  "title": "Mobile responsive adaptation",
+  "description": "",
+  "status": "completed",
+  "dev_type": "frontend",
+  "scope": null,
+  "package": null,
+  "priority": "P2",
+  "creator": "Maple",
+  "assignee": "Maple",
+  "createdAt": "2026-05-19",
+  "completedAt": "2026-05-19",
+  "branch": null,
+  "base_branch": "dev",
+  "worktree_path": null,
+  "current_phase": 6,
+  "next_action": [
+    {
+      "phase": 1,
+      "action": "brainstorm"
+    },
+    {
+      "phase": 2,
+      "action": "research"
+    },
+    {
+      "phase": 3,
+      "action": "implement"
+    },
+    {
+      "phase": 4,
+      "action": "check"
+    },
+    {
+      "phase": 5,
+      "action": "update-spec"
+    },
+    {
+      "phase": 6,
+      "action": "record-session"
+    }
+  ],
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": null,
+  "relatedFiles": [
+    "web/css/style.css",
+    "web/js/ws-client.js",
+    "test/ws-client.test.js",
+    "package.json",
+    "eslint.config.js",
+    ".trellis/spec/frontend/quality-guidelines.md",
+    "README.md",
+    "README.zh-CN.md"
+  ],
+  "notes": "Mobile responsive layout fixed; rapid WebSocket disconnect/reconnect race fixed; manual mobile verification passed.",
+  "meta": {}
+}

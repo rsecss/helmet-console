@@ -23,6 +23,15 @@ export default [
     rules: js.configs.recommended.rules,
   },
   {
+    files: ['test/**/*.js'],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      globals: globals.node,
+    },
+    rules: js.configs.recommended.rules,
+  },
+  {
     files: ['web/js/**/*.js'],
     languageOptions: {
       ecmaVersion: 'latest',

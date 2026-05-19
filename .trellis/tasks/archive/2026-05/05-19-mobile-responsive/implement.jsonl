@@ -1,0 +1,7 @@
+{"file": ".trellis/workflow.md", "reason": "Project workflow and conventions"}
+{"file": ".trellis/spec/frontend/index.md", "reason": "Frontend development guide"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "Hard constraints (no build, no CDN, BEM-ish), module ownership table (terminal.js owns xterm), and viewport invariants that this task scopes-down at <=768px"}
+{"file": ".trellis/spec/frontend/directory-structure.md", "reason": "Confirms web/css/style.css is the single CSS entry; index.html must stay structure-only"}
+{"file": "web/css/style.css", "reason": "Primary edit target; extend existing @media (max-width:768px) block at lines 1339-1373 and add new @media (max-width:480px)"}
+{"file": "web/index.html", "reason": "Reference only - structural source of truth; do NOT modify in this task"}
+{"file": ".trellis/tasks/05-19-mobile-responsive/prd.md", "reason": "Goal, requirements, acceptance criteria, non-goals"}
