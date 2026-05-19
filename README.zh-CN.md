@@ -19,6 +19,10 @@
 
 </div>
 
+<p align="center">
+  <img src="docs/assets/screenshots/hero.png" alt="Helmet Console —— 终端视图与实时设备遥测" width="960" />
+</p>
+
 一个 Node.js 进程同时承担两件事：把浏览器 UI 通过 HTTP 发出去，并在
 浏览器与设备之间转发 WebSocket 帧。线上协议是 **平铺的 UTF-8 文本** ——
 一帧一条命令，以 `\n` 结尾，没有 JSON 外壳。MCU 侧用 `strncmp` 派发，
@@ -27,6 +31,39 @@
 > 为什么再造一个控制台？大多数串口 / WS 控制台要么绑了 SaaS，要么需要
 > 构建管线，要么为了"结构化"把每一帧都套上 JSON。这一个尽量不挡路：
 > 服务器零解析、前端零构建、你输入的每一帧就是设备看到的每一帧。
+
+---
+
+## 更新动态
+
+| 日期       | 更新                                                                                                                                                                      |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-05-19 | **v0.1.2** —— 移动端响应式布局；修复 WebSocket 快速断开 / 重连竞态。([Release](https://github.com/rsecss/helmet-console/releases/tag/v0.1.2))                             |
+| 2026-05-18 | **v0.1.1** —— 设备面板新增 MQ2 烟雾趋势图与报警状态。([Release](https://github.com/rsecss/helmet-console/releases/tag/v0.1.1))                                            |
+| 2026-05-05 | **v0.1.0** —— 首个开源版本：终端 / AI 助手 / 设备面板三视图，平铺字符串协议，一行 frp 隧道脚本。([Release](https://github.com/rsecss/helmet-console/releases/tag/v0.1.0)) |
+
+完整变更见 [CHANGELOG](CHANGELOG.md)。
+
+---
+
+## 界面截图
+
+<table>
+  <tr>
+    <td width="33%" align="center">
+      <a href="docs/assets/screenshots/terminal.png"><img src="docs/assets/screenshots/terminal.png" alt="终端视图" /></a>
+      <br/><em>终端 —— xterm 中带方向标记的帧流</em>
+    </td>
+    <td width="33%" align="center">
+      <a href="docs/assets/screenshots/panel.png"><img src="docs/assets/screenshots/panel.png" alt="设备面板视图" /></a>
+      <br/><em>面板 —— LED、电机与 MQ2 烟雾趋势图</em>
+    </td>
+    <td width="33%" align="center">
+      <a href="docs/assets/screenshots/ai-assistant.png"><img src="docs/assets/screenshots/ai-assistant.png" alt="AI 助手视图" /></a>
+      <br/><em>AI 助手 —— DeepSeek 工具调用与设备状态</em>
+    </td>
+  </tr>
+</table>
 
 ---
 

@@ -19,6 +19,10 @@
 
 </div>
 
+<p align="center">
+  <img src="docs/assets/screenshots/hero.png" alt="Helmet Console — terminal view with live device telemetry" width="960" />
+</p>
+
 A single Node.js process serves the browser UI and relays WebSocket
 frames between browsers and devices. The wire is **flat UTF-8 text** —
 one command per frame, terminated by `\n`. No JSON envelope. The MCU
@@ -29,6 +33,39 @@ side dispatches with `strncmp`; the browser shows raw bytes in xterm.
 > This one stays out of the way: zero parsing on the server, zero build
 > tools on the front-end, and every frame you type is what the device
 > sees.
+
+---
+
+## What's New
+
+| Date       | Update                                                                                                                                                                                               |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-05-19 | **v0.1.2** — Mobile-friendly layout and a fix for the rapid disconnect/reconnect race in the WS client. ([release](https://github.com/rsecss/helmet-console/releases/tag/v0.1.2))                    |
+| 2026-05-18 | **v0.1.1** — MQ2 smoke trend chart with alarm state on the device panel. ([release](https://github.com/rsecss/helmet-console/releases/tag/v0.1.1))                                                   |
+| 2026-05-05 | **v0.1.0** — Initial open-source release: terminal, AI assistant, device panel; flat-string protocol; one-line frp tunnel. ([release](https://github.com/rsecss/helmet-console/releases/tag/v0.1.0)) |
+
+See the full [CHANGELOG](CHANGELOG.md).
+
+---
+
+## Screenshots
+
+<table>
+  <tr>
+    <td width="33%" align="center">
+      <a href="docs/assets/screenshots/terminal.png"><img src="docs/assets/screenshots/terminal.png" alt="Terminal view" /></a>
+      <br/><em>Terminal — direction-marked frames in xterm</em>
+    </td>
+    <td width="33%" align="center">
+      <a href="docs/assets/screenshots/panel.png"><img src="docs/assets/screenshots/panel.png" alt="Device panel view" /></a>
+      <br/><em>Panel — LED, motor, and MQ2 smoke trend chart</em>
+    </td>
+    <td width="33%" align="center">
+      <a href="docs/assets/screenshots/ai-assistant.png"><img src="docs/assets/screenshots/ai-assistant.png" alt="AI assistant view" /></a>
+      <br/><em>AI assistant — DeepSeek tool calls with device state</em>
+    </td>
+  </tr>
+</table>
 
 ---
 
