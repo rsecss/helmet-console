@@ -1,0 +1,4 @@
+{"file": ".claude/commands/trellis/finish-work.md", "reason": "Finish work checklist"}
+{"file": ".claude/commands/trellis/check.md", "reason": "Code quality check spec"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "Verify CSS file constraints, BEM-ish naming, token usage (--s-*, --c-*), single stylesheet"}
+{"file": ".trellis/tasks/05-19-mobile-responsive/prd.md", "reason": "Verify all acceptance criteria for non-manual checks are met"}
