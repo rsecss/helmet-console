@@ -75,15 +75,21 @@ export function createWsClient({ onStatus, onFrame, onLog }) {
     clearTimers();
     setStatus('connecting');
 
-    socket = new WebSocket(url);
+    const activeSocket = new WebSocket(url);
+    socket = activeSocket;
 
-    socket.addEventListener('open', () => {
+    activeSocket.addEventListener('open', () => {
+      if (socket !== activeSocket) {
+        activeSocket.close(1000, 'stale connection');
+        return;
+      }
       reconnectAttempt = 0;
       setStatus('connected');
       startHeartbeat();
     });
 
-    socket.addEventListener('message', (event) => {
+    activeSocket.addEventListener('message', (event) => {
+      if (socket !== activeSocket) return;
       markActivity();
 
       if (typeof event.data !== 'string') {
@@ -94,7 +100,8 @@ export function createWsClient({ onStatus, onFrame, onLog }) {
       onFrame(event.data);
     });
 
-    socket.addEventListener('close', (event) => {
+    activeSocket.addEventListener('close', (event) => {
+      if (socket !== activeSocket) return;
       clearTimers();
       socket = null;
 
@@ -106,7 +113,8 @@ export function createWsClient({ onStatus, onFrame, onLog }) {
       scheduleReconnect();
     });
 
-    socket.addEventListener('error', () => {
+    activeSocket.addEventListener('error', () => {
+      if (socket !== activeSocket) return;
       onLog('[ws] error');
     });
   }
