@@ -44,7 +44,8 @@ side dispatches with `strncmp`; the browser shows raw bytes in xterm.
   view that talks to DeepSeek V4 directly from the browser and
   translates `tool_calls` into the same flat-text commands.
 - **Resilient WS client** — 5-state machine, exponential backoff
-  reconnect (1s · 2s · 4s · 8s · 16s), 30s heartbeat, 45s stale detect.
+  reconnect (1s · 2s · 4s · 8s · 16s), 30s heartbeat, 45s stale detect,
+  and stale-socket guards for rapid disconnect/reconnect cycles.
 - **MCU-friendly protocol** — `led_on\n`, `motor_speed_3\n`. Dispatch
   with `strcmp`; no cJSON, no length prefix, no masking layer.
 - **Local-first deployment** — works on `localhost`; optional one-line
@@ -182,10 +183,14 @@ flowchart TB
 ## Quality Checks
 
 ```bash
-npm test              # ESLint + smoke (HTTP / WS broadcast / ping / binary close)
+npm test              # ESLint + unit + smoke
+npm run test:unit     # Node test runner regression tests
 npm run format:check  # Prettier
 npm run lint          # ESLint only
 ```
+
+The unit tests cover browser-side state-machine regressions such as
+rapid disconnect/reconnect races in `web/js/ws-client.js`.
 
 The smoke script (`server/scripts/smoke.js`) runs an ephemeral server
 and asserts:
