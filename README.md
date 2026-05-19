@@ -19,6 +19,10 @@
 
 </div>
 
+<p align="center">
+  <img src="docs/assets/screenshots/hero.png" alt="Helmet Console — terminal view with live device telemetry" width="960" />
+</p>
+
 A single Node.js process serves the browser UI and relays WebSocket
 frames between browsers and devices. The wire is **flat UTF-8 text** —
 one command per frame, terminated by `\n`. No JSON envelope. The MCU
@@ -50,6 +54,27 @@ side dispatches with `strncmp`; the browser shows raw bytes in xterm.
   with `strcmp`; no cJSON, no length prefix, no masking layer.
 - **Local-first deployment** — works on `localhost`; optional one-line
   frp tunnel script for public ingress (BYO domain/VPS/token).
+
+---
+
+## Screenshots
+
+<table>
+  <tr>
+    <td width="33%" align="center">
+      <a href="docs/assets/screenshots/terminal.png"><img src="docs/assets/screenshots/terminal.png" alt="Terminal view" /></a>
+      <br/><em>Terminal — direction-marked frames in xterm</em>
+    </td>
+    <td width="33%" align="center">
+      <a href="docs/assets/screenshots/panel.png"><img src="docs/assets/screenshots/panel.png" alt="Device panel view" /></a>
+      <br/><em>Panel — LED, motor, and MQ2 smoke trend chart</em>
+    </td>
+    <td width="33%" align="center">
+      <a href="docs/assets/screenshots/ai-assistant.png"><img src="docs/assets/screenshots/ai-assistant.png" alt="AI assistant view" /></a>
+      <br/><em>AI assistant — DeepSeek tool calls with device state</em>
+    </td>
+  </tr>
+</table>
 
 ---
 

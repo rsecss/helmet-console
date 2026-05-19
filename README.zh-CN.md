@@ -19,6 +19,10 @@
 
 </div>
 
+<p align="center">
+  <img src="docs/assets/screenshots/hero.png" alt="Helmet Console —— 终端视图与实时设备遥测" width="960" />
+</p>
+
 一个 Node.js 进程同时承担两件事：把浏览器 UI 通过 HTTP 发出去，并在
 浏览器与设备之间转发 WebSocket 帧。线上协议是 **平铺的 UTF-8 文本** ——
 一帧一条命令，以 `\n` 结尾，没有 JSON 外壳。MCU 侧用 `strncmp` 派发，
@@ -47,6 +51,27 @@
   派发即可；不需要 cJSON、不需要长度前缀、不需要掩码层。
 - **本地优先部署** —— 默认跑在 `localhost`；可选一行 frp 隧道脚本对公
   网暴露（自带域名 / VPS / token）。
+
+---
+
+## 界面截图
+
+<table>
+  <tr>
+    <td width="33%" align="center">
+      <a href="docs/assets/screenshots/terminal.png"><img src="docs/assets/screenshots/terminal.png" alt="终端视图" /></a>
+      <br/><em>终端 —— xterm 中带方向标记的帧流</em>
+    </td>
+    <td width="33%" align="center">
+      <a href="docs/assets/screenshots/panel.png"><img src="docs/assets/screenshots/panel.png" alt="设备面板视图" /></a>
+      <br/><em>面板 —— LED、电机与 MQ2 烟雾趋势图</em>
+    </td>
+    <td width="33%" align="center">
+      <a href="docs/assets/screenshots/ai-assistant.png"><img src="docs/assets/screenshots/ai-assistant.png" alt="AI 助手视图" /></a>
+      <br/><em>AI 助手 —— DeepSeek 工具调用与设备状态</em>
+    </td>
+  </tr>
+</table>
 
 ---
 
