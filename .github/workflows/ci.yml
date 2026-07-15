@@ -2,11 +2,11 @@ name: CI
 
 on:
   push:
-    branches: [main, dev]
+    branches: [main]
   pull_request:
-    branches: [main, dev]
+    branches: [main]
 
-# Cancel stale runs on the same PR; let push runs on main/dev complete.
+# Cancel stale runs on the same PR; let push runs on main complete.
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}

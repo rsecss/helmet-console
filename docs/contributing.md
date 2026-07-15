@@ -21,17 +21,18 @@ into `.git/hooks/`. No husky.
 ## Branching: GitHub Flow
 
 ```
-main                          ← protected; merged via PR; always releasable
-└── dev                       ← integration branch
-    └── feat/<scope>-<desc>   ← features
-    └── fix/<scope>-<desc>    ← bugfixes
-    └── docs/<scope>          ← docs-only
-    └── chore/<scope>         ← tooling / chores
+main                          ← protected; always releasable
+└── feat/<scope>-<desc>       ← features
+└── fix/<scope>-<desc>        ← bugfixes
+└── docs/<scope>              ← docs-only
+└── chore/<scope>             ← tooling / chores
 ```
 
-- Solo phase: work on `dev` directly; periodic PRs into `main`.
-- Multi-contributor: `feat/*` → PR → `dev` → integration → PR → `main`.
-- Forbidden: force-push to `main` / `dev`; `--no-verify` on hooks.
+- Single trunk: short-lived branches merge into `main` via PR.
+- Trivial docs/chore changes may be pushed to `main` directly by
+  maintainers; anything touching `server/` or `web/` goes through a PR.
+- Releases are cut from `main` with a tag (`vX.Y.Z`) — no release branch.
+- Forbidden: force-push to `main`; `--no-verify` on hooks.
 
 ---
 
@@ -83,7 +84,8 @@ chore: bump prettier to 3.3
 
 - No build tool (Vite / Webpack / etc.).
 - No test framework — only `server/scripts/smoke.js`-level coverage.
-- No direct commits to `main`.
+- No direct commits to `main` for code changes (docs/chore exempt, see
+  Branching above).
 - No new web framework on the server (see
   `.trellis/spec/backend/quality-guidelines.md`).
 - No UI framework on the front-end (see
