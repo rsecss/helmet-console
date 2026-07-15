@@ -102,6 +102,9 @@ Server bytes are pure passthrough.
 For the full module diagram, command dictionary, state machine, and
 deferred extensions, see [`docs/architecture.md`](docs/architecture.md).
 
+The device side (MCU firmware) lives in a separate repo:
+[rsecss/helmet](https://github.com/rsecss/helmet).
+
 ---
 
 ## Quick Start
@@ -245,14 +248,15 @@ config.
 
 ## Documentation
 
-| Doc                                            | Audience                                       |
-| ---------------------------------------------- | ---------------------------------------------- |
-| [`docs/architecture.md`](docs/architecture.md) | System shape, modules, protocol, state machine |
-| [`docs/interface.md`](docs/interface.md)       | HTTP routes + WebSocket contract               |
-| [`docs/deployment.md`](docs/deployment.md)     | Env vars, reverse proxy, smoke checks          |
-| [`docs/contributing.md`](docs/contributing.md) | Branch flow, commits, formatting               |
-| [`deploy/deploy.md`](deploy/deploy.md)         | Local-first frp tunnel setup (BYO)             |
-| [`CHANGELOG.md`](CHANGELOG.md)                 | Release notes                                  |
+| Doc                                               | Audience                                       |
+| ------------------------------------------------- | ---------------------------------------------- |
+| [`docs/architecture.md`](docs/architecture.md)    | System shape, modules, protocol, state machine |
+| [`docs/interface.md`](docs/interface.md)          | HTTP routes + WebSocket contract               |
+| [`docs/deployment.md`](docs/deployment.md)        | Env vars, reverse proxy, smoke checks          |
+| [`docs/contributing.md`](docs/contributing.md)    | Branch flow, commits, formatting               |
+| [`deploy/deploy.md`](deploy/deploy.md)            | Local-first frp tunnel setup (BYO)             |
+| [`CHANGELOG.md`](CHANGELOG.md)                    | Release notes                                  |
+| [rsecss/helmet](https://github.com/rsecss/helmet) | Companion MCU firmware (device side)           |
 
 For coding rules used by AI collaborators, see
 [`.trellis/spec/`](.trellis/spec/) (backend / frontend / shared guides).
