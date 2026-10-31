@@ -1,0 +1,53 @@
+{
+  "id": "pin-trellis-local-tooling",
+  "name": "pin-trellis-local-tooling",
+  "title": "Pin Trellis and generate local AI tooling",
+  "description": "",
+  "status": "in_progress",
+  "dev_type": "docs",
+  "scope": "tooling",
+  "package": null,
+  "priority": "P2",
+  "creator": "Maple",
+  "assignee": "Maple",
+  "createdAt": "2026-10-31",
+  "completedAt": null,
+  "branch": "chore/trellis-local-tooling",
+  "base_branch": "main",
+  "worktree_path": null,
+  "current_phase": 4,
+  "next_action": [
+    {
+      "phase": 1,
+      "action": "brainstorm"
+    },
+    {
+      "phase": 2,
+      "action": "research"
+    },
+    {
+      "phase": 3,
+      "action": "implement"
+    },
+    {
+      "phase": 4,
+      "action": "check"
+    },
+    {
+      "phase": 5,
+      "action": "update-spec"
+    },
+    {
+      "phase": 6,
+      "action": "record-session"
+    }
+  ],
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": null,
+  "relatedFiles": [],
+  "notes": "Implementation and local validation complete; preparing commit and pull request.",
+  "meta": {}
+}

@@ -23,7 +23,7 @@ preserves history — both are acceptable depending on the change set.
 ## Checklist
 
 - [ ] Commits follow Conventional Commits (`type(scope): subject`)
-- [ ] `npm test` (lint + smoke) passes locally
+- [ ] `npm test` (lint + unit tests + smoke) passes locally
 - [ ] `npm run format:check` passes
 - [ ] `CHANGELOG.md` `[Unreleased]` updated (or N/A: tooling-only chore)
 - [ ] Docs updated (`docs/`, `README.md`) if user-visible behavior changed

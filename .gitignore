@@ -1,5 +1,10 @@
 .ace-tool/
 
+# AI tool adapters (generated with npm run trellis:init)
+/.agents/
+/.claude/
+/.codex/
+
 # Design prototypes (large HTML mockups; reference-only)
 docs/design/
 
