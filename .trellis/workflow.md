@@ -18,6 +18,8 @@
 
 ## Quick Start (Do This First)
 
+For AI tool setup, follow the [pinned initialization instructions](../docs/contributing.md#ai-assisted-development-optional) before using generated skills or hooks.
+
 ### Step 0: Initialize Developer Identity (First Time Only)
 
 > **Multi-developer support**: Each developer/Agent needs to initialize their identity first

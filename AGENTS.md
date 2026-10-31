@@ -21,6 +21,13 @@ Keep this managed block so 'trellis update' can refresh the instructions.
 
 <!-- TRELLIS:END -->
 
+# AI Tool Setup
+
+The root `.agents/`, `.claude/`, and `.codex/` directories are generated locally and gitignored.
+Before using their skills or hooks, follow the pinned setup in
+[`docs/contributing.md`](docs/contributing.md#ai-assisted-development-optional).
+Keep project rules in `AGENTS.md` and `.trellis/`, not only in generated adapters.
+
 # Project Snapshot
 
 - Runtime: single Node.js package, ESM, Node 18+. Start: `npm start`.

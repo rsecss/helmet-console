@@ -253,13 +253,15 @@ config.
 | [`docs/architecture.md`](docs/architecture.md)    | System shape, modules, protocol, state machine |
 | [`docs/interface.md`](docs/interface.md)          | HTTP routes + WebSocket contract               |
 | [`docs/deployment.md`](docs/deployment.md)        | Env vars, reverse proxy, smoke checks          |
-| [`docs/contributing.md`](docs/contributing.md)    | Branch flow, commits, formatting               |
+| [`docs/contributing.md`](docs/contributing.md)    | Contributor setup, AI tooling, PRs and checks  |
 | [`deploy/deploy.md`](deploy/deploy.md)            | Local-first frp tunnel setup (BYO)             |
 | [`CHANGELOG.md`](CHANGELOG.md)                    | Release notes                                  |
 | [rsecss/helmet](https://github.com/rsecss/helmet) | Companion MCU firmware (device side)           |
 
 For coding rules used by AI collaborators, see
 [`.trellis/spec/`](.trellis/spec/) (backend / frontend / shared guides).
+Generate local AI tool adapters with the
+[pinned Trellis setup](docs/contributing.md#ai-assisted-development-optional).
 
 ---
 

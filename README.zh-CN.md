@@ -243,13 +243,14 @@ npm run lint          # 仅 ESLint
 | [`docs/architecture.md`](docs/architecture.md)    | 系统形态、模块、协议、状态机        |
 | [`docs/interface.md`](docs/interface.md)          | HTTP 路由 + WebSocket 契约          |
 | [`docs/deployment.md`](docs/deployment.md)        | 环境变量、反向代理、冒烟检查        |
-| [`docs/contributing.md`](docs/contributing.md)    | 分支流程、提交规范、格式化          |
+| [`docs/contributing.md`](docs/contributing.md)    | 开发环境、AI 工具初始化、PR 与检查  |
 | [`deploy/deploy.md`](deploy/deploy.md)            | 本地优先的 frp 隧道部署（自带配置） |
 | [`CHANGELOG.md`](CHANGELOG.md)                    | 发布记录                            |
 | [rsecss/helmet](https://github.com/rsecss/helmet) | 配套下位机固件（设备侧）            |
 
 供 AI 协作者使用的编码规则在 [`.trellis/spec/`](.trellis/spec/)
 （backend / frontend / 共享指南）。
+本地 AI 工具配置请按[固定版本的 Trellis 初始化说明](docs/contributing.md#ai-assisted-development-optional)生成。
 
 ---
 
