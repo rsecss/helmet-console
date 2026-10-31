@@ -13,7 +13,7 @@
   "createdAt": "2026-10-31",
   "completedAt": null,
   "branch": "docs/documentation-boundaries",
-  "base_branch": "docs/documentation-boundaries",
+  "base_branch": "main",
   "worktree_path": null,
   "current_phase": 4,
   "next_action": [
@@ -48,6 +48,6 @@
   "children": [],
   "parent": null,
   "relatedFiles": [],
-  "notes": "Implementation and local validation complete; preparing PR.",
+  "notes": "User README rewrite and documentation organization validated; preparing a single PR containing both commits.",
   "meta": {}
 }

@@ -1,7 +1,8 @@
 # Documentation
 
-The repository [README](../README.md) and [Chinese README](../README.zh-CN.md)
-remain the GitHub entry points. This index covers detailed guides and file ownership.
+The repository [README](../README.md) is the GitHub entry point and the project
+overview, written in Simplified Chinese. This index and the guides below are in
+English; they cover detailed guidance and file ownership.
 
 ## Reading Paths
 
@@ -18,7 +19,7 @@ remain the GitHub entry points. This index covers detailed guides and file owner
 
 | Location                                         | Purpose                                          | Commit?                               |
 | ------------------------------------------------ | ------------------------------------------------ | ------------------------------------- |
-| Root `README.md`, `README.zh-CN.md`              | Project overview and quick start                 | Yes                                   |
+| Root `README.md`                                 | Project overview and quick start                 | Yes                                   |
 | `docs/*.md`                                      | Reusable architecture, contracts, and guides     | Yes                                   |
 | `docs/assets/screenshots/`                       | Screenshots referenced by public documentation   | Yes                                   |
 | `deploy/start.py`, `deploy/frpc.example.toml`    | Launcher and placeholder configuration           | Yes                                   |

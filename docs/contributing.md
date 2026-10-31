@@ -143,8 +143,9 @@ chore: bump prettier to 3.3
 ## Documentation and Local Files
 
 Use the [documentation index](README.md) for guide ownership and the complete
-commit/ignore matrix. Keep both repository READMEs at the root. Public guides
-use placeholders; personal non-secret notes belong in ignored `docs/local/`.
+commit/ignore matrix. Keep the Simplified Chinese README at the repository root.
+Public guides use placeholders; personal non-secret notes belong in ignored
+`docs/local/`.
 Capture runtime output in root `logs/` as described in
 [deployment](deployment.md#capturing-logs).
 
