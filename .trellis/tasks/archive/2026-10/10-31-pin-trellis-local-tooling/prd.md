@@ -21,7 +21,7 @@ Keep project-specific workflow knowledge in Git while generating AI tool adapter
 - [x] Repeating initialization preserves existing files.
 - [x] Generated AI directories are ignored and no longer tracked, with local contents retained.
 - [x] Relevant quality checks pass and documentation matches verified commands.
-- [ ] Changes are committed on the feature branch and submitted as a PR.
+- [x] Changes are committed on the feature branch and submitted as a PR.
 
 ## Command Contract
 
@@ -39,3 +39,5 @@ Compare generated adapters with tracked originals, compare tracked file hashes b
 - Initialization preserves 62 tracked project files; repeated runs preserve local adapter edits and restore a missing adapter.
 - `npm test`, `npm run format:check`, task-context validation, and Git whitespace checks pass.
 - The 44 original adapter files remain present locally after removal from the index.
+- PR: https://github.com/rsecss/helmet-console/pull/7
+- Remote checks pass: Node.js 18/20/22 quality gates and commit-message validation.
