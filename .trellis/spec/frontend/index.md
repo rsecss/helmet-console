@@ -1,7 +1,9 @@
 # Frontend Spec Index
 
 The console is a native browser ESM app under `web/` with no build tool.
-Visual surface mirrors `docs/design/prototype-rose.html` 1:1.
+Current UI behavior is defined by tracked `web/` code and the contracts below.
+Tracked screenshots in `docs/assets/screenshots/` illustrate the visual baseline;
+ignored prototypes under `docs/design/` are optional local references.
 
 ---
 
@@ -9,7 +11,7 @@ Visual surface mirrors `docs/design/prototype-rose.html` 1:1.
 
 Before touching `web/`:
 1. [`quality-guidelines.md`](./quality-guidelines.md) — hard constraints, module ownership, signatures, validation matrix, design decisions
-2. `docs/design/prototype-rose.html` — visual surface of truth (gitignored prototype)
+2. `web/index.html`, `web/css/style.css`, and `docs/assets/screenshots/` — current implementation and illustrative visual references
 3. `docs/architecture.md` §2 + §5 — module diagram and connection state machine
 
 ---

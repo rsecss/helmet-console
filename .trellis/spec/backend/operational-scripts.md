@@ -15,8 +15,9 @@
 - `deploy/frpc.exe` / `deploy/frpc` — frp binary (gitignored, not bundled)
 
 Operational adjuncts to the backend service. Keep small and direct;
-project-state values (current domain, VPS IP, token) belong in
-`deploy/deploy.md`, not in this spec.
+reusable setup belongs in `docs/frp-tunnel.md`. Personal non-secret topology
+notes belong in ignored `docs/local/`; tokens belong only in ignored runtime
+configuration or a secret store. See `docs/README.md` for file ownership.
 
 ---
 
@@ -29,9 +30,9 @@ project-state values (current domain, VPS IP, token) belong in
   `.gitignore`; only the example template is tracked.
 - Do not reference the relay port as a literal in only one of the three
   call sites. The port is a synced constant — see scenario below.
-- Do not bake current domain / VPS / token values into `spec/`.
-  Those are project state, not coding rules. Document them in
-  `deploy/deploy.md` and reference them from a `# TODO` in `start.py`.
+- Do not put personal environment values or credentials in public guides,
+  specifications, tasks, or journals. Use placeholders in reusable examples;
+  keep private configuration local.
 
 ---
 
@@ -178,8 +179,9 @@ runtime binaries.
 - **Good**: contributor runs
   `cp deploy/frpc.example.toml deploy/frpc.toml`, fills in real values;
   `git status` shows no changes under `deploy/`.
-- **Bad**: a real `frpc.toml` accidentally committed once → token must
-  be rotated and history rewritten (BFG / `git filter-repo`).
+- **Bad**: a real `frpc.toml` is accidentally committed. Rotate exposed
+  credentials and escalate repository remediation to maintainers; never
+  rewrite protected/default/release history as an automated cleanup step.
 
 #### 6. Tests Required
 
@@ -215,8 +217,8 @@ deploy/frpc
   `.gitignore`?
 - Does `frpc.example.toml` carry only `YOUR_*` placeholders (no real
   IP/token)?
-- Are temporary domain / VPS / token values documented in
-  `deploy/deploy.md` (not in `spec/`)?
+- Do public guides use placeholders, personal non-secret notes stay in
+  ignored `docs/local/`, and credentials stay out of all tracked content?
 
 ---
 

@@ -5,7 +5,7 @@
 ```text
 web/
 ├── css/
-│   └── style.css         # Single CSS entry — design tokens lifted from prototype-rose
+│   └── style.css         # Single CSS entry — tracked design tokens and layout
 ├── js/
 │   ├── main.js           # Composition: DOM lookup + callback wiring + reserved placeholders
 │   ├── ws-client.js      # WebSocket transport + 5-state machine + heartbeat

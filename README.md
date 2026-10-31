@@ -4,267 +4,216 @@
 
 ---
 
-### The Host-Side WebSocket Relay for Embedded Devices
+### 面向嵌入式设备的主机端 WebSocket 中继
 
-**Zero parsing on the server. Zero build tools on the front-end.**
+**服务器零解析，前端零构建。**
 
 ![Node.js](https://img.shields.io/badge/Node.js-18%2B-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-1f6feb?style=for-the-badge)
 ![Build](https://img.shields.io/badge/Build-no%20bundler-dc2626?style=for-the-badge&logo=javascript&logoColor=white)
 ![WebSocket](https://img.shields.io/badge/WebSocket-flat%20text-8250df?style=for-the-badge&logo=socketdotio&logoColor=white)
 
-[English](README.md) | [简体中文](README.zh-CN.md)
-
 ---
 
 </div>
 
 <p align="center">
-  <img src="docs/assets/screenshots/hero.png" alt="Helmet Console — terminal view with live device telemetry" width="960" />
+  <img src="docs/assets/screenshots/hero.png" alt="Helmet Console —— 终端视图与实时设备遥测" width="960" />
 </p>
 
-A single Node.js process serves the browser UI and relays WebSocket
-frames between browsers and devices. The wire is **flat UTF-8 text** —
-one command per frame, terminated by `\n`. No JSON envelope. The MCU
-side dispatches with `strncmp`; the browser shows raw bytes in xterm.
+Helmet Console 用一个 Node.js 进程做两件事：通过 HTTP 提供浏览器 UI，并在
+浏览器与嵌入式设备之间转发 WebSocket 帧。线上的每一帧都是**一行以 `\n`
+结尾的 UTF-8 文本** —— 没有 JSON 外壳、没有长度前缀、没有 schema。浏览器把
+它敲出来，中继原样转发、不读内容，MCU 用 `strcmp` 分发。
 
-> Why another console? Most serial / WS consoles either bundle a SaaS,
-> require a build pipeline, or wrap every frame in JSON for "structure".
-> This one stays out of the way: zero parsing on the server, zero build
-> tools on the front-end, and every frame you type is what the device
-> sees.
+> **线上的字节就是命令本身。** `led_on\n` 从命令栏发出时是 7 个字节，经过
+> 中继还是这 7 个字节，到达设备仍然是这 7 个字节。任何一跳都没有东西需要
+> 拆包，所以服务端不需要解析器，设备不需要 cJSON，前端也不需要构建管线。
 
 ---
 
-## Features
+## 特性
 
-- **Forward-only relay** — server never reads command content (one
-  exception: `ping` → `pong\n`). No persistence, no allow-lists, no
-  schema. New verbs need no server change.
-- **Native browser ESM** — `web/` loads directly from `<script type="module">`.
-  No Vite, no Webpack, no framework runtime.
-- **Three views in one viewport** — terminal (xterm + command bar),
-  device control panel (LED + motor switch/gear), and an AI assistant
-  view that talks to DeepSeek V4 directly from the browser and
-  translates `tool_calls` into the same flat-text commands.
-- **Resilient WS client** — 5-state machine, exponential backoff
-  reconnect (1s · 2s · 4s · 8s · 16s), 30s heartbeat, 45s stale detect,
-  and stale-socket guards for rapid disconnect/reconnect cycles.
-- **MCU-friendly protocol** — `led_on\n`, `motor_speed_3\n`. Dispatch
-  with `strcmp`; no cJSON, no length prefix, no masking layer.
-- **Local-first deployment** — works on `localhost`; optional one-line
-  frp tunnel script for public ingress (BYO domain/VPS/token).
+- **只转发，不解析** —— 每一条文本帧都逐字节广播给其他所有客户端。服务器
+  只认一个动词 `ping`，并回以 `pong\n`。不持久化、不维护命令表：新增动词
+  无需改服务端。
+- **原生浏览器 ESM** —— `web/` 就是一组普通模块，由 `<script type="module">`
+  直接加载。没有 Vite、没有 Webpack、没有框架运行时；唯一的第三方库是
+  `web/vendor/` 下的 xterm 及其 fit 插件。
+- **一页三视图** —— 终端（带方向标记的 xterm + 命令栏）、设备面板（LED、
+  电机开关与挡位、MQ2 烟雾趋势图）、AI 助手（浏览器直连 DeepSeek，
+  `deepseek-v4-flash` / `deepseek-v4-pro`，把 `tool_calls` 翻译成同一套平铺
+  文本命令）。
+- **弹性连接** —— 5 态连接状态机，指数退避重连（1 s · 2 s · 4 s · 8 s ·
+  16 s，最多 5 次），30 s 心跳，45 s 失活检测，并忽略来自已被替换的旧
+  socket 的迟到事件。
+- **对 MCU 友好的协议** —— `led_on\n`、`motor_speed_3\n`、`mq2=142\n`。
+  每行一次 `strcmp` 就是全部分发逻辑；没有 JSON 解析，WebSocket 之上也没有
+  额外的分帧层。
+- **本地优先的部署** —— `npm start` 在 `localhost` 上就是完整的一套。可选
+  的 Python 启动器会附带 frp 隧道用于公网接入，VPS、token 与域名需自备。
 
 ---
 
-## Screenshots
+## 界面截图
 
 <table>
   <tr>
     <td width="33%" align="center">
-      <a href="docs/assets/screenshots/terminal.png"><img src="docs/assets/screenshots/terminal.png" alt="Terminal view" /></a>
-      <br/><em>Terminal — direction-marked frames in xterm</em>
+      <a href="docs/assets/screenshots/terminal.png"><img src="docs/assets/screenshots/terminal.png" alt="终端视图" /></a>
+      <br/><em>终端 —— xterm 中的每一帧，发出 <code>[↓]</code>，收到 <code>[↑]</code></em>
     </td>
     <td width="33%" align="center">
-      <a href="docs/assets/screenshots/panel.png"><img src="docs/assets/screenshots/panel.png" alt="Device panel view" /></a>
-      <br/><em>Panel — LED, motor, and MQ2 smoke trend chart</em>
+      <a href="docs/assets/screenshots/panel.png"><img src="docs/assets/screenshots/panel.png" alt="设备面板视图" /></a>
+      <br/><em>面板 —— LED、电机与 MQ2 烟雾趋势实时曲线</em>
     </td>
     <td width="33%" align="center">
-      <a href="docs/assets/screenshots/ai-assistant.png"><img src="docs/assets/screenshots/ai-assistant.png" alt="AI assistant view" /></a>
-      <br/><em>AI assistant — DeepSeek tool calls with device state</em>
+      <a href="docs/assets/screenshots/ai-assistant.png"><img src="docs/assets/screenshots/ai-assistant.png" alt="AI 助手视图" /></a>
+      <br/><em>AI 助手 —— DeepSeek 工具调用，并固定显示设备状态</em>
     </td>
   </tr>
 </table>
 
 ---
 
-## Architecture
-
-```mermaid
-flowchart LR
-    eng[Engineer browser]
-    ai[AI Assistant DeepSeek V4]
-    server[Helmet Console Node.js relay]
-    dev[Device MCU and 4G]
-
-    eng -->|HTTP and WS /ws| server
-    server -->|HTTP and WS /ws| eng
-    eng -->|HTTPS and SSE direct| ai
-    ai -->|tool calls to cmd| eng
-    dev -->|WS /ws over 4G| server
-    server -->|WS /ws over 4G| dev
-```
-
-The browser is the only place that knows about commands. AI runs in the
-browser too — the API key stays in `localStorage`, never on the server.
-Server bytes are pure passthrough.
-
-For the full module diagram, command dictionary, state machine, and
-deferred extensions, see [`docs/architecture.md`](docs/architecture.md).
-
-The device side (MCU firmware) lives in a separate repo:
-[rsecss/helmet](https://github.com/rsecss/helmet).
-
----
-
-## Quick Start
+## 快速开始
 
 ```bash
-git clone <this-repo>
+git clone https://github.com/rsecss/helmet-console.git
 cd helmet-console
-npm install
+npm ci
 npm start
 # → http://127.0.0.1:8080
 ```
 
-Open the URL, click **连接** (the URL field defaults to
-`ws://127.0.0.1:8080/ws`), and type a command. With no device
-connected, run a second client locally to play the device role:
+打开页面，保留预填的 `ws://127.0.0.1:8080/ws`，点击 **连接**。状态标签变为
+**已连接** 后，命令栏即可输入。
+
+手头没有设备？另开一个终端，让 `ws-cli` 扮演设备：
 
 ```bash
-echo "temp=42.3" | node server/scripts/ws-cli.js
+node server/scripts/ws-cli.js   # 默认连接 ws://127.0.0.1:8080/ws
+mq2=142,mq2_alarm=0             # 输入一行并回车 → 出现在浏览器终端与 MQ2 曲线中
 ```
 
-Then send `led_on` from the browser and watch it arrive on the cli.
+然后在浏览器里发送 `led_on`，它会打印在这个终端里。这个客户端被设计为交互
+式：stdin 结束时它会关闭连接，所以用一条 `echo` 管道喂给它不会把帧送出去。
 
 ---
 
-## Sending Commands
+## 线上格式
 
-Any UTF-8 text line ending in `\n` is a frame. The browser's command
-bar splits multi-line input on `\n` so the device never has to handle
-frame boundaries.
+任何以 `\n` 结尾的 UTF-8 文本行都是一帧。命令栏会按 `\n` 拆分多行输入，
+设备永远不必处理帧边界。
 
-| Frame                             | Direction        | Meaning                 |
-| --------------------------------- | ---------------- | ----------------------- |
-| `led_on\n` · `led_off\n`          | browser → device | Toggle LED              |
-| `led_color_<white\|red\|green>\n` | browser → device | Set LED color           |
-| `motor_speed_<0..3>\n`            | browser → device | Set motor gear          |
-| `state:led=…,motor=…\n`           | browser → peers  | Best-effort UI snapshot |
-| any UTF-8 text (`temp=42.3\n`, …) | device → browser | Free-form telemetry     |
-| `ping\n` / `pong\n`               | client ↔ server  | Heartbeat               |
+| 帧                                    | 方向            | 含义                                     |
+| ------------------------------------- | --------------- | ---------------------------------------- |
+| `led_on\n` · `led_off\n`              | 浏览器 → 设备   | LED 开（白色）/ 关                       |
+| `led_color_<white\|red\|green>\n`     | 浏览器 → 设备   | 设置 LED 颜色并点亮                      |
+| `motor_speed_<0..3>\n`                | 浏览器 → 设备   | `0` 停机，`1..3` 选择挡位                |
+| `state:led=…,motor=…\n`               | 浏览器 → 对端   | 控制操作后尽力广播的 UI 快照；设备可忽略 |
+| `mq2=<n>,mq2_alarm=<0\|1>\n`          | 设备 → 浏览器   | 由面板解析为趋势曲线与报警状态           |
+| 其他任意 UTF-8 行（`temp=42.3\n` 等） | 设备 → 浏览器   | 自由格式遥测，原样打印                   |
+| `ping\n` / `pong\n`                   | 客户端 ↔ 服务器 | 心跳；服务器唯一会读的帧                 |
 
-Add new verbs at will — the server doesn't maintain a registry. Browser
-and device negotiate vocabulary directly. See
-[`docs/interface.md`](docs/interface.md) for the full contract.
+中继从不补 `\n`、不改大小写、不加时间戳。二进制帧会让对应连接以 `1003`
+关闭。包含心跳时序的完整契约见 [`docs/interface.md`](docs/interface.md)。
 
 ---
 
-## Repository Layout
-
-```
-helmet-console/
-├── server/        Node.js relay (composition + sirv + ws)
-├── web/           Native browser ESM UI (no build)
-├── deploy/        One-shot launcher + frp tunnel template
-├── docs/          Architecture, interface, deployment, contributing
-└── .trellis/      Per-package coding specs + AI workflow files
-```
+## 工作原理
 
 ```mermaid
-flowchart TB
-    subgraph serverGroup[server - Node.js relay]
-        idx[index.js entry]
-        st[static.js HTTP healthz]
-        rl[ws-relay.js broadcast and ping]
-        cf[config.js env]
-        idx --> st
-        idx --> rl
-        cf --> st
-        cf --> rl
-    end
+flowchart LR
+    browser[浏览器 UI]
+    relay[Helmet Console 中继]
+    device[设备 MCU 走 4G]
+    deepseek[DeepSeek API]
 
-    subgraph webGroup[web/js - browser native ESM]
-        m[main.js composition]
-        wsc[ws-client.js state and heartbeat]
-        cp[config-panel.js URL and data-state]
-        cmd[command-panel.js textarea]
-        ctrl[control-panel.js LED and motor]
-        vsw[view-switcher.js data-view]
-        ai[ai-panel.js DeepSeek tools]
-        term[terminal.js xterm display]
-        m --> wsc
-        m --> cp
-        m --> cmd
-        m --> ctrl
-        m --> vsw
-        m --> ai
-        m --> term
-    end
-
-    subgraph scriptsGroup[server scripts and deploy]
-        smk[smoke.js HTTP and WS test]
-        cli[ws-cli.js device-role peer]
-        sp[start.py Node and frpc supervisor]
-    end
-
-    serverGroup -->|uses| scriptsGroup
+    browser -->|HTTP 和 WS /ws| relay
+    relay -->|WS /ws| browser
+    device -->|WS /ws 走 4G| relay
+    relay -->|WS /ws 走 4G| device
+    browser -->|HTTPS 和 SSE 直连| deepseek
+    deepseek -->|tool calls 转 cmd| browser
 ```
 
-> Modules never import each other directly — `main.js` wires everything
-> via injected callbacks. Single writers: `config-panel.js` owns
-> `console.ws.*` + `.app-shell[data-state]`; `view-switcher.js` owns
-> `.app-shell[data-view]`; `ai-panel.js` owns `console.ai.*`.
+只有浏览器理解命令。AI 助手同样跑在浏览器里：API key 留在 `localStorage`，
+从不到达中继。在服务器上，字节只是直接穿过。
+
+`web/js/` 里只有 `main.js` 会 import 其他模块；各面板通过注入的回调通信，
+每一份共享状态都只有一个写入者。模块图、状态机与延后扩展见
+[`docs/architecture.md`](docs/architecture.md)。
+
+设备侧（MCU 固件）在独立仓库：[rsecss/helmet](https://github.com/rsecss/helmet)。
 
 ---
 
-## Quality Checks
+## 仓库结构
+
+```text
+helmet-console/
+├── server/
+│   ├── src/          index.js · static.js（HTTP + /healthz）· ws-relay.js · config.js（环境变量）
+│   └── scripts/      smoke.js（HTTP + WS 检查）· ws-cli.js（扮演设备的客户端）
+├── web/
+│   ├── index.html    唯一的页面
+│   ├── js/           原生 ESM 模块，由 main.js 拼装
+│   ├── css/          样式表
+│   └── vendor/       xterm + addon-fit
+├── test/             Node test runner 的 WS 客户端回归测试
+├── deploy/           start.py 启动器 + frpc.example.toml（真实 frpc.toml 不提交）
+├── docs/             文档索引、指南与截图
+├── .trellis/         编码规范与 AI 工作流文件
+└── logs/             可选的本地输出捕获（不提交）
+```
+
+---
+
+## 质量检查
 
 ```bash
-npm test              # ESLint + unit + smoke
-npm run test:unit     # Node test runner regression tests
+npm test              # ESLint + 单元测试 + 冒烟
+npm run test:unit     # Node test runner —— ws-client 重连/竞态回归
+npm run smoke         # 临时服务器：/healthz、广播、ping/pong、二进制关闭
 npm run format:check  # Prettier
-npm run lint          # ESLint only
 ```
 
-The unit tests cover browser-side state-machine regressions such as
-rapid disconnect/reconnect races in `web/js/ws-client.js`.
+冒烟脚本在随机端口起一个服务器，并断言：`/healthz` 返回 `status: "ok"`、
+数值型 `uptime` 和 `clients: 0`；两个客户端能逐字节收到对方的帧；`ping\n`
+被回以 `pong\n` 且不被广播；二进制帧会让发送方以 `1003` 关闭。
 
-The smoke script (`server/scripts/smoke.js`) runs an ephemeral server
-and asserts:
-
-- `/healthz` returns `{ status: "ok", clients: 0 }`.
-- Two WS clients can broadcast to each other byte-for-byte.
-- `ping\n` is answered with `pong\n` (and not broadcast).
-- Binary frames close the offending socket with code `1003`.
-
-A `commit-msg` git hook (via `simple-git-hooks` + `commitlint`) enforces
-[Conventional Commits](https://www.conventionalcommits.org/).
+CI 在 Node 18、20、22 上跑同一套检查。`commit-msg` 钩子
+（`simple-git-hooks` + `commitlint`）强制
+[Conventional Commits](https://www.conventionalcommits.org/)。
 
 ---
 
-## Deployment
+## 部署
 
-**Local only** — `npm start`. That's it.
+**本地** —— `npm start`。监听地址、端口、WebSocket 路径与客户端上限由环境
+变量控制；变量表与 nginx 升级配置见 [`docs/deployment.md`](docs/deployment.md)。
 
-**Public ingress (frp tunnel)** — `python deploy/start.py` boots Node +
-`frpc` together. You bring your own VPS, frps token, and domain; the
-script supervises both processes and prints connection URLs.
-See [`deploy/deploy.md`](deploy/deploy.md) for prerequisites and
-[`docs/deployment.md`](docs/deployment.md) for env vars and reverse-proxy
-config.
-
----
-
-## Documentation
-
-| Doc                                               | Audience                                       |
-| ------------------------------------------------- | ---------------------------------------------- |
-| [`docs/architecture.md`](docs/architecture.md)    | System shape, modules, protocol, state machine |
-| [`docs/interface.md`](docs/interface.md)          | HTTP routes + WebSocket contract               |
-| [`docs/deployment.md`](docs/deployment.md)        | Env vars, reverse proxy, smoke checks          |
-| [`docs/contributing.md`](docs/contributing.md)    | Contributor setup, AI tooling, PRs and checks  |
-| [`deploy/deploy.md`](deploy/deploy.md)            | Local-first frp tunnel setup (BYO)             |
-| [`CHANGELOG.md`](CHANGELOG.md)                    | Release notes                                  |
-| [rsecss/helmet](https://github.com/rsecss/helmet) | Companion MCU firmware (device side)           |
-
-For coding rules used by AI collaborators, see
-[`.trellis/spec/`](.trellis/spec/) (backend / frontend / shared guides).
-Generate local AI tool adapters with the
-[pinned Trellis setup](docs/contributing.md#ai-assisted-development-optional).
+**公网接入** —— `python deploy/start.py` 同时拉起中继与 `frpc` 并守护两者，
+中继意外退出会被重启。VPS、frps token 与域名需自备；把
+`deploy/frpc.example.toml` 复制为被忽略的 `deploy/frpc.toml` 并填入你的值。
+启动器会先释放 `8080` 端口，这会终止当前占用它的进程 —— 只想跑中继时请用
+`npm start`。安装与排障见 [`docs/frp-tunnel.md`](docs/frp-tunnel.md)。
 
 ---
 
-## License
+## 文档
+
+- [文档索引](docs/README.md) —— 阅读路径与文件提交/忽略矩阵。
+- [架构](docs/architecture.md) · [接口](docs/interface.md) ·
+  [部署](docs/deployment.md) · [frp 隧道](docs/frp-tunnel.md)
+- [贡献指南](docs/contributing.md) —— 环境搭建、分支、提交规范，以及生成 AI
+  工具适配器的[固定版本 Trellis 初始化](docs/contributing.md#ai-assisted-development-optional)。
+- [`.trellis/spec/`](.trellis/spec/) —— 供 AI 协作者使用的后端 / 前端编码规则。
+- [更新日志](CHANGELOG.md) —— 发布历史。
+
+---
+
+## 许可证
 
 [MIT](LICENSE)

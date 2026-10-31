@@ -5,17 +5,18 @@
 /.claude/
 /.codex/
 
-# Design prototypes (large HTML mockups; reference-only)
-docs/design/
+# Local documentation (optional references, never required to contribute)
+/docs/design/
+/docs/local/
 
 # Node
 node_modules/
 .env
 .env.local
 *.log
-logs/
+/logs/
 
-# Deploy（含 token / 二进制不入库；用 frpc.example.toml 作为模板）
+# Local deployment configuration and downloaded binaries
 deploy/frpc.toml
 deploy/frpc.exe
 deploy/frpc
