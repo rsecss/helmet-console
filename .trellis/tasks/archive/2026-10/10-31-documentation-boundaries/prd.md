@@ -23,7 +23,7 @@ Give contributors one documentation index and explicit boundaries between public
 - [x] No private configuration or log content is read or committed; existing local artifacts are retained.
 - [x] The launcher has identical executable behavior.
 - [x] Formatting, relevant quality checks, and task validation pass.
-- [ ] Changes are committed and submitted as a PR.
+- [x] Changes are committed and submitted as a PR.
 
 ## Verification
 
@@ -41,3 +41,5 @@ Check local Markdown links and anchors, Git tracking and ignore rules, launcher 
 
 - Include the user rewrite of `README.md`, removal of `README.zh-CN.md`, and synchronized `AGENTS.md`, documentation index, and contributor guidance in the same PR as `b805587`.
 - Rechecked 82 local Markdown links, anchors, and HTML assets after the rewrite. `npm test`, `npm run format:check`, context validation, and whitespace checks pass.
+
+- PR: https://github.com/rsecss/helmet-console/pull/8
