@@ -157,7 +157,8 @@ helmet-console/
 ├── server/        Node.js relay (composition + sirv + ws)
 ├── web/           Native browser ESM UI (no build)
 ├── deploy/        One-shot launcher + frp tunnel template
-├── docs/          Architecture, interface, deployment, contributing
+├── docs/          Documentation index, public guides, and screenshots
+├── logs/          Optional local output captures (gitignored)
 └── .trellis/      Per-package coding specs + AI workflow files
 ```
 
@@ -240,7 +241,7 @@ A `commit-msg` git hook (via `simple-git-hooks` + `commitlint`) enforces
 **Public ingress (frp tunnel)** — `python deploy/start.py` boots Node +
 `frpc` together. You bring your own VPS, frps token, and domain; the
 script supervises both processes and prints connection URLs.
-See [`deploy/deploy.md`](deploy/deploy.md) for prerequisites and
+See [`docs/frp-tunnel.md`](docs/frp-tunnel.md) for prerequisites and
 [`docs/deployment.md`](docs/deployment.md) for env vars and reverse-proxy
 config.
 
@@ -248,15 +249,9 @@ config.
 
 ## Documentation
 
-| Doc                                               | Audience                                       |
-| ------------------------------------------------- | ---------------------------------------------- |
-| [`docs/architecture.md`](docs/architecture.md)    | System shape, modules, protocol, state machine |
-| [`docs/interface.md`](docs/interface.md)          | HTTP routes + WebSocket contract               |
-| [`docs/deployment.md`](docs/deployment.md)        | Env vars, reverse proxy, smoke checks          |
-| [`docs/contributing.md`](docs/contributing.md)    | Contributor setup, AI tooling, PRs and checks  |
-| [`deploy/deploy.md`](deploy/deploy.md)            | Local-first frp tunnel setup (BYO)             |
-| [`CHANGELOG.md`](CHANGELOG.md)                    | Release notes                                  |
-| [rsecss/helmet](https://github.com/rsecss/helmet) | Companion MCU firmware (device side)           |
+Start with the [documentation index](docs/README.md) for architecture,
+protocol, deployment, contributor guides, and the commit/ignore matrix.
+Release history lives in [CHANGELOG.md](CHANGELOG.md).
 
 For coding rules used by AI collaborators, see
 [`.trellis/spec/`](.trellis/spec/) (backend / frontend / shared guides).

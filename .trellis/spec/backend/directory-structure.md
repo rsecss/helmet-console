@@ -15,6 +15,9 @@ server/
 ```
 
 Runtime artifacts (`logs/`, `node_modules/`) are at the repo root and gitignored.
+Public guides live under `docs/` (index: `docs/README.md`). Deployment scripts
+and placeholder config stay under `deploy/`; personal non-secret notes belong
+in ignored `docs/local/`.
 
 ---
 

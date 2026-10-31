@@ -1,0 +1,4 @@
+{"file": ".trellis/workflow.md", "reason": "Project workflow and conventions"}
+{"file": ".trellis/spec/backend/operational-scripts.md", "reason": "Deployment and commit boundaries"}
+{"file": ".trellis/spec/frontend/index.md", "reason": "Reproducible visual references"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "Stylesheet comment only; preserve CSS behavior"}

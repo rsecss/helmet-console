@@ -284,7 +284,7 @@ Frontend: `localStorage` (`console.ws.*` for connection target,
 - Optional reverse proxy: nginx → `:8080`, with WebSocket upgrade headers.
 - Optional dev tunnel: `python deploy/start.py` runs Node + `frpc` for
   public ingress (BYO domain/VPS/token; see
-  [`./deployment.md`](./deployment.md) and `deploy/deploy.md`).
+  [deployment](./deployment.md) and [frp tunnel setup](./frp-tunnel.md)).
 
 ---
 

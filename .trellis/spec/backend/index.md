@@ -16,7 +16,8 @@ Before touching `server/`:
 
 Before touching `deploy/`:
 1. [`operational-scripts.md`](./operational-scripts.md) — port sync, subprocess output, secrets
-2. `deploy/deploy.md` — current topology, prerequisites, setup
+2. `docs/frp-tunnel.md` — reusable topology, prerequisites, setup
+3. `docs/README.md` — documentation and local artifact ownership
 
 ---
 

@@ -37,5 +37,6 @@ Keep project rules in `AGENTS.md` and `.trellis/`, not only in generated adapter
 - UI: serial-assistant model. Three views switched by `view-switcher.js` writing `.app-shell[data-view]`: `terminal` (xterm + command bar), `ai` (DeepSeek V4 chat with `tool_calls` → `cmd`), `panel` (LED + motor + reserved telemetry slot).
 - Single writers: `.app-shell[data-state]` ← `config-panel.js`; `.app-shell[data-view]` ← `view-switcher.js`; `console.ws.*` ← `config-panel.js#writeConfig`; `console.ai.*` ← `ai-panel.js#writeAiConfig`.
 - Frontend stays native ESM with no build tool. Vendor browser libs under `web/vendor/`.
-- Deploy: `deploy/start.py` boots `npm start` + `frpc` for the local-first dev tunnel. Real config `deploy/frpc.toml` is gitignored; `deploy/frpc.example.toml` is the template. See [`deploy/deploy.md`](deploy/deploy.md).
+- Documentation: [`docs/README.md`](docs/README.md) owns the guide index and commit/ignore matrix. Root READMEs remain the GitHub entry points; `docs/local/`, `docs/design/`, and root `logs/` are local artifacts.
+- Deploy: `deploy/start.py` boots `npm start` + `frpc` for the local-first dev tunnel. Real config `deploy/frpc.toml` is gitignored; `deploy/frpc.example.toml` is the template. See [`docs/frp-tunnel.md`](docs/frp-tunnel.md).
 - Relay port `8080` lives in three sites — `server/src/config.js`, `deploy/start.py`, `deploy/frpc.toml` — change all together. Rule in `.trellis/spec/backend/operational-scripts.md`.

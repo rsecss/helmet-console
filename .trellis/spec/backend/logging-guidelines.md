@@ -2,6 +2,10 @@
 
 > Console-only. No logger library. No structured JSON.
 
+Explicit output captures belong in root `logs/` (gitignored), not beside source
+files. Do not add a file logger or capture device frames. See
+[`docs/deployment.md`](../../../docs/deployment.md#capturing-logs) for shell commands.
+
 ---
 
 ## Levels

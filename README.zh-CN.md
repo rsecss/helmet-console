@@ -150,7 +150,8 @@ helmet-console/
 ├── server/        Node.js 中继（composition + sirv + ws）
 ├── web/           原生浏览器 ESM UI（无构建）
 ├── deploy/        一键启动器 + frp 隧道模板
-├── docs/          架构、接口、部署、贡献指南
+├── docs/          文档索引、公共指南与截图
+├── logs/          可选的本地日志目录（不提交）
 └── .trellis/      分包代码规范 + AI 工作流文件
 ```
 
@@ -231,22 +232,15 @@ npm run lint          # 仅 ESLint
 
 **公网入口（frp 隧道）** —— `python deploy/start.py` 同时拉起 Node 和
 `frpc`。你需要自备 VPS、frps token 与域名；脚本会守护这两个进程并打印
-连接 URL。前置条件见 [`deploy/deploy.md`](deploy/deploy.md)，环境变量
+连接 URL。前置条件见 [`docs/frp-tunnel.md`](docs/frp-tunnel.md)，环境变量
 与反向代理配置见 [`docs/deployment.md`](docs/deployment.md)。
 
 ---
 
 ## 文档
 
-| 文档                                              | 读者                                |
-| ------------------------------------------------- | ----------------------------------- |
-| [`docs/architecture.md`](docs/architecture.md)    | 系统形态、模块、协议、状态机        |
-| [`docs/interface.md`](docs/interface.md)          | HTTP 路由 + WebSocket 契约          |
-| [`docs/deployment.md`](docs/deployment.md)        | 环境变量、反向代理、冒烟检查        |
-| [`docs/contributing.md`](docs/contributing.md)    | 开发环境、AI 工具初始化、PR 与检查  |
-| [`deploy/deploy.md`](deploy/deploy.md)            | 本地优先的 frp 隧道部署（自带配置） |
-| [`CHANGELOG.md`](CHANGELOG.md)                    | 发布记录                            |
-| [rsecss/helmet](https://github.com/rsecss/helmet) | 配套下位机固件（设备侧）            |
+从[文档索引](docs/README.md)查看架构、协议、部署、贡献指南，
+以及文件提交与忽略规则。发布历史见 [CHANGELOG.md](CHANGELOG.md)。
 
 供 AI 协作者使用的编码规则在 [`.trellis/spec/`](.trellis/spec/)
 （backend / frontend / 共享指南）。

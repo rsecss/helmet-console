@@ -1,7 +1,7 @@
 /* ============================================================
- * Design Tokens — Rose variant (replicated from prototype-rose.html).
- * The primary surface of truth for this design lives in
- * docs/design/prototype-rose.html.
+ * Design Tokens — Rose variant.
+ * This tracked stylesheet and web/index.html define the current UI;
+ * docs/assets/screenshots/ contains illustrative references.
  * ============================================================ */
 :root {
   color-scheme: light;

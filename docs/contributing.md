@@ -140,6 +140,18 @@ chore: bump prettier to 3.3
 
 ---
 
+## Documentation and Local Files
+
+Use the [documentation index](README.md) for guide ownership and the complete
+commit/ignore matrix. Keep both repository READMEs at the root. Public guides
+use placeholders; personal non-secret notes belong in ignored `docs/local/`.
+Capture runtime output in root `logs/` as described in
+[deployment](deployment.md#capturing-logs).
+
+When moving a document, update README links, related guides, agent instructions,
+and active `.trellis/spec/` references together. Required development references
+must be available in a clean clone; ignored prototypes are optional.
+
 ## Release notes
 
 `CHANGELOG.md` `[Unreleased]` is the source of truth for the next
